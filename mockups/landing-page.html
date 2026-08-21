@@ -1,0 +1,795 @@
+<title>CIL Winter League</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<style>
+  :root {
+    --pitch:        #0D1913;
+    --pitch-deep:   #08110D;
+    --dugout:       #16271F;
+    --dugout-2:     #1E362B;
+    --line:         #2C4738;
+    --chalk:        #F2EEE2;
+    --chalk-dim:    #A9B7AC;
+    --chalk-faint:  #6E8177;
+    --clay:         #C34B2E;
+    --clay-bright:  #E06840;
+    --gold:         #D6A544;
+
+    --display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --body: "Libre Franklin", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--pitch);
+    color: var(--chalk);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--clay); color: var(--chalk); }
+
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--clay-bright);
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ============ seam divider ============ */
+  .seam {
+    width: 100%;
+    height: 22px;
+    color: var(--line);
+    opacity: 0.9;
+  }
+
+  /* ============ header ============ */
+  header.site {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(13, 25, 19, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem 1.5rem;
+    padding: 1.05rem 0;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .wordmark .type {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .wordmark .ci {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .wordmark .sub {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+  }
+
+  /* ============ crest badge ============ */
+  .badge {
+    flex: none;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--dugout);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .badge img {
+    width: 108%;
+    height: 108%;
+    max-width: 108%;
+    object-fit: cover;
+    margin: -4%;
+    display: block;
+  }
+  .badge.sm { width: 42px; height: 42px; }
+  .badge.md { width: 56px; height: 56px; }
+  .badge.lg { width: 148px; height: 148px; }
+
+  nav.primary {
+    display: none;
+    align-items: center;
+    gap: 2.1rem;
+  }
+  @media (min-width: 780px) {
+    nav.primary { display: flex; }
+  }
+  nav.primary a {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: color 150ms ease, border-color 150ms ease;
+  }
+  nav.primary a:hover { color: var(--chalk); border-color: var(--clay); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.72rem 1.35rem;
+    border: 1px solid var(--clay);
+    background: var(--clay);
+    color: var(--chalk);
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+  .btn:hover { background: var(--clay-bright); border-color: var(--clay-bright); transform: translateY(-1px); }
+  .btn.ghost { background: transparent; color: var(--chalk); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--chalk-dim); background: var(--dugout-2); }
+
+  /* ============ hero ============ */
+  .hero {
+    position: relative;
+    padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(4rem, 8vw, 6rem);
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(242,238,226,0.028) 0, rgba(242,238,226,0.028) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(-45deg, rgba(242,238,226,0.028) 0, rgba(242,238,226,0.028) 1px, transparent 1px, transparent 26px);
+    mask-image: radial-gradient(ellipse 70% 60% at 70% 20%, black, transparent 75%);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    top: -14%;
+    right: -8%;
+    width: 640px;
+    height: 640px;
+    background-image: url("../static/img/logo2.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: invert(1) brightness(0.9);
+    opacity: 0.05;
+    z-index: 0;
+  }
+
+  .hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.75rem;
+  }
+  @media (min-width: 960px) {
+    .hero-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); align-items: end; }
+  }
+
+  .hero-copy { opacity: 0; animation: rise 700ms cubic-bezier(.2,.8,.2,1) 80ms forwards; }
+  .hero-panel { opacity: 0; animation: rise 700ms cubic-bezier(.2,.8,.2,1) 260ms forwards; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-copy, .hero-panel { animation: none; opacity: 1; }
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 8.5vw, 6.3rem);
+    line-height: 0.92;
+    margin-top: 0.6rem;
+  }
+  .hero h1 .accent { color: var(--clay); }
+
+  .hero-sub {
+    margin: 1.4rem 0 0;
+    max-width: 46ch;
+    font-size: 1.1rem;
+    color: var(--chalk-dim);
+  }
+
+  .hero-ctas {
+    margin-top: 2.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+  }
+
+  /* scoreboard stat panel */
+  .scoreboard {
+    background: var(--dugout);
+    border: 1px solid var(--line);
+    position: relative;
+  }
+  .scoreboard::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(242,238,226,0.06);
+    pointer-events: none;
+  }
+  .scoreboard-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .scoreboard-head .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px rgba(214,165,68,0.7);
+  }
+  .scoreboard-head .label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .scoreboard-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .cell {
+    padding: 1.15rem 1.1rem;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .cell:nth-child(2n) { border-right: none; }
+  .cell:nth-last-child(-n+2) { border-bottom: none; }
+  .cell .v {
+    font-family: var(--mono);
+    font-size: 1.85rem;
+    font-weight: 600;
+    color: var(--chalk);
+    line-height: 1;
+  }
+  .cell .k {
+    margin-top: 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-faint);
+  }
+
+  /* ============ section shell ============ */
+  section { padding: clamp(3.5rem, 7vw, 5.5rem) 0; }
+  section.alt { background: var(--pitch-deep); }
+
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 2.6rem;
+    max-width: 62ch;
+  }
+  .section-head h2 { font-size: clamp(2rem, 4.5vw, 2.75rem); }
+
+  /* ============ format / about ============ */
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.75rem;
+  }
+  @media (min-width: 900px) {
+    .about-grid { grid-template-columns: 1.1fr 0.9fr; }
+  }
+
+  .fact-list { display: flex; flex-direction: column; gap: 1.4rem; }
+  .fact {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 1.1rem;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .fact:last-child { border-bottom: none; padding-bottom: 0; }
+  .fact .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--clay-bright);
+    padding-top: 0.15rem;
+  }
+  .fact p { margin: 0; color: var(--chalk-dim); }
+  .fact strong { color: var(--chalk); font-weight: 600; }
+
+  /* timeline */
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--line);
+  }
+  .timeline li {
+    position: relative;
+    padding: 0 0 1.6rem 1.5rem;
+  }
+  .timeline li::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 0.35rem;
+    width: 9px;
+    height: 9px;
+    background: var(--pitch);
+    border: 1.5px solid var(--chalk-faint);
+  }
+  .timeline li.now::before { border-color: var(--gold); background: var(--gold); box-shadow: 0 0 0 4px rgba(214,165,68,0.18); }
+  .timeline .when {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-faint);
+  }
+  .timeline li.now .when { color: var(--gold); }
+  .timeline .what { font-family: var(--display); font-weight: 700; font-size: 1.25rem; text-transform: uppercase; margin-top: 0.15rem; }
+
+  /* ============ registration ============ */
+  .reg-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+  }
+  @media (min-width: 940px) {
+    .reg-grid { grid-template-columns: 0.85fr 1.15fr; }
+  }
+
+  .fee-card {
+    background: var(--dugout);
+    border: 1px solid var(--line);
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .fee-row:last-of-type { border-bottom: none; padding-bottom: 0; }
+  .fee-row .fee-label { font-size: 0.98rem; }
+  .fee-row .fee-label small { display: block; color: var(--chalk-faint); font-size: 0.82rem; margin-top: 0.2rem; }
+  .fee-row .fee-amt { font-family: var(--mono); font-size: 1.6rem; font-weight: 600; }
+
+  form.entry {
+    background: var(--dugout);
+    border: 1px solid var(--line);
+    padding: clamp(1.6rem, 3vw, 2.4rem);
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  @media (min-width: 620px) {
+    .field-grid.two { grid-template-columns: 1fr 1fr; }
+  }
+  .field { display: flex; flex-direction: column; gap: 0.5rem; }
+  .field label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+  }
+  .field input {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--line);
+    color: var(--chalk);
+    font-family: var(--body);
+    font-size: 1.02rem;
+    padding: 0.5rem 0.1rem;
+    transition: border-color 150ms ease;
+  }
+  .field input::placeholder { color: var(--chalk-faint); }
+  .field input:focus { border-color: var(--clay); outline: none; }
+  .field input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  form.entry .btn { margin-top: 2rem; width: 100%; justify-content: center; padding: 0.95rem; font-size: 0.82rem; }
+
+  /* ============ prizes ============ */
+  .prize-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  @media (min-width: 700px) {
+    .prize-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  .prize {
+    background: var(--pitch);
+    padding: 1.6rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  section.alt .prize { background: var(--pitch-deep); }
+  .prize .rank { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
+  .prize .name { font-family: var(--display); font-size: 1.3rem; text-transform: uppercase; font-weight: 700; }
+
+  /* ============ sponsors ============ */
+  .sponsor-shell {
+    border: 1.5px dashed var(--line);
+    padding: 2.6rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .sponsor-shell p { max-width: 46ch; color: var(--chalk-dim); }
+
+  /* ============ contact ============ */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+  @media (min-width: 780px) {
+    .contact-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .contact-card {
+    border: 1px solid var(--line);
+    padding: 1.7rem;
+  }
+  .contact-card .eyebrow { margin-bottom: 0.6rem; display: block; }
+  .contact-card .line { font-family: var(--mono); font-size: 1.02rem; margin-top: 0.3rem; }
+  .contact-card .who { color: var(--chalk-dim); margin-top: 1rem; font-size: 0.92rem; }
+
+
+  /* ============ footer ============ */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 2.6rem 0;
+  }
+  .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  .foot-row .wordmark .ci { font-size: 1.2rem; }
+  .foot-meta {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-faint);
+    display: flex;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+  }
+</style>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <div class="wordmark">
+      <span class="badge sm"><img src="../static/img/logo1.jpeg" alt="Crick-It Inter League crest"></span>
+      <span class="type">
+        <span class="ci">Crick-It</span>
+        <span class="sub">Inter League</span>
+      </span>
+    </div>
+    <nav class="primary">
+      <a href="#format">Format</a>
+      <a href="#register">Register</a>
+      <a href="#prizes">Prizes</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a href="#register" class="btn">Register Team</a>
+  </div>
+</header>
+
+<svg class="seam" viewBox="0 0 240 20" preserveAspectRatio="none" role="presentation">
+  <defs>
+    <pattern id="stitchTop" width="24" height="20" patternUnits="userSpaceOnUse">
+      <line x1="12" y1="3" x2="7" y2="10" stroke="currentColor" stroke-width="1.6" />
+      <line x1="12" y1="3" x2="17" y2="10" stroke="currentColor" stroke-width="1.6" />
+      <line x1="12" y1="17" x2="7" y2="10" stroke="currentColor" stroke-width="1.6" />
+      <line x1="12" y1="17" x2="17" y2="10" stroke="currentColor" stroke-width="1.6" />
+    </pattern>
+  </defs>
+  <rect width="240" height="20" fill="url(#stitchTop)" />
+</svg>
+
+<main>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Metro Atlanta &middot; Est. 2013</span>
+        <h1>The 2026&ndash;27<br>Season Begins<br><span class="accent">October 24.</span></h1>
+        <p class="hero-sub">Fifteen years of weekend cricket on Atlanta's ballfields continues. T15, hard tennis ball, two pools, one trophy. Team registration opens August&nbsp;31.</p>
+        <div class="hero-ctas">
+          <a href="#register" class="btn">Register Your Team</a>
+          <a href="#format" class="btn ghost">See the Format</a>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="scoreboard">
+          <div class="scoreboard-head">
+            <span class="label"><span class="dot"></span>Season Card</span>
+            <span class="label">2026&ndash;27</span>
+          </div>
+          <div class="scoreboard-body">
+            <div class="cell"><div class="v">T15</div><div class="k">Format</div></div>
+            <div class="cell"><div class="v">13th</div><div class="k">Season</div></div>
+            <div class="cell"><div class="v">02</div><div class="k">Pools</div></div>
+            <div class="cell"><div class="v">10</div><div class="k">League Games / Team</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <svg class="seam" viewBox="0 0 240 20" preserveAspectRatio="none" role="presentation"><rect width="240" height="20" fill="url(#stitchTop)" /></svg>
+
+  <!-- ================= FORMAT ================= -->
+  <section id="format">
+    <div class="wrap about-grid">
+      <div>
+        <div class="section-head">
+          <span class="eyebrow">The Format</span>
+          <h2>Cricket, adapted for the diamond.</h2>
+        </div>
+        <div class="fact-list">
+          <div class="fact">
+            <span class="tag">Ball</span>
+            <p><strong>Hard tennis (red/yellow).</strong> CIL supplies the balls for every scheduled match &mdash; no need to bring your own.</p>
+          </div>
+          <div class="fact">
+            <span class="tag">Ground</span>
+            <p><strong>Baseball fields across Metro Atlanta.</strong> Boundary scoring is set per field category, from a tight 2D-and-out to a full 4-over-the-fence.</p>
+          </div>
+          <div class="fact">
+            <span class="tag">Overs</span>
+            <p><strong>15 a side, 9 players plus a super-sub.</strong> No LBWs, no last-man batting, max four overs per bowler.</p>
+          </div>
+          <div class="fact">
+            <span class="tag">Schedule</span>
+            <p><strong>Saturdays and Sundays.</strong> Matches can move by mutual agreement between captains &mdash; CIL keeps the ground booked either way.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-head">
+          <span class="eyebrow">Key Dates</span>
+          <h2 style="font-size:1.4rem;">Tentative Schedule</h2>
+        </div>
+        <ul class="timeline">
+          <li class="now">
+            <div class="when">Aug 31</div>
+            <div class="what">Registration Opens</div>
+          </li>
+          <li>
+            <div class="when">Sep 30</div>
+            <div class="what">Registration Closes</div>
+          </li>
+          <li>
+            <div class="when">Early Oct</div>
+            <div class="what">Teams Approved &amp; Pools Set</div>
+          </li>
+          <li>
+            <div class="when">Oct 24</div>
+            <div class="what">League Stage Begins</div>
+          </li>
+          <li>
+            <div class="when">TBD</div>
+            <div class="what">Playoffs &amp; Final</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <svg class="seam" viewBox="0 0 240 20" preserveAspectRatio="none" role="presentation"><rect width="240" height="20" fill="url(#stitchTop)" /></svg>
+
+  <!-- ================= REGISTER ================= -->
+  <section id="register" class="alt">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Team Registration</span>
+        <h2>Put your team on the card.</h2>
+      </div>
+
+      <div class="reg-grid">
+        <div class="fee-card">
+          <div class="fee-row">
+            <div class="fee-label">Standard Entry<small>Per team, full season</small></div>
+            <div class="fee-amt">$650</div>
+          </div>
+          <div class="fee-row">
+            <div class="fee-label">With Sponsorship<small>Per team &mdash; details on approval</small></div>
+            <div class="fee-amt">$800</div>
+          </div>
+          <p style="margin:0; color:var(--chalk-dim); font-size:0.9rem;">Payment is handled directly with the committee after your registration is submitted &mdash; instructions arrive by email. Registration closes <strong style="color:var(--chalk)">September 30</strong>; the committee reviews and approves teams shortly after.</p>
+        </div>
+
+        <form class="entry">
+          <div class="field-grid two">
+            <div class="field">
+              <label for="team">Team Name</label>
+              <input id="team" name="team" type="text" placeholder="e.g. Peachtree Panthers" required>
+            </div>
+            <div class="field">
+              <label for="captfirst">Captain First Name</label>
+              <input id="captfirst" name="captfirst" type="text" placeholder="First name" required>
+            </div>
+          </div>
+          <div class="field-grid two" style="margin-top:1.5rem;">
+            <div class="field">
+              <label for="captlast">Captain Last Name</label>
+              <input id="captlast" name="captlast" type="text" placeholder="Last name" required>
+            </div>
+            <div class="field">
+              <label for="mobile">Mobile Number</label>
+              <input id="mobile" name="mobile" type="tel" placeholder="(404) 555-0142" required>
+            </div>
+          </div>
+          <div class="field-grid" style="margin-top:1.5rem;">
+            <div class="field">
+              <label for="email">Email Address</label>
+              <input id="email" name="email" type="email" placeholder="captain@email.com" required>
+            </div>
+          </div>
+          <button type="submit" class="btn">Submit Registration</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <svg class="seam" viewBox="0 0 240 20" preserveAspectRatio="none" role="presentation"><rect width="240" height="20" fill="url(#stitchTop)" /></svg>
+
+  <!-- ================= PRIZES ================= -->
+  <section id="prizes">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What's on the Line</span>
+        <h2>Trophies &amp; recognition.</h2>
+      </div>
+      <div class="prize-grid">
+        <div class="prize"><span class="rank">Team</span><span class="name">Champions</span></div>
+        <div class="prize"><span class="rank">Team</span><span class="name">Runners-Up</span></div>
+        <div class="prize"><span class="rank">Match</span><span class="name">Playoff MOM</span></div>
+        <div class="prize"><span class="rank">Individual</span><span class="name">Best Batsman</span></div>
+        <div class="prize"><span class="rank">Individual</span><span class="name">Best Bowler</span></div>
+        <div class="prize"><span class="rank">Individual</span><span class="name">Most Valuable Player</span></div>
+      </div>
+    </div>
+  </section>
+
+  <svg class="seam" viewBox="0 0 240 20" preserveAspectRatio="none" role="presentation"><rect width="240" height="20" fill="url(#stitchTop)" /></svg>
+
+  <!-- ================= SPONSORS ================= -->
+  <section class="alt">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Sponsors</span>
+        <h2>Backing the 2026&ndash;27 season.</h2>
+      </div>
+      <div class="sponsor-shell">
+        <span class="eyebrow" style="color:var(--chalk-faint);">Open for the 2026&ndash;27 season</span>
+        <p>This season's sponsors will appear here. Interested in backing 500+ players across fifteen teams? Reach out to the committee below.</p>
+        <a href="#contact" class="btn ghost">Become a Sponsor</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Get in Touch</span>
+        <h2>Questions before you register?</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <span class="eyebrow">Committee Inbox</span>
+          <div class="line">CILcommittee@gmail.com</div>
+          <p class="who">Monitored by the CIL committee &mdash; registration, scheduling, and general questions.</p>
+        </div>
+        <div class="contact-card">
+          <span class="eyebrow">Committee Contact</span>
+          <div class="line">Naren &middot; +1 (916) 616-9339</div>
+          <p class="who">For anything that needs a faster answer than email.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="wordmark">
+      <span class="badge md"><img src="../static/img/logo1.jpeg" alt="Crick-It Inter League crest"></span>
+      <span class="type">
+        <span class="ci">Crick-It</span>
+        <span class="sub">Inter League</span>
+      </span>
+    </div>
+    <div class="foot-meta">
+      <span>Metro Atlanta, GA</span>
+      <span>Est. 2013</span>
+      <span>2026&ndash;27 Season</span>
+    </div>
+  </div>
+</footer>
