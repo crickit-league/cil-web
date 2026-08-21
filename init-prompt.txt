@@ -1,0 +1,64 @@
+I want to design a website for a cricket league. I have some general ideas and some specific requests. I want you to give me a architecture overview and suggest tech stack and other required services for the same. 
+
+General details 
+- This is a website for a cricket league where multiple teams will participate and play actual cricket games throughout the year
+- This website will serve as a single place where the whole league can be tracked
+- The site should be accessible and responsive both in web and mobile 
+- The website will serve as a portal where new teams are registered for the league. 
+- It will also serve as a place to track games which are completed, along with team stats, player stats, scores etc. 
+- The site will also show fixtures and schedules for teams. 
+- Site will not be used to enter and track live score when a game is actually played, there are third party apps which wil be used to do that for now 
+- The data from these third party sites can then be imported into this site on a nightly basis or a weekly basis. This will give us scores and scorecards of the games along with season stats, player stats etc 
+- The site can be public where anyone can see any data without a login 
+- The site does need logins and different access levels for players, team captains and admins
+- The league is small. The maximum number of teams could be around 10-15 and total number of players would just be around 500 at max. 
+- We do not plan to show live scores or even enter/track live scores in this site at the moment
+- We may need the ability to send emails / WhatsApp messages for reminders etc. 
+- We will also need to get a domain and an inbox for the domain which will be monitored by admins 
+
+Phase 1
+- For phase 1, the ask is simple. It can be a static site which will serve as a "Coming soon" site for the league 
+- Team captains should be able to access the site to fill out a form to register a team for the league. the form should have a field for email and phone number/WhatsApp number for the captain. 
+- The site should list the details of the league along with info about team registration cost and some tentative dates 
+- We dont have to handle payments through this site, captains will make payments outside
+- Registration should close by the given date, while admins should have to ability to reopen/extend the registration date 
+- Once registration is officially closed the committee will look at the teams and approve/deny team registration requests. 
+- Once approved the captains will receive a link in their email which they can use to setup their team and roster on the website. 
+- The captains should have the ability to add names/emails of the team members and send invites for them to login to the site. 
+- the captains should also have the ability to edit names, emails of the players, edit team name, upload team logo if any etc. 
+- the players should be able to use the link to login and create their profiles with photos and other info etc. 
+- A sponsors section where sponsors logos can be shown 
+- A notice board where admins can post messages and have the ability to tag specific teams. 
+- Contact us page with the necessary contact details and info about each admin/committee member. 
+- the site admins should have to ability to do all of these. 
+
+Phase 2
+- Teams will be finalized by this phase. So the admins should be able to enter/upload the fixtures and schedules for the games 
+- Whenever a fixture is added/changed the team captain and team members who have registered with emails should receive emails/WhatsApp messages 
+- Apart from the two teams playing in a game, there is also an umpiring team which the admins will select based on availability
+- The umpiring team captain should be notified when the fixtures go up. 
+- Its the responsibility of the umpiring team captain to select 2 people from their team as umpires. When the captain selects the players for umpiring, an email should be sent to the players. 
+- The umpires for a game should also show up in the fixtures so that people can contact them if they are late etc. 
+- The results/scores will be imported into the site by the admins from the third party scoring sites weekly. 
+- The scores should show up in the fixtures section for finished games 
+- Each game will also have a venue which the admins can set. 
+- Clicking on a completed games should open the game page with batting performance, bowling performance etc. 
+- Clicking on a player/team name in the game page should open the player/team page with player/team stats. 
+
+Phase 3
+- Admins should have the ability to upload photos for each games and the tournament overall. 
+- The site will be used for multiple seasons over the years, so there should be an archive of pictures, stats, results etc. 
+- This league has been happening since 2013 , so there are lot of historic data from previous seasons which should be brought into the site. 
+- Rules section which lists all the rules of the league which should be searchable. 
+- A universal search bar which can be used to search for a team name, player name, venue name etc. 
+- A calendar view which shows my team games schedule and my umpiring games with predicted weather for that day for that venue 
+- Player should be able to mark themselves Yes/No/Maybe for each of their games
+- Captains calendar view should have the ability to see players available/unavailable for their team games and their umpiring games. 
+- Admins should be able to see all of these and should have umpiring specific views. 
+- Admins should be able to see the calendar view of a selected team 
+
+
+Long term 
+- I want an iPhone/android app for this site through which users can receive notifications directly instead of email/WhatsApp. 
+
+I want to give me an architecture suggestion keeping all these in mind. Remember that Phase 1 is the immediate action item, Phase 2 and 3 will be handled 1 or 2 months later. Ask me any and all clarifying questions you may have. 
