@@ -1,0 +1,84 @@
+// Crick-It Inter League — data model
+//
+// Scope note: this schema currently covers only what Phase 1a needs
+// (season windows + team registration). The full target domain model —
+// teams, rosters, fixtures, scorecards, stats, standings — is documented
+// in docs/architecture.md §6 and grows incrementally as each phase's
+// features are actually built, not speculatively ahead of them.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// Connection URL lives in prisma.config.ts / env, not here — see
+// https://pris.ly/d/prisma7-client-config
+datasource db {
+  provider = "postgresql"
+}
+
+enum SeasonStatus {
+  UPCOMING
+  REGISTRATION_OPEN
+  ACTIVE
+  ARCHIVED
+}
+
+enum RegistrationStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum FeeStatus {
+  UNPAID
+  PAID
+  WAIVED
+}
+
+model Season {
+  id                    String       @id @default(cuid())
+  name                  String // e.g. "2026-27"
+  status                SeasonStatus @default(UPCOMING)
+  registrationOpensAt   DateTime
+  registrationClosesAt  DateTime
+
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("seasons")
+}
+
+// A Phase 1a team-registration submission. Not yet linked to a Team,
+// Person, or User — that linkage happens in Phase 1b, once a registration
+// is approved and the captain accepts their setup invite.
+model Registration {
+  id       String @id @default(cuid())
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  teamName         String
+  captainFirstName String
+  captainLastName  String
+  captainEmail     String
+  captainMobile    String
+
+  status    RegistrationStatus @default(SUBMITTED)
+  feeStatus FeeStatus          @default(UNPAID)
+
+  notes String?
+
+  // Free-text for now — becomes a proper admin-user relation once
+  // Phase 1a auth exists.
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seasonId, status])
+  @@map("registrations")
+}

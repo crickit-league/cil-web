@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholder connection strings — Prisma Client generation only needs
+      # these to be present and parseable, not a reachable database.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/cil_web"
+      DATABASE_URL_UNPOOLED: "postgresql://user:password@localhost:5432/cil_web"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build

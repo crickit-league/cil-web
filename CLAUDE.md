@@ -2,6 +2,8 @@
 
 CIL Winter League (Metro Atlanta, T15 format) portal: registration, fixtures, scorecards, standings, and a multi-season archive back to 2013. Read [docs/architecture.md](docs/architecture.md) first — it has the full stack rationale, phasing, domain model, and risks. Read [docs/STATUS.md](docs/STATUS.md) every session — it's the living "what's actually done, what's next" doc; this file is stable background, that one changes daily.
 
+Also see [AGENTS.md](AGENTS.md) — Next.js-version-specific framework notes, auto-maintained by `next dev`. That file, not this one, is where breaking-change warnings for the installed Next.js version live.
+
 ## Stack (see architecture.md §2/§4 for why)
 
 Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (Auth.js/Clerk), Cloudflare R2 for files, Resend for email, Vercel Cron for scheduled jobs, Tailwind + shadcn/ui. One repo, no microservices, no custom infra.
@@ -14,6 +16,7 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (A
 - **Validation**: Zod schemas in `lib/validation/`, shared client and server. Never trust a form.
 - **Types**: `strict: true`, no `any`.
 - **Migrations**: Prisma migrations committed to git. Nobody edits the production DB by hand.
+- **Prisma 7**: connection URLs live in `prisma.config.ts` / env, not in `schema.prisma`'s `datasource` block — that's a Prisma 7 breaking change from what the original architecture doc assumed. The runtime client uses `@prisma/adapter-neon` (`src/lib/db/prisma.ts`) against pooled `DATABASE_URL`; Migrate uses unpooled `DATABASE_URL_UNPOOLED`. Generated client output is `src/generated/prisma` (gitignored), imported via `@/generated/prisma`.
 - **Stats are derived, never hand-typed** — rebuilt from scorecards after every import — with one deliberate exception: `standings_adjustments` for committee-issued penalties (see below). Never overwrite that table from an import.
 
 ## Facts that shape the data model — confirmed by the committee, don't re-litigate
@@ -36,3 +39,7 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (A
 ## Admin/org facts
 
 5 admin accounts. Shared inbox `CILcommittee@gmail.com` (existing Gmail, not yet on the branded domain). Domain not purchased as of last check — see STATUS.md for current state.
+
+## External services
+
+Every third-party account (Cloudflare, Vercel, Neon, Resend, Turnstile, Sentry) and how to generate its keys is documented in [docs/service-setup.md](docs/service-setup.md) — go there before creating a new account for something the project already depends on.

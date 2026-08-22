@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --pitch: #0d1913;
+  --pitch-deep: #08110d;
+  --dugout: #16271f;
+  --dugout-2: #1e362b;
+  --line: #2c4738;
+  --chalk: #f2eee2;
+  --chalk-dim: #a9b7ac;
+  --chalk-faint: #6e8177;
+  --clay: #c34b2e;
+  --clay-bright: #e06840;
+  --gold: #d6a544;
+}
+
+@theme inline {
+  --color-pitch: var(--pitch);
+  --color-pitch-deep: var(--pitch-deep);
+  --color-dugout: var(--dugout);
+  --color-dugout-2: var(--dugout-2);
+  --color-line: var(--line);
+  --color-chalk: var(--chalk);
+  --color-chalk-dim: var(--chalk-dim);
+  --color-chalk-faint: var(--chalk-faint);
+  --color-clay: var(--clay);
+  --color-clay-bright: var(--clay-bright);
+  --color-gold: var(--gold);
+
+  --font-display: var(--font-big-shoulders), "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: var(--font-libre-franklin), -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+body {
+  background: var(--pitch);
+  color: var(--chalk);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--clay);
+  color: var(--chalk);
+}
+
+/* Hero decoration: faint diagonal cross-hatch, masked to the top-right */
+.hero-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgb(242 238 226 / 2.8%) 0,
+      rgb(242 238 226 / 2.8%) 1px,
+      transparent 1px,
+      transparent 26px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgb(242 238 226 / 2.8%) 0,
+      rgb(242 238 226 / 2.8%) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+  mask-image: radial-gradient(ellipse 70% 60% at 70% 20%, black, transparent 75%);
+}
+
+/* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */
+.hero-crest-watermark::after {
+  content: "";
+  position: absolute;
+  top: -14%;
+  right: -8%;
+  width: 640px;
+  height: 640px;
+  background-image: url("/img/logo2.jpeg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: invert(1) brightness(0.9);
+  opacity: 0.05;
+  z-index: 0;
+}

@@ -6,41 +6,41 @@ Status: draft v4 (2026-08-21) · Supersedes v3 · Pending answers to [Open quest
 
 ## 1. Decisions locked in
 
-| Question | Answer | Consequence |
-|---|---|---|
-| WhatsApp | **Dropped entirely** | Email is the only notification channel through Phase 3. Push arrives with the mobile app, not before |
-| Scoring platform | **CricClubs or Stumps** (not yet chosen) | Import design must stay source-agnostic; a spike is needed before Phase 2 (§8) |
-| Location | **Metro Atlanta, US** | `America/New_York` with DST, US privacy law (not GDPR), NWS weather API, `iad1`/us-east hosting |
-| Budget | **As close to free as possible** | $0–8/month Phase 1; every paid line item is called out with its free alternative (§12) |
-| Team | **5–6 people, Claude-assisted, no stack preference** | Pick the most conventional, best-documented stack; invest heavily in guardrails (§4, §11) |
-| Registration window | **Opens ~Aug 31 2026, closes ~Sep 30 2026** | Phase 1 splits into 1a (public + form, ~2 weeks) and 1b (portal, all of September) (§10) |
+| Question            | Answer                                               | Consequence                                                                                          |
+| ------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| WhatsApp            | **Dropped entirely**                                 | Email is the only notification channel through Phase 3. Push arrives with the mobile app, not before |
+| Scoring platform    | **CricClubs or Stumps** (not yet chosen)             | Import design must stay source-agnostic; a spike is needed before Phase 2 (§8)                       |
+| Location            | **Metro Atlanta, US**                                | `America/New_York` with DST, US privacy law (not GDPR), NWS weather API, `iad1`/us-east hosting      |
+| Budget              | **As close to free as possible**                     | $0–8/month Phase 1; every paid line item is called out with its free alternative (§12)               |
+| Team                | **5–6 people, Claude-assisted, no stack preference** | Pick the most conventional, best-documented stack; invest heavily in guardrails (§4, §11)            |
+| Registration window | **Opens ~Aug 31 2026, closes ~Sep 30 2026**          | Phase 1 splits into 1a (public + form, ~2 weeks) and 1b (portal, all of September) (§10)             |
 
 ### 1.1 Round two — confirmed by the committee (2026-08-21)
 
-| Question | Answer | Consequence |
-|---|---|---|
-| League / season | **CIL Winter League, 2026–2027**, format **T15**, season starts **Oct 24 2026** | Landing page copy finalised; format drives scorecard/overs modelling |
-| Domain | **Not owned yet**, target: **this week** | Still the #1 blocker — nothing in email setup can be tested until it lands |
-| Branding | Logo exists, will be shared; colours/typeface TBD | Visual design waits on the logo |
-| Registration fields | Team name, captain first/last name, email, mobile | Simpler than the placeholder default — no squad list, no rules checkbox |
-| Fee | **$650 standard / $800 "with Sponsorship"** — exact meaning still unclear | Form ships **without** a fee-tier selector until confirmed; admins track amount owed manually |
-| Payment flow | Off-site. Captain emails a payment screenshot to `CILcommittee@gmail.com`; confirmation email fires **on submission**, not on approval | Matches existing design — this is a receipt/reminder, separate from the later post-close approval + invite email |
-| Admins | **5**, all with access to the shared inbox | Seed 5 admin accounts; inbox stays on existing Gmail for now, not a new domain mailbox |
-| Sponsors | None confirmed yet | No change to design; sponsor section ships empty with a placeholder |
-| Competition format | **2 pools** (A/B, count depends on registrations), **one competition per season**. Max 10 league-stage matches per team; top 6 per pool (12 total) advance to playoffs | `team_seasons.pool` field; standings kept per pool |
-| Points table | **Win = 2, tie = 1 each, no result = 1 each**, plus net run rate to 4 decimal places | `team_season_stats.net_run_rate` stored at that precision; points awarded per the fixed scale above |
-| Standings tie-break | **Fully specified, multi-level**: points → NRR → head-to-head result → most wins among tied teams (3+ way ties) → most wickets taken → random draw | Needs an explicit tie-break algorithm in the standings service, not a plain sort |
-| Playoffs | **Fully resolved from the 2026–27 rule book (§1.2)** — top 2/pool direct to QF; 3rd–6th/pool play a pre-quarter-final round; specific cross-pool QF/SF/Final bracket confirmed | No longer blocked — the bracket generator in Phase 2 can be built against a known structure |
-| Player–team binding | **One player, one team, per season** — no mid-season moves | Simplifies stats attribution; no transfer workflow needed |
-| Free agents | Handled in CricClubs already | No free-agent signup needed on this site |
-| Minors | Under-18 (possibly under-13) players are allowed; **a physical field waiver** (adult co-signs, adult present pitchside) is the current process | This is a liability waiver, not online data consent — see the flag in §13 |
-| Minors' public profile | **User's call: no age-based restriction** — full name, photo, stats public for everyone | Not yet confirmed with the committee's counsel/insurer; flagged as a pre-Phase-2 gut-check, see §13 |
-| Contact visibility | **Captains can see/edit their own team's player emails/phones**; other captains and the public cannot; committee sees everything | Confirms the original design — no rework needed |
-| Umpire visibility | Confirmed: visible only to the two teams in that fixture, once logged in | No change |
-| Auth | Magic links to start; Google sign-in may be **added later without breaking anything**, since email is the shared identity key | No change to design |
-| Multiple roles | Confirmed: one person can be committee + captain simultaneously | No change |
-| Cross-season accounts | Confirmed: accounts and profile data persist season to season, backed by a CricClubs import | No change — reinforces the `people`/`users` split in §6 |
-| Historic data source | Still unexplored how to export from CricClubs | The Phase 2 import spike (§8) now covers this too |
+| Question               | Answer                                                                                                                                                                         | Consequence                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| League / season        | **CIL Winter League, 2026–2027**, format **T15**, season starts **Oct 24 2026**                                                                                                | Landing page copy finalised; format drives scorecard/overs modelling                                             |
+| Domain                 | **Not owned yet**, target: **this week**                                                                                                                                       | Still the #1 blocker — nothing in email setup can be tested until it lands                                       |
+| Branding               | Logo exists, will be shared; colours/typeface TBD                                                                                                                              | Visual design waits on the logo                                                                                  |
+| Registration fields    | Team name, captain first/last name, email, mobile                                                                                                                              | Simpler than the placeholder default — no squad list, no rules checkbox                                          |
+| Fee                    | **$650 standard / $800 "with Sponsorship"** — exact meaning still unclear                                                                                                      | Form ships **without** a fee-tier selector until confirmed; admins track amount owed manually                    |
+| Payment flow           | Off-site. Captain emails a payment screenshot to `CILcommittee@gmail.com`; confirmation email fires **on submission**, not on approval                                         | Matches existing design — this is a receipt/reminder, separate from the later post-close approval + invite email |
+| Admins                 | **5**, all with access to the shared inbox                                                                                                                                     | Seed 5 admin accounts; inbox stays on existing Gmail for now, not a new domain mailbox                           |
+| Sponsors               | None confirmed yet                                                                                                                                                             | No change to design; sponsor section ships empty with a placeholder                                              |
+| Competition format     | **2 pools** (A/B, count depends on registrations), **one competition per season**. Max 10 league-stage matches per team; top 6 per pool (12 total) advance to playoffs         | `team_seasons.pool` field; standings kept per pool                                                               |
+| Points table           | **Win = 2, tie = 1 each, no result = 1 each**, plus net run rate to 4 decimal places                                                                                           | `team_season_stats.net_run_rate` stored at that precision; points awarded per the fixed scale above              |
+| Standings tie-break    | **Fully specified, multi-level**: points → NRR → head-to-head result → most wins among tied teams (3+ way ties) → most wickets taken → random draw                             | Needs an explicit tie-break algorithm in the standings service, not a plain sort                                 |
+| Playoffs               | **Fully resolved from the 2026–27 rule book (§1.2)** — top 2/pool direct to QF; 3rd–6th/pool play a pre-quarter-final round; specific cross-pool QF/SF/Final bracket confirmed | No longer blocked — the bracket generator in Phase 2 can be built against a known structure                      |
+| Player–team binding    | **One player, one team, per season** — no mid-season moves                                                                                                                     | Simplifies stats attribution; no transfer workflow needed                                                        |
+| Free agents            | Handled in CricClubs already                                                                                                                                                   | No free-agent signup needed on this site                                                                         |
+| Minors                 | Under-18 (possibly under-13) players are allowed; **a physical field waiver** (adult co-signs, adult present pitchside) is the current process                                 | This is a liability waiver, not online data consent — see the flag in §13                                        |
+| Minors' public profile | **User's call: no age-based restriction** — full name, photo, stats public for everyone                                                                                        | Not yet confirmed with the committee's counsel/insurer; flagged as a pre-Phase-2 gut-check, see §13              |
+| Contact visibility     | **Captains can see/edit their own team's player emails/phones**; other captains and the public cannot; committee sees everything                                               | Confirms the original design — no rework needed                                                                  |
+| Umpire visibility      | Confirmed: visible only to the two teams in that fixture, once logged in                                                                                                       | No change                                                                                                        |
+| Auth                   | Magic links to start; Google sign-in may be **added later without breaking anything**, since email is the shared identity key                                                  | No change to design                                                                                              |
+| Multiple roles         | Confirmed: one person can be committee + captain simultaneously                                                                                                                | No change                                                                                                        |
+| Cross-season accounts  | Confirmed: accounts and profile data persist season to season, backed by a CricClubs import                                                                                    | No change — reinforces the `people`/`users` split in §6                                                          |
+| Historic data source   | Still unexplored how to export from CricClubs                                                                                                                                  | The Phase 2 import spike (§8) now covers this too                                                                |
 
 ### 1.2 The 2026–27 rule book (2026-08-21)
 
@@ -72,7 +72,7 @@ Playoff eligibility is by league-stage table position regardless of matches actu
 
 **New operational rules that affect the build:**
 
-- **Player-misuse penalty is a manual override, not a pure recompute.** If a team is found to have used an ineligible player, the committee can award the opponent the win/points (no NRR change) or deduct 20 runs from the offending team (which *does* change NRR), entirely at committee discretion. Since §6 says stats are "derived, never hand-edited," this needs an explicit exception: an `standings_adjustment` (or similar) row an admin can apply on top of the computed numbers, logged like everything else in `audit_log`.
+- **Player-misuse penalty is a manual override, not a pure recompute.** If a team is found to have used an ineligible player, the committee can award the opponent the win/points (no NRR change) or deduct 20 runs from the offending team (which _does_ change NRR), entirely at committee discretion. Since §6 says stats are "derived, never hand-edited," this needs an explicit exception: an `standings_adjustment` (or similar) row an admin can apply on top of the computed numbers, logged like everything else in `audit_log`.
 - **Roster additions have a recurring weekly deadline** (Friday), not a one-time cutoff before the season — new players must be added by Friday to be eligible that weekend. Worth a soft warning on the captain's roster screen rather than a hard gate, unless the committee wants it enforced.
 - **Import cadence is now concrete.** Captains are expected to have scores entered in CricClubs "by the following Monday" after a weekend's matches — so the Phase 2 weekly import should run Monday evening/Tuesday morning, not on an arbitrary schedule.
 - **Forfeit rule** for CIL-scheduled (not mutually rescheduled) matches: if one team is ready and the other isn't, the ready team gets the win and points with no NRR change, provided they have ≥6 players present with photo evidence. Exception: unavailability from a clashing ACL playoff match.
@@ -85,22 +85,22 @@ Playoff eligibility is by league-stage table position regardless of matches actu
 
 ## 2. TL;DR
 
-| Decision | Recommendation |
-|---|---|
-| App | One **Next.js (App Router) + TypeScript** app — public site, member portal and admin console in a single codebase |
-| Hosting | **Vercel**, region `iad1` (Virginia). Free Hobby to start — see the licensing note in §12 |
-| Database | **Postgres on Neon** (free tier, DB branching) — Supabase if you'd rather bundle auth + storage |
-| ORM | **Prisma** — one declarative schema file, the largest documentation corpus, best AI-assist accuracy |
-| Auth | **Magic-link / email OTP**, no passwords — Auth.js (free) or Clerk (free ≤10k MAU) |
-| File storage | **Cloudflare R2** (zero egress) or Supabase Storage |
-| Email (outbound) | **Resend** + React Email templates; AWS SES if volume outgrows the free tier |
-| Inbox (inbound) | **Cloudflare Email Routing** — free forwarding of `info@` to all admins' existing mailboxes |
-| Domain/DNS/CDN | **Cloudflare Registrar** (at cost, ~$11/yr) + Cloudflare DNS |
-| Scheduled jobs | **Vercel Cron** → route handlers |
-| Search (Ph. 3) | **Postgres full-text search** — do *not* add Algolia/Typesense at this size |
-| Weather (Ph. 3) | **api.weather.gov** (NWS — free, no key, US-only), Open-Meteo as fallback |
-| Mobile (long term) | **PWA + Web Push first**, then **Expo (React Native)** against a versioned `/api/v1` |
-| Errors/analytics | Sentry (free tier) + Vercel Analytics |
+| Decision           | Recommendation                                                                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| App                | One **Next.js (App Router) + TypeScript** app — public site, member portal and admin console in a single codebase |
+| Hosting            | **Vercel**, region `iad1` (Virginia). Free Hobby to start — see the licensing note in §12                         |
+| Database           | **Postgres on Neon** (free tier, DB branching) — Supabase if you'd rather bundle auth + storage                   |
+| ORM                | **Prisma** — one declarative schema file, the largest documentation corpus, best AI-assist accuracy               |
+| Auth               | **Magic-link / email OTP**, no passwords — Auth.js (free) or Clerk (free ≤10k MAU)                                |
+| File storage       | **Cloudflare R2** (zero egress) or Supabase Storage                                                               |
+| Email (outbound)   | **Resend** + React Email templates; AWS SES if volume outgrows the free tier                                      |
+| Inbox (inbound)    | **Cloudflare Email Routing** — free forwarding of `info@` to all admins' existing mailboxes                       |
+| Domain/DNS/CDN     | **Cloudflare Registrar** (at cost, ~$11/yr) + Cloudflare DNS                                                      |
+| Scheduled jobs     | **Vercel Cron** → route handlers                                                                                  |
+| Search (Ph. 3)     | **Postgres full-text search** — do _not_ add Algolia/Typesense at this size                                       |
+| Weather (Ph. 3)    | **api.weather.gov** (NWS — free, no key, US-only), Open-Meteo as fallback                                         |
+| Mobile (long term) | **PWA + Web Push first**, then **Expo (React Native)** against a versioned `/api/v1`                              |
+| Errors/analytics   | Sentry (free tier) + Vercel Analytics                                                                             |
 
 **Run cost: $0–8/month for Phase 1** (domain amortised), **$10–30/month at full Phase 3.**
 
@@ -116,7 +116,7 @@ Given your Aug 31 date, §10 splits Phase 1 so that only the genuinely date-crit
 
 ### Build vs. buy, stated once
 
-CricClubs is itself a league-management platform: if you score there, you already get a public league page with fixtures, standings and scorecards for free. Your site's value is everything CricClubs *doesn't* do well — your own branding and domain, the registration and approval workflow, the umpiring-team rotation, availability RSVPs, the sponsor and photo archive, the notice board, and one continuous home for 2013-onward history that survives you changing scoring platforms again. That's a real set of reasons, and it maps exactly onto your phases. Worth confirming with the committee once, then not revisiting.
+CricClubs is itself a league-management platform: if you score there, you already get a public league page with fixtures, standings and scorecards for free. Your site's value is everything CricClubs _doesn't_ do well — your own branding and domain, the registration and approval workflow, the umpiring-team rotation, availability RSVPs, the sponsor and photo archive, the notice board, and one continuous home for 2013-onward history that survives you changing scoring platforms again. That's a real set of reasons, and it maps exactly onto your phases. Worth confirming with the committee once, then not revisiting.
 
 ---
 
@@ -142,22 +142,22 @@ This is the input that most changes my recommendations, so it's worth being expl
 
 ### The stack, with alternatives
 
-| Concern | Choice | Why | Alternative |
-|---|---|---|---|
-| Framework | Next.js App Router | One codebase for public + portal + admin; server components make public pages cheap and cacheable; best-documented option | Remix, SvelteKit, Astro+API |
-| Rendering | SSG/ISR public, dynamic portal | Fixtures & scorecards regenerate on import, then serve from CDN | Full SSR (simpler, marginally slower) |
-| UI | Tailwind + **shadcn/ui** (Radix) | Accessible by default — keyboard nav, focus management, ARIA. You own the code, no lock-in | MUI, Mantine |
-| DB | Postgres | Stats queries are inherently relational; full-text search built in; JSONB for raw import payloads | Nothing else is a serious contender. Avoid document stores here |
-| DB host | **Neon** free tier | Real Postgres, generous free tier, DB branching pairs with Vercel preview deploys | Supabase (bundles auth+storage), Vercel Postgres |
-| ORM | **Prisma** | See above | Drizzle if the team turns out to prefer SQL-shaped code |
-| Auth | Magic link / email OTP | Your invite flow *is* magic links. 500 casual users will not remember passwords, and you have no support desk | Clerk if you want it done in an afternoon; add Google sign-in later if asked |
-| Authorization | App-layer `can()` | Explicit, testable, reviewable | Postgres RLS as later defence-in-depth |
-| Email out | **Resend** | 3k/mo free, React Email templates live in the repo, good deliverability | AWS SES (~$0.10/1k, cheapest, more setup) once bulk fixture emails start |
-| Inbox in | **Cloudflare Email Routing** | Genuinely free; forwards `info@yourleague.com` to all six admins' existing inboxes | Zoho Mail free (5 mailboxes, webmail only); Google Workspace $7/mo/seat |
-| Storage | **Cloudflare R2** | Zero egress fees — matters for Phase 3 photo galleries | Supabase Storage; Cloudinary free tier for auto-transforms |
-| Jobs | Vercel Cron | Free, built in, sufficient for weekly imports and reminder digests | Inngest if imports become multi-step workflows needing retries |
-| Search | Postgres `tsvector` + GIN | 500 players, 15 teams, a few hundred matches | Typesense only if the rules corpus explodes |
-| Weather | **api.weather.gov** | Official NWS, free, no key, no rate limit worth worrying about, US-only (fine — you're in Georgia) | Open-Meteo (free, global) as fallback |
+| Concern       | Choice                           | Why                                                                                                                       | Alternative                                                                  |
+| ------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Framework     | Next.js App Router               | One codebase for public + portal + admin; server components make public pages cheap and cacheable; best-documented option | Remix, SvelteKit, Astro+API                                                  |
+| Rendering     | SSG/ISR public, dynamic portal   | Fixtures & scorecards regenerate on import, then serve from CDN                                                           | Full SSR (simpler, marginally slower)                                        |
+| UI            | Tailwind + **shadcn/ui** (Radix) | Accessible by default — keyboard nav, focus management, ARIA. You own the code, no lock-in                                | MUI, Mantine                                                                 |
+| DB            | Postgres                         | Stats queries are inherently relational; full-text search built in; JSONB for raw import payloads                         | Nothing else is a serious contender. Avoid document stores here              |
+| DB host       | **Neon** free tier               | Real Postgres, generous free tier, DB branching pairs with Vercel preview deploys                                         | Supabase (bundles auth+storage), Vercel Postgres                             |
+| ORM           | **Prisma**                       | See above                                                                                                                 | Drizzle if the team turns out to prefer SQL-shaped code                      |
+| Auth          | Magic link / email OTP           | Your invite flow _is_ magic links. 500 casual users will not remember passwords, and you have no support desk             | Clerk if you want it done in an afternoon; add Google sign-in later if asked |
+| Authorization | App-layer `can()`                | Explicit, testable, reviewable                                                                                            | Postgres RLS as later defence-in-depth                                       |
+| Email out     | **Resend**                       | 3k/mo free, React Email templates live in the repo, good deliverability                                                   | AWS SES (~$0.10/1k, cheapest, more setup) once bulk fixture emails start     |
+| Inbox in      | **Cloudflare Email Routing**     | Genuinely free; forwards `info@yourleague.com` to all six admins' existing inboxes                                        | Zoho Mail free (5 mailboxes, webmail only); Google Workspace $7/mo/seat      |
+| Storage       | **Cloudflare R2**                | Zero egress fees — matters for Phase 3 photo galleries                                                                    | Supabase Storage; Cloudinary free tier for auto-transforms                   |
+| Jobs          | Vercel Cron                      | Free, built in, sufficient for weekly imports and reminder digests                                                        | Inngest if imports become multi-step workflows needing retries               |
+| Search        | Postgres `tsvector` + GIN        | 500 players, 15 teams, a few hundred matches                                                                              | Typesense only if the rules corpus explodes                                  |
+| Weather       | **api.weather.gov**              | Official NWS, free, no key, no rate limit worth worrying about, US-only (fine — you're in Georgia)                        | Open-Meteo (free, global) as fallback                                        |
 
 ---
 
@@ -293,7 +293,7 @@ erDiagram
 **Modelling notes**
 
 - Keep `people` separate from `users`. Most of your 500 players will never log in, and none of the historic ones will.
-- "Captain" is not a global role — it's `roster_entries.role = 'captain'` on a specific `team_season`. Likewise a person is an umpire *for a match*, not permanently.
+- "Captain" is not a global role — it's `roster_entries.role = 'captain'` on a specific `team_season`. Likewise a person is an umpire _for a match_, not permanently.
 - Store `matches.starts_at` in UTC and render in `America/New_York`. Atlanta observes DST; a season spanning March and November will otherwise drift by an hour. Never store local wall-clock time.
 - Keep the raw third-party payload in `import_staging` as JSONB forever. When your parser has a bug in 2028, replay 2026 without re-fetching.
 - `external_ref` on `matches`, `teams`, `people` makes imports idempotent upserts rather than duplicate factories.
@@ -302,13 +302,13 @@ erDiagram
 
 ## 7. Auth and access control
 
-| Role | Scope | Can do |
-|---|---|---|
-| Public (no login) | — | Read everything public: fixtures, scorecards, stats, notices, rules, photos, sponsors |
-| Player | own person + team_season | Edit own profile & photo, set availability (Ph. 3), view team calendar |
-| Captain | one team_season | Player rights, plus: manage roster (including their own players' emails/phones — confirmed by committee, §1.1), send/revoke invites, edit team name & logo, assign umpires when their team is officiating, view team availability |
-| Admin | one season | Approve registrations, open/close/extend registration, manage fixtures & venues, run imports, post notices, upload photos, manage sponsors & committee |
-| Super admin | global | All of the above + create seasons, manage admins, archive seasons |
+| Role              | Scope                    | Can do                                                                                                                                                                                                                            |
+| ----------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public (no login) | —                        | Read everything public: fixtures, scorecards, stats, notices, rules, photos, sponsors                                                                                                                                             |
+| Player            | own person + team_season | Edit own profile & photo, set availability (Ph. 3), view team calendar                                                                                                                                                            |
+| Captain           | one team_season          | Player rights, plus: manage roster (including their own players' emails/phones — confirmed by committee, §1.1), send/revoke invites, edit team name & logo, assign umpires when their team is officiating, view team availability |
+| Admin             | one season               | Approve registrations, open/close/extend registration, manage fixtures & venues, run imports, post notices, upload photos, manage sponsors & committee                                                                            |
+| Super admin       | global                   | All of the above + create seasons, manage admins, archive seasons                                                                                                                                                                 |
 
 **Enforcement:** every service function opens with an explicit `can()` check. Never rely on a hidden UI button. Public read paths bypass auth entirely so they stay CDN-cacheable.
 
@@ -406,12 +406,12 @@ Your registration date is the only immovable object here, so Phase 1 splits in t
 
 Scope is deliberately tiny. This is roughly two weeks of work for a small team.
 
-| Window | Work |
-|---|---|
-| Aug 16–22 | Domain purchased (targeted this week), Cloudflare DNS, Resend domain verified (SPF/DKIM/DMARC), repo + CI + Vercel + Neon wired, Prisma schema for seasons/registrations/users, `CLAUDE.md` and conventions written (§11). Admin inbox stays on the existing `CILcommittee@gmail.com` for now — no new mailbox needed |
-| Aug 23–29 | Landing page: CIL Winter League 2026–2027 info (T15, starts Oct 24), fee ($650/$800 — pending tier clarification), tentative dates, sponsors placeholder, contact/committee page. Registration form (team name, captain first/last name, email, mobile) → DB, with Cloudflare Turnstile. Confirmation/payment-reminder email to captain + notification to admin inbox. Minimal admin console: magic-link login for 5 admin accounts, list submissions, export CSV |
-| Aug 29–30 | Accessibility pass, mobile QA, load-test the form once, dry-run a submission end to end |
-| **Aug 31** | **Registration opens** |
+| Window     | Work                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aug 16–22  | Domain purchased (targeted this week), Cloudflare DNS, Resend domain verified (SPF/DKIM/DMARC), repo + CI + Vercel + Neon wired, Prisma schema for seasons/registrations/users, `CLAUDE.md` and conventions written (§11). Admin inbox stays on the existing `CILcommittee@gmail.com` for now — no new mailbox needed                                                                                                                                             |
+| Aug 23–29  | Landing page: CIL Winter League 2026–2027 info (T15, starts Oct 24), fee ($650/$800 — pending tier clarification), tentative dates, sponsors placeholder, contact/committee page. Registration form (team name, captain first/last name, email, mobile) → DB, with Cloudflare Turnstile. Confirmation/payment-reminder email to captain + notification to admin inbox. Minimal admin console: magic-link login for 5 admin accounts, list submissions, export CSV |
+| Aug 29–30  | Accessibility pass, mobile QA, load-test the form once, dry-run a submission end to end                                                                                                                                                                                                                                                                                                                                                                           |
+| **Aug 31** | **Registration opens**                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 Everything else waits. No auth beyond admin login, no portal, no rosters.
 
@@ -428,7 +428,7 @@ Then: magic-link auth for members → invite issuance and resend → captain por
 
 Venues (with lat/long) → fixtures CRUD + bulk CSV upload → umpiring team assignment → captain's umpire-selection screen → notification events wired up → scoring adapter + import review UI → match/team/player pages → standings.
 
-Run the scoring-platform spike (§8) *before* this phase starts, not inside it.
+Run the scoring-platform spike (§8) _before_ this phase starts, not inside it.
 
 ### Phase 3 — archive, search, availability, calendar
 
@@ -465,18 +465,18 @@ Five or six people with AI assistance and no shared stack background will produc
 
 ## 12. Cost
 
-| Item | Phase 1 | Full Phase 3 | Free alternative |
-|---|---|---|---|
-| Domain `.com` | ~$11/yr | ~$11/yr | None — this is the one unavoidable cost |
-| Cloudflare DNS + CDN + Turnstile | $0 | $0 | — |
-| Cloudflare Email Routing (`info@`) | $0 | $0 | — |
-| Vercel | $0 (Hobby) | $0–20/mo | See note below |
-| Neon Postgres | $0 | $0–19/mo | Free tier is very likely enough forever at your size |
-| Cloudflare R2 | $0 | ~$0–3/mo | 10 GB free; galleries may exceed it by Phase 3 |
-| Resend | $0 (3k/mo, 100/day) | $0–20/mo | AWS SES ≈ $0.10/1k — effectively free, more setup |
-| Sentry | $0 | $0 | — |
-| Weather (NWS) | — | $0 | — |
-| **Total** | **≈ $1/mo** | **≈ $0–30/mo** | |
+| Item                               | Phase 1             | Full Phase 3   | Free alternative                                     |
+| ---------------------------------- | ------------------- | -------------- | ---------------------------------------------------- |
+| Domain `.com`                      | ~$11/yr             | ~$11/yr        | None — this is the one unavoidable cost              |
+| Cloudflare DNS + CDN + Turnstile   | $0                  | $0             | —                                                    |
+| Cloudflare Email Routing (`info@`) | $0                  | $0             | —                                                    |
+| Vercel                             | $0 (Hobby)          | $0–20/mo       | See note below                                       |
+| Neon Postgres                      | $0                  | $0–19/mo       | Free tier is very likely enough forever at your size |
+| Cloudflare R2                      | $0                  | ~$0–3/mo       | 10 GB free; galleries may exceed it by Phase 3       |
+| Resend                             | $0 (3k/mo, 100/day) | $0–20/mo       | AWS SES ≈ $0.10/1k — effectively free, more setup    |
+| Sentry                             | $0                  | $0             | —                                                    |
+| Weather (NWS)                      | —                   | $0             | —                                                    |
+| **Total**                          | **≈ $1/mo**         | **≈ $0–30/mo** |                                                      |
 
 **One licensing caveat you should decide on deliberately:** Vercel's Hobby plan is for personal, non-commercial use. A league site that collects registration fees and displays sponsor logos is arguably commercial. Three honest options:
 
@@ -484,7 +484,7 @@ Five or six people with AI assistance and no shared stack background will produc
 2. **Cloudflare Workers/Pages free tier**, which explicitly permits commercial use and is genuinely generous. Next.js runs there via `@opennextjs/cloudflare`, but the path is less trodden than Vercel's — meaning more friction for a Claude-assisted team.
 3. **Start on Hobby**, keep the app portable (nothing in §5 is Vercel-specific except the cron routes), and move if it ever becomes an issue.
 
-**A truly free inbox:** Cloudflare Email Routing forwards `info@yourleague.com` to all six admins' existing personal inboxes at no cost. Its one limitation is that it's receive-only — replying *as* `info@` needs an SMTP sender. For Phase 1, admins replying from their own addresses is fine. If the committee wants a proper shared mailbox later, Zoho Mail's free plan covers 5 mailboxes (webmail only), and Google Workspace is $7/mo for one seat with group aliases.
+**A truly free inbox:** Cloudflare Email Routing forwards `info@yourleague.com` to all six admins' existing personal inboxes at no cost. Its one limitation is that it's receive-only — replying _as_ `info@` needs an SMTP sender. For Phase 1, admins replying from their own addresses is fine. If the committee wants a proper shared mailbox later, Zoho Mail's free plan covers 5 mailboxes (webmail only), and Google Workspace is $7/mo for one seat with group aliases.
 
 ---
 
@@ -498,7 +498,7 @@ Five or six people with AI assistance and no shared stack background will produc
 
 **SEO and sharing** — one page per team, player, match and season, with dynamic OpenGraph images. A match-result card that renders properly when pasted into a group chat is the highest-leverage 200 lines in the project.
 
-**Backups** — Neon provides point-in-time recovery, but also run a monthly `pg_dump` to storage *you personally control*. A season's scorecards are irreplaceable and a free-tier account is not a backup strategy.
+**Backups** — Neon provides point-in-time recovery, but also run a monthly `pg_dump` to storage _you personally control_. A season's scorecards are irreplaceable and a free-tier account is not a backup strategy.
 
 **Privacy (US)** — no GDPR, and Georgia has no comprehensive consumer privacy statute, so your obligations are lighter than in v1 of this document. That is a floor, not a target. You're storing names, emails, phone numbers and photos of ~500 people, so: publish a plain privacy policy, state a retention period, offer a deletion path. **Player emails and phone numbers are visible to committee and to the player's own captain only** (confirmed §1.1) — never public. Phase 2's "contact the umpire" feature reveals a number only to logged-in members of the teams in that fixture.
 
@@ -512,16 +512,16 @@ Five or six people with AI assistance and no shared stack background will produc
 
 ## 14. Risks
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Neither CricClubs nor Stumps exports usable data | Phase 2 core feature blocked | Run the spike early (§8); build CSV + manual entry first; treat any API as a bonus |
-| Aug 31 registration date slips | League's season timeline slips | Phase 1a scope is frozen and tiny (§10); everything else moves, this doesn't |
-| 13 years of historic data is messier than remembered | Phase 3 slips badly | Timebox it; import newest-first; accept partial history; build the name-mapping queue early |
-| Invite emails land in spam | Captains can't onboard, in the one week it matters | SPF/DKIM/DMARC before launch; resend button; copyable raw invite link |
-| Codebase drifts across 5–6 AI-assisted contributors | Unmaintainable within a season | §11 guardrails in week one, CI-enforced, plus mandatory human review |
-| Bus factor of one | Project dies | Boring stack, managed services, no bespoke infra, a README a stranger can follow, and at least two people holding every credential |
-| Phase 3 scope creeps into Phase 1 | Miss the registration window | Hard freeze on Phase 1a. Write down the good ideas; ship them in October |
-| Standings tie-break algorithm implemented wrong | Wrong team gets a playoff spot — high-visibility bug | The five-level cascade in §1.2 needs dedicated test cases (points, NRR, head-to-head, most-wins, wickets) before it ever runs on real data |
+| Risk                                                 | Impact                                               | Mitigation                                                                                                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Neither CricClubs nor Stumps exports usable data     | Phase 2 core feature blocked                         | Run the spike early (§8); build CSV + manual entry first; treat any API as a bonus                                                         |
+| Aug 31 registration date slips                       | League's season timeline slips                       | Phase 1a scope is frozen and tiny (§10); everything else moves, this doesn't                                                               |
+| 13 years of historic data is messier than remembered | Phase 3 slips badly                                  | Timebox it; import newest-first; accept partial history; build the name-mapping queue early                                                |
+| Invite emails land in spam                           | Captains can't onboard, in the one week it matters   | SPF/DKIM/DMARC before launch; resend button; copyable raw invite link                                                                      |
+| Codebase drifts across 5–6 AI-assisted contributors  | Unmaintainable within a season                       | §11 guardrails in week one, CI-enforced, plus mandatory human review                                                                       |
+| Bus factor of one                                    | Project dies                                         | Boring stack, managed services, no bespoke infra, a README a stranger can follow, and at least two people holding every credential         |
+| Phase 3 scope creeps into Phase 1                    | Miss the registration window                         | Hard freeze on Phase 1a. Write down the good ideas; ship them in October                                                                   |
+| Standings tie-break algorithm implemented wrong      | Wrong team gets a playoff spot — high-visibility bug | The five-level cascade in §1.2 needs dedicated test cases (points, NRR, head-to-head, most-wins, wickets) before it ever runs on real data |
 
 ---
 
@@ -537,7 +537,7 @@ Two rounds of committee answers are folded into §1.1. What's left is short.
 
 ### Needed before Phase 2's import spike
 
-4. **How to export data from CricClubs** — the Phase 2 import spike (§8), which now needs to answer this for the *live* season feed as well as the historic backfill. The playoff bracket and points/tie-break rules are now fully resolved (§1.2) and no longer block this.
+4. **How to export data from CricClubs** — the Phase 2 import spike (§8), which now needs to answer this for the _live_ season feed as well as the historic backfill. The playoff bracket and points/tie-break rules are now fully resolved (§1.2) and no longer block this.
 
 ### Worth a deliberate decision before Phase 2 player pages ship
 
