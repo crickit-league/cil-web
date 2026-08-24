@@ -4,7 +4,7 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 ## Where we are
 
-**Scaffold is up.** Landing page (Phase 1a content) renders; registration form is wired to a real database write, but two integration points are still stubs (see below). Nothing is deployed yet.
+**Deployed to Vercel.** Landing page (Phase 1a content) renders live on the `*.vercel.app` URL; registration form is wired to a real database write, but two integration points are still stubs (see below), and the database itself is still a placeholder — submitting the form will 500 until Neon is real.
 
 ## Done
 
@@ -18,11 +18,13 @@ Living doc. Update this whenever you finish a session's work so the next person 
 - Registration form (`src/app/(public)/registration-form.tsx`) is a real client component with a server action (`actions.ts`) that validates with Zod and writes to Postgres via the service layer (`src/lib/services/registrations.ts`) — genuinely functional the moment `DATABASE_URL`/`DATABASE_URL_UNPOOLED` point at a real database.
 - CI workflow (`.github/workflows/ci.yml`): format check, lint, typecheck, build on every push/PR.
 - `npm run format|lint|typecheck|build` all pass clean as of this writing.
+- **Vercel project live**, deployed under the `crickit-league` Team (not a personal account), tracking `main`. `DATABASE_URL`/`DATABASE_URL_UNPOOLED` are set to placeholder values there so builds succeed — real values still needed (see Blocking).
+- Domain decided: `crickitinterleague.org`, being purchased via Cloudflare Registrar (signed up with a personal email to sidestep the CILcommittee@gmail.com access problem — see `docs/service-setup.md` for why).
 
 ## Blocking
 
-- **Domain not purchased yet** (last checked 2026-08-21). Nothing in email verification (Resend/SPF/DKIM/DMARC) can start until this lands.
-- **No real Neon database yet** — `.env` has placeholder values only. Registration form will 500 until `DATABASE_URL`/`DATABASE_URL_UNPOOLED` are real and a `Season` row with `status: REGISTRATION_OPEN` exists.
+- **Real Neon database** — `.env` / Vercel env vars have placeholder values only. Registration form will 500 until `DATABASE_URL`/`DATABASE_URL_UNPOOLED` are real and a `Season` row with `status: REGISTRATION_OPEN` exists. This no longer depends on the domain — do it any time.
+- **Domain DNS/mail** — once `crickitinterleague.org` is purchased, still need: Cloudflare Email Routing (or Zoho) for `mail@crickitinterleague.org`, the domain added to Vercel, and Resend/Turnstile set up against it. See `docs/service-setup.md`.
 
 ## Explicitly not done yet — don't assume otherwise
 
@@ -38,8 +40,9 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 ## Next up
 
-1. Work through [docs/service-setup.md](service-setup.md) — domain purchase, Vercel, Neon, Resend, Turnstile, Auth secret, Sentry.
-2. Real Neon database + a seed script (at minimum: one `Season` row with registration open).
-3. Wire up Cloudflare Turnstile on the registration form.
-4. Wire up Resend for the two confirmation emails.
-5. Magic-link admin auth + a minimal console to list/approve/export registrations.
+1. **Neon** ([docs/service-setup.md](service-setup.md) §3) — set up the real database, put real values in Vercel's env vars, redeploy.
+2. A seed script / manual insert: at minimum one `Season` row with `status: REGISTRATION_OPEN`, otherwise the form has nothing to attach to even with a real database.
+3. Finish the domain: buy it if not done, then Email Routing/Zoho for `mail@crickitinterleague.org`, add the domain in Vercel → Settings → Domains, Resend domain verification, Cloudflare Turnstile.
+4. Wire up Cloudflare Turnstile on the registration form (code side — keys can be generated any time per step 3 above, but the form doesn't call it yet).
+5. Wire up Resend for the two confirmation emails (also code side).
+6. Magic-link admin auth + a minimal console to list/approve/export registrations.
