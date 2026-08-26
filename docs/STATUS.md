@@ -4,7 +4,7 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 ## Where we are
 
-**Live and fully functional end to end.** Landing page renders on Vercel Production; the registration form writes real rows to the real Neon `production` branch — verified by submitting through the live site and confirming the row, twice (once to catch a database mismatch, see below).
+**Live and fully functional end to end, with a real three-tier environment setup.** Landing page renders on Vercel Production; the registration form writes real rows to the real Neon `production` branch. PR previews and the persistent `main` "dev" deployment each get their own Neon branch automatically via the Neon-Vercel integration, isolated from production data. Local dev is pointed at the dev branch (`preview/main`), not production.
 
 ## Done
 
@@ -18,8 +18,9 @@ Living doc. Update this whenever you finish a session's work so the next person 
 - Registration form (`src/app/(public)/registration-form.tsx`) is a real client component with a server action (`actions.ts`) that validates with Zod and writes to Postgres via the service layer (`src/lib/services/registrations.ts`).
 - CI workflow (`.github/workflows/ci.yml`): format check, lint, typecheck, build on every push/PR.
 - `npm run format|lint|typecheck|build` all pass clean as of this writing.
-- **Vercel project live** under the `crickit-league` Team (not a personal account), tracking `main`.
-- **Neon database live**, migration applied, seeded with the 2026-27 season (`REGISTRATION_OPEN`). Two branches exist — `production` (real, what Vercel Prod/Preview use) and `vercel-dev` (Vercel Dev only) — see `docs/service-setup.md` §3's branch-topology note before touching env var scopes; getting this wrong doesn't error, it just silently writes data to the wrong place.
+- **Vercel project live** under the `crickit-league` Team (not a personal account). **Two git branches**: `main` (everyday work, PRs merge here) and `production` (the actual Vercel Production Branch — a deliberate release gate, not auto-deployed). Releasing = merging `main` → `production`.
+- **Neon database live**, migration applied, seeded with the 2026-27 season (`REGISTRATION_OPEN`). Three-tier branch topology via the Neon-Vercel integration: `production` (Neon Default branch, real data) ↔ Vercel Production only; `preview/main` (persistent, since `main` never merges/deletes) ↔ the always-on `main` dev deployment, and also what local `.env` should point at; every PR branch gets its own auto-created, auto-deleted Neon branch. **Full details, and why you must never manually set a Preview/Development-scoped `DATABASE_URL`, in `docs/service-setup.md` §3** — getting this wrong doesn't error, it silently writes data to the wrong place, and it took three rounds of debugging to nail down on 2026-08-26.
+- The original manually-created `vercel-dev` Neon branch is obsolete now that `preview/main` serves that role — safe to delete whenever, nothing references it.
 - Domain decided: `crickitinterleague.org`, purchase in progress via Cloudflare Registrar.
 
 ## Blocking
