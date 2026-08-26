@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/db/prisma";
 import { registrationSchema, type RegistrationInput } from "@/lib/validation/registration";
+import { can, type SessionUser } from "@/lib/auth/permissions";
+
+export class ForbiddenError extends Error {
+  constructor() {
+    super("You do not have permission to perform this action.");
+    this.name = "ForbiddenError";
+  }
+}
 
 export class NoOpenSeasonError extends Error {
   constructor() {
@@ -34,5 +42,20 @@ export async function submitRegistration(input: RegistrationInput) {
       captainEmail: data.captainEmail,
       captainMobile: data.captainMobile,
     },
+  });
+}
+
+/**
+ * Lists all registrations, most recent first, for the admin console.
+ * No review/approve workflow yet (Phase 1b) — this is read-only.
+ */
+export async function listRegistrations(user: SessionUser) {
+  if (!can(user, "access-admin-console")) {
+    throw new ForbiddenError();
+  }
+
+  return prisma.registration.findMany({
+    include: { season: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
   });
 }

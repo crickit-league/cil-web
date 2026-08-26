@@ -22,6 +22,7 @@ Living doc. Update this whenever you finish a session's work so the next person 
 - **Neon database live**, migration applied, seeded with the 2026-27 season (`REGISTRATION_OPEN`). Three-tier branch topology via the Neon-Vercel integration: `production` (Neon Default branch, real data) ↔ Vercel Production only; `preview/main` (persistent, since `main` never merges/deletes) ↔ the always-on `main` dev deployment, and also what local `.env` should point at; every PR branch gets its own auto-created, auto-deleted Neon branch. **Full details, and why you must never manually set a Preview/Development-scoped `DATABASE_URL`, in `docs/service-setup.md` §3** — getting this wrong doesn't error, it silently writes data to the wrong place, and it took three rounds of debugging to nail down on 2026-08-26.
 - The original manually-created `vercel-dev` Neon branch is obsolete now that `preview/main` serves that role — safe to delete whenever, nothing references it.
 - Domain decided: `crickitinterleague.org`, purchase in progress via Cloudflare Registrar.
+- **Magic-link admin auth + a gated admin console**, on `feature/admin-auth`. Auth.js v5 (`next-auth@beta`) with `@auth/prisma-adapter`, `Resend` email provider, database sessions. New Prisma models: `User`, `UserRole` (role + scope, see `docs/architecture.md` §6 for why it's not an enum on `User`), plus the standard Auth.js `Account`/`Session`/`VerificationToken` tables — migration `20260826071359_add_auth_and_roles`. `src/lib/auth/permissions.ts` has the `can(user, action)` check CLAUDE.md requires; `(admin)/admin/layout.tsx` gates the whole console on it server-side. `RESEND_API_KEY` is still empty (domain not verified yet — see Blocking below), so `src/lib/auth/send-magic-link.ts` falls back to logging the link to the console in dev; this must not be relied on once real admins are using it. First admin seeded via `npm run admin:promote -- <email>` (lowercase the email — Auth.js normalizes to lowercase on sign-in, so a mixed-case seed creates an orphaned second `User` row instead of matching); `CILcommittee@gmail.com` is seeded on the dev branch. The admin page itself just lists registrations read-only (`listRegistrations` in `src/lib/services/registrations.ts`) — no approve/reject yet, that's still Phase 1b.
 
 ## Blocking
 
@@ -31,7 +32,7 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 - **No bot protection** on the registration form (Cloudflare Turnstile) — flagged with a `TODO` in `actions.ts`. Needed before this goes live to real users.
 - **No confirmation/payment-reminder email** (Resend) — also `TODO`'d in `actions.ts`. See architecture.md §9 for the two-separate-emails design (submission receipt vs. post-approval invite).
-- **No admin console, no auth** (magic links). Nobody can currently approve/reject a submitted registration except by querying the database directly. This is the next major chunk of work.
+- **No approve/reject workflow.** The new admin console (see above) can only list registrations, not act on them — that plus invite issuance is Phase 1b.
 
 ## Open questions (don't re-ask, don't guess — see CLAUDE.md for full context)
 
@@ -43,4 +44,4 @@ Living doc. Update this whenever you finish a session's work so the next person 
 1. Finish the domain: buy it if not done, then Email Routing/Zoho for `mail@crickitinterleague.org`, add the domain in Vercel → Settings → Domains, Resend domain verification, Cloudflare Turnstile.
 2. Wire up Cloudflare Turnstile on the registration form (code side — keys can be generated any time per step 1 above, but the form doesn't call it yet).
 3. Wire up Resend for the two confirmation emails (also code side).
-4. Magic-link admin auth + a minimal console to list/approve/export registrations.
+4. Admin console: approve/reject registrations, export CSV. Auth + read-only listing are done (see above).
