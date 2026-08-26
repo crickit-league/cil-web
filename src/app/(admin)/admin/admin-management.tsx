@@ -14,6 +14,20 @@ type AdminAccount = {
 
 const initialState: GrantAdminState = { status: "idle" };
 
+function RevokeButton({ userRoleId }: { userRoleId: string }) {
+  return (
+    <form action={revokeAdminAction}>
+      <input type="hidden" name="userRoleId" value={userRoleId} />
+      <button
+        type="submit"
+        className="font-data text-clay-bright hover:text-clay-bright text-xs tracking-[0.08em] uppercase underline-offset-2 transition-colors hover:underline"
+      >
+        Revoke
+      </button>
+    </form>
+  );
+}
+
 export function AdminManagement({
   admins,
   currentUserId,
@@ -33,7 +47,33 @@ export function AdminManagement({
         </p>
       </div>
 
-      <div className="border-line overflow-x-auto border">
+      {/* Cards below `sm` — five columns don't fit a phone. See docs/architecture.md §13. */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {admins.map((admin) => (
+          <div key={admin.userRoleId} className="border-line bg-dugout border p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-medium">{admin.name || admin.email}</div>
+                {admin.name ? <div className="text-chalk-dim text-sm">{admin.email}</div> : null}
+              </div>
+              <span className="font-data text-chalk-dim shrink-0 text-[0.62rem] tracking-[0.08em] uppercase">
+                {admin.role}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.05em] uppercase">
+                Granted {admin.grantedAt.toLocaleDateString()}
+              </span>
+              {admin.role === "ADMIN" && admin.userId !== currentUserId ? (
+                <RevokeButton userRoleId={admin.userRoleId} />
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table at `sm` and up. */}
+      <div className="border-line hidden overflow-x-auto border sm:block">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="font-data border-line text-chalk-dim border-b text-[0.68rem] tracking-[0.1em] uppercase">
@@ -53,15 +93,7 @@ export function AdminManagement({
                 <td className="text-chalk-dim px-4 py-3">{admin.grantedAt.toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-right">
                   {admin.role === "ADMIN" && admin.userId !== currentUserId ? (
-                    <form action={revokeAdminAction}>
-                      <input type="hidden" name="userRoleId" value={admin.userRoleId} />
-                      <button
-                        type="submit"
-                        className="font-data text-clay-bright hover:text-clay-bright text-xs tracking-[0.08em] uppercase underline-offset-2 transition-colors hover:underline"
-                      >
-                        Revoke
-                      </button>
-                    </form>
+                    <RevokeButton userRoleId={admin.userRoleId} />
                   ) : null}
                 </td>
               </tr>
