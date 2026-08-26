@@ -45,7 +45,7 @@ export function UserMenu() {
         aria-expanded={open}
         className="font-data text-chalk-dim hover:text-chalk max-w-[10rem] truncate text-xs tracking-[0.1em] uppercase transition-colors"
       >
-        {session.user.email}
+        {session.user.name || session.user.email}
       </button>
 
       {open ? (

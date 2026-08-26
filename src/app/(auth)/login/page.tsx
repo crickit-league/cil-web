@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth";
+import { getPostSignInRedirect } from "@/lib/services/users";
 
 export default function LoginPage({
   searchParams,
@@ -19,7 +20,8 @@ export default function LoginPage({
           "use server";
           const email = formData.get("email");
           if (typeof email !== "string" || !email) return;
-          await signIn("resend", { email, redirectTo: "/" });
+          const redirectTo = await getPostSignInRedirect(email);
+          await signIn("resend", { email, redirectTo });
         }}
         className="flex flex-col gap-3"
       >
