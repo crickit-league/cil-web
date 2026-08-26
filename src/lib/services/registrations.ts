@@ -1,14 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { registrationSchema, type RegistrationInput } from "@/lib/validation/registration";
-import { can, type SessionUser } from "@/lib/auth/permissions";
+import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { sendRegistrationConfirmationEmail } from "@/lib/email/send-registration-confirmation";
-
-export class ForbiddenError extends Error {
-  constructor() {
-    super("You do not have permission to perform this action.");
-    this.name = "ForbiddenError";
-  }
-}
 
 export class NoOpenSeasonError extends Error {
   constructor() {
