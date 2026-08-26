@@ -64,6 +64,15 @@ This repo uses `main` for everyday work and a separate `production` branch as th
 
 Nothing to put in `.env` — Vercel holds its own copy of these variables separately from your local `.env`.
 
+### Migrations run automatically on Preview/Dev, never on Production
+
+`scripts/vercel-build.mjs` runs before `next build` (see the `build` script in `package.json`) and checks `VERCEL_ENV`, which Vercel sets for every deployment:
+
+- `preview` — covers both PR branches and the persistent `main` deploy, since only the `production` git branch is scoped as Vercel's Production environment (see above). `prisma migrate deploy` runs automatically against that deployment's Neon branch.
+- `production` — the script skips migrating and logs that it did. Applying a migration to real registrant data is a deliberate, manually-run step: pull that deployment's real `DATABASE_URL_UNPOOLED` (`vercel env pull`) and run `npx prisma migrate deploy` against it yourself, on purpose, not as a side effect of merging code.
+
+This exists because every PR gets a freshly auto-created Neon branch (per the branch topology above) with no guarantee it already has whatever's in `prisma/migrations` — auto-migrating Preview means you never have to remember to do it by hand for a database nothing real depends on, while Production keeps a human in the loop.
+
 ---
 
 ## 3. Neon (Postgres database)
