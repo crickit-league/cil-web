@@ -66,7 +66,7 @@ Nothing to put in `.env` — Vercel holds its own copy of these variables separa
 4. You need **two** connection strings:
    - **Pooled** (for the app at runtime) → shown by default on the dashboard, has `-pooler` in the hostname. Copy this into `.env` as `DATABASE_URL`.
    - **Unpooled / direct** (for migrations) → toggle "Pooled connection" off on the same screen, or find it under **Connection Details**. Copy this into `.env` as `DATABASE_URL_UNPOOLED`.
-5. **Recommended shortcut**: instead of copying these by hand into Vercel, install the [Neon Vercel integration](https://vercel.com/integrations/neon) from the Vercel dashboard — it creates the project and injects both env vars into your Vercel project automatically, and keeps preview-branch databases in sync with PRs.
+5. **Recommended shortcut**: instead of copying these by hand into Vercel, install the [Neon Vercel integration](https://vercel.com/integrations/neon) from the Vercel dashboard — it creates the project and injects env vars into your Vercel project automatically. **Read the branch-naming note below before trusting which env var goes where.**
 6. Invite the other admins: **Project Settings → People → Invite**.
 7. Once real values are in `.env`, run:
    ```bash
@@ -74,6 +74,14 @@ Nothing to put in `.env` — Vercel holds its own copy of these variables separa
    npm run db:migrate
    ```
    This creates the actual `seasons` / `registrations` tables from `prisma/schema.prisma`.
+
+### Branch topology — don't re-derive this, it already bit us once
+
+Neon gives a new project's default branch the name **`production`**. Connecting the Vercel integration afterward creates a **second branch, `vercel-dev`**, scoped only to Vercel's **Development** environment — that's the integration working as intended, so local dev doesn't touch real data.
+
+**The trap**: if you ever widen an env var's scope in Vercel's dashboard (e.g. "just add Production to this Development-scoped variable" to fix a mismatch), you can accidentally point live traffic at `vercel-dev` instead of `production` without any error — both are valid, reachable databases, so nothing complains. This happened once already (see git history around 2026-08-26) and produced a confusing "the site works but my registration isn't where I expected" symptom, not a crash.
+
+**Current, correct state**: Vercel's **Production** and **Preview** environments → Neon's **`production`** branch. Vercel's **Development** environment → Neon's **`vercel-dev`** branch. If you're troubleshooting "data isn't where I expected," check the _hostname_ in the relevant env var (Neon gives each branch a distinct `ep-xxxx` hostname) before assuming the code is wrong.
 
 ---
 
