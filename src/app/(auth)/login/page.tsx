@@ -1,5 +1,5 @@
 import { signIn } from "@/lib/auth";
-import { getPostSignInRedirect } from "@/lib/services/users";
+import { LoginForm } from "./login-form";
 
 export default function LoginPage({
   searchParams,
@@ -15,35 +15,17 @@ export default function LoginPage({
 
       <LoginErrorBanner searchParams={searchParams} />
 
-      <form
+      <LoginForm
         action={async (formData) => {
           "use server";
           const email = formData.get("email");
           if (typeof email !== "string" || !email) return;
-          const redirectTo = await getPostSignInRedirect(email);
-          await signIn("resend", { email, redirectTo });
+          // Always land on /welcome — it redirects straight through to "/"
+          // for anyone who already has a display name, so this doesn't add
+          // a visible extra step for returning users.
+          await signIn("resend", { email, redirectTo: "/welcome" });
         }}
-        className="flex flex-col gap-3"
-      >
-        <label htmlFor="email" className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="you@example.com"
-          className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none"
-        />
-        <button
-          type="submit"
-          className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright mt-4 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors"
-        >
-          Send Sign-In Link
-        </button>
-      </form>
+      />
     </div>
   );
 }

@@ -7,11 +7,11 @@ type SendVerificationRequestParams = Parameters<EmailConfig["sendVerificationReq
 // purchase is still in progress), so RESEND_API_KEY is unset in most dev
 // environments. Fall back to logging the link so magic-link auth is
 // testable locally before that infra lands; production must set the key.
-export async function sendMagicLinkEmail({ identifier, url }: SendVerificationRequestParams) {
+export async function sendMagicLinkEmail({ identifier, url, token }: SendVerificationRequestParams) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    console.log(`\n[dev] Magic link for ${identifier}:\n${url}\n`);
+    console.log(`\n[dev] Sign-in for ${identifier} — code: ${token}\n${url}\n`);
     return;
   }
 
@@ -21,9 +21,9 @@ export async function sendMagicLinkEmail({ identifier, url }: SendVerificationRe
   const { error } = await resend.emails.send({
     from,
     to: identifier,
-    subject: "Sign in to the CIL Winter League admin console",
-    text: `Sign in by clicking this link: ${url}\n\nIf you didn't request this, ignore this email.`,
-    html: `<p>Sign in to the CIL Winter League admin console by clicking the link below.</p><p><a href="${url}">${url}</a></p><p>If you didn't request this, ignore this email.</p>`,
+    subject: "Sign in to CIL Winter League",
+    text: `Click this link to sign in: ${url}\n\nOn a different device? Enter this code instead: ${token}\n\nThis expires in 10 minutes. If you didn't request this, ignore this email.`,
+    html: `<p>Click the link below to sign in.</p><p><a href="${url}">${url}</a></p><p>On a different device? Enter this code instead:</p><p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${token}</p><p>This expires in 10 minutes. If you didn't request this, ignore this email.</p>`,
   });
 
   if (error) {
