@@ -33,7 +33,6 @@ export async function submitRegistrationAction(
 
   try {
     await submitRegistration(parsed.data);
-    // TODO: confirmation/payment-reminder email via Resend (docs/architecture.md §9)
     // TODO: Cloudflare Turnstile before this ships live
   } catch (error) {
     if (error instanceof NoOpenSeasonError) {
