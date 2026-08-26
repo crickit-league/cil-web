@@ -1,9 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, type ChangeEvent } from "react";
 import { submitRegistrationAction, type RegistrationFormState } from "./actions";
 
 const initialState: RegistrationFormState = { status: "idle" };
+
+// Formats digits as the user types into a US-style "(404) 555-0142" mask.
+function formatPhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length === 0) return "";
+  if (digits.length < 4) return `(${digits}`;
+  if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 
 function Field({
   id,
@@ -11,12 +20,16 @@ function Field({
   type = "text",
   placeholder,
   error,
+  value,
+  onChange,
 }: {
   id: string;
   label: string;
   type?: string;
   placeholder: string;
   error?: string;
+  value?: string;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -31,6 +44,8 @@ function Field({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
         required
+        value={value}
+        onChange={onChange}
         className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay focus-visible:outline-gold border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
       />
       {error ? (
@@ -44,6 +59,7 @@ function Field({
 
 export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
+  const [mobile, setMobile] = useState("");
 
   if (state.status === "success") {
     return (
@@ -56,36 +72,38 @@ export function RegistrationForm() {
 
   return (
     <form action={formAction} className="border-line bg-dugout border p-6 sm:p-9" noValidate>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6">
         <Field
           id="teamName"
           label="Team Name"
           placeholder="e.g. Peachtree Panthers"
           error={state.fieldErrors?.teamName}
         />
+      </div>
+      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Field
           id="captainFirstName"
           label="Captain First Name"
           placeholder="First name"
           error={state.fieldErrors?.captainFirstName}
         />
-      </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Field
           id="captainLastName"
           label="Captain Last Name"
           placeholder="Last name"
           error={state.fieldErrors?.captainLastName}
         />
+      </div>
+      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Field
           id="captainMobile"
           label="Mobile Number"
           type="tel"
           placeholder="(404) 555-0142"
           error={state.fieldErrors?.captainMobile}
+          value={mobile}
+          onChange={(event) => setMobile(formatPhoneInput(event.target.value))}
         />
-      </div>
-      <div className="mt-6 grid grid-cols-1 gap-6">
         <Field
           id="captainEmail"
           label="Email Address"
