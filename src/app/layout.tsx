@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Big_Shoulders, Libre_Franklin, IBM_Plex_Mono } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const bigShoulders = Big_Shoulders({
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${bigShoulders.variable} ${libreFranklin.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden">{children}</body>
+      <body className="flex min-h-full flex-col overflow-x-hidden">
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CrestBadge } from "./crest-badge";
+import { UserMenu } from "./user-menu";
 
 const NAV = [
   { href: "#format", label: "Format" },
@@ -36,12 +37,15 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <a
-          href="#register"
-          className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors"
-        >
-          Register Team
-        </a>
+        <div className="flex items-center gap-6">
+          <a
+            href="#register"
+            className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors"
+          >
+            Register Team
+          </a>
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

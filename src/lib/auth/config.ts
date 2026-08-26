@@ -13,7 +13,7 @@ export const authConfig = {
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.AUTH_EMAIL_FROM ?? "CIL Winter League <onboarding@resend.dev>",
+      from: process.env.AUTH_EMAIL_FROM || "CIL Winter League <onboarding@resend.dev>",
       sendVerificationRequest: sendMagicLinkEmail,
     }),
   ],

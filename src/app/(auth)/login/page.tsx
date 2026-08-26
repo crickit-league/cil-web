@@ -6,12 +6,10 @@ export default function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center gap-6 px-5">
+    <div className="mx-auto flex min-h-[60vh] max-w-sm flex-col justify-center gap-6 px-5 py-16">
       <div>
-        <h1 className="font-display text-2xl font-extrabold tracking-wide uppercase">Admin Sign In</h1>
-        <p className="text-chalk-dim mt-2 text-sm">
-          Enter your admin email and we&apos;ll send you a sign-in link.
-        </p>
+        <h1 className="font-display text-2xl font-extrabold tracking-wide uppercase">Sign In</h1>
+        <p className="text-chalk-dim mt-2 text-sm">Enter your email and we&apos;ll send you a sign-in link.</p>
       </div>
 
       <LoginErrorBanner searchParams={searchParams} />
@@ -21,7 +19,7 @@ export default function LoginPage({
           "use server";
           const email = formData.get("email");
           if (typeof email !== "string" || !email) return;
-          await signIn("resend", { email, redirectTo: "/admin" });
+          await signIn("resend", { email, redirectTo: "/" });
         }}
         className="flex flex-col gap-3"
       >
@@ -44,7 +42,7 @@ export default function LoginPage({
           Send Sign-In Link
         </button>
       </form>
-    </main>
+    </div>
   );
 }
 

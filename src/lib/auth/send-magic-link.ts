@@ -16,7 +16,7 @@ export async function sendMagicLinkEmail({ identifier, url }: SendVerificationRe
   }
 
   const resend = new Resend(apiKey);
-  const from = process.env.AUTH_EMAIL_FROM ?? "CIL Winter League <onboarding@resend.dev>";
+  const from = process.env.AUTH_EMAIL_FROM || "CIL Winter League <onboarding@resend.dev>";
 
   const { error } = await resend.emails.send({
     from,
