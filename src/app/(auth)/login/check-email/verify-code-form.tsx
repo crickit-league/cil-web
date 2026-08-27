@@ -26,7 +26,10 @@ export function VerifyCodeForm() {
     <form method="GET" action="/api/auth/callback/resend" className="flex flex-col gap-3">
       <input type="hidden" name="callbackUrl" value="/welcome" />
 
-      <label htmlFor="verify-email" className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+      <label
+        htmlFor="verify-email"
+        className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase"
+      >
         Email
       </label>
       <input
@@ -41,7 +44,10 @@ export function VerifyCodeForm() {
         className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none"
       />
 
-      <label htmlFor="token" className="font-data text-chalk-dim mt-2 text-[0.68rem] tracking-[0.1em] uppercase">
+      <label
+        htmlFor="token"
+        className="font-data text-chalk-dim mt-2 text-[0.68rem] tracking-[0.1em] uppercase"
+      >
         6-digit code
       </label>
       <input

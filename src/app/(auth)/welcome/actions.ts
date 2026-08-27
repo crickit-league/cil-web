@@ -6,10 +6,7 @@ import { displayNameSchema } from "@/lib/validation/user";
 
 export type SetNameState = { status: "idle" | "error" | "success"; message?: string };
 
-export async function setDisplayNameAction(
-  _prev: SetNameState,
-  formData: FormData,
-): Promise<SetNameState> {
+export async function setDisplayNameAction(_prev: SetNameState, formData: FormData): Promise<SetNameState> {
   const session = await auth();
   if (!session?.user) {
     return { status: "error", message: "You must be signed in." };

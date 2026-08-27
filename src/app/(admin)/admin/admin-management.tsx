@@ -42,8 +42,8 @@ export function AdminManagement({
       <div>
         <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Admins</h2>
         <p className="text-chalk-dim mt-1 text-sm">
-          Grant or revoke admin access. Super admins are managed separately and aren&apos;t shown as
-          revocable here.
+          Grant or revoke admin access. Super admins are managed separately and aren&apos;t shown as revocable
+          here.
         </p>
       </div>
 
@@ -103,7 +103,10 @@ export function AdminManagement({
       </div>
 
       <form action={formAction} className="flex max-w-sm flex-col gap-3">
-        <label htmlFor="admin-email" className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+        <label
+          htmlFor="admin-email"
+          className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase"
+        >
           Grant admin access
         </label>
         <input

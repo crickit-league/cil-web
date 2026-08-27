@@ -6,10 +6,7 @@ import { grantAdminRole, revokeAdminRole } from "@/lib/services/admins";
 
 export type GrantAdminState = { status: "idle" | "error" | "success"; message?: string };
 
-export async function grantAdminAction(
-  _prev: GrantAdminState,
-  formData: FormData,
-): Promise<GrantAdminState> {
+export async function grantAdminAction(_prev: GrantAdminState, formData: FormData): Promise<GrantAdminState> {
   const session = await auth();
   if (!session?.user) {
     return { status: "error", message: "You must be signed in." };
