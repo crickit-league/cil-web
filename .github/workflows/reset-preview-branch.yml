@@ -1,0 +1,80 @@
+name: Reset Neon Preview Branch
+
+# Manually resets a Neon preview branch's data to match another branch
+# (preview/main by default). Deliberately workflow_dispatch-only, not
+# triggered on every push — an automatic reset would wipe out whatever a
+# reviewer has been testing on that PR's preview deployment every time
+# someone pushes a follow-up commit.
+#
+# Needs two things added under Settings → Secrets and variables → Actions
+# before this can run:
+#   - Secret  NEON_API_KEY    — Neon console → Account/Project Settings → API Keys
+#   - Variable NEON_PROJECT_ID — Neon console → Project Settings → General (the
+#                                 project id, not a branch id)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "Neon branch to reset — this one gets OVERWRITTEN (e.g. preview/my-feature)"
+        required: true
+      source_branch:
+        description: "Neon branch to copy data from"
+        required: false
+        default: "preview/main"
+
+jobs:
+  reset:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Refuse to target production or preview/main
+        run: |
+          case "${{ inputs.target_branch }}" in
+            production|preview/main)
+              echo "::error::Refusing to reset '${{ inputs.target_branch }}' — this action only targets ephemeral PR preview branches, never production or the shared dev branch."
+              exit 1
+              ;;
+          esac
+
+      - name: Resolve branch ids by name
+        id: resolve
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          branches=$(curl -sf "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+            -H "Authorization: Bearer ${NEON_API_KEY}")
+
+          target_id=$(echo "$branches" | jq -r --arg name "${{ inputs.target_branch }}" '.branches[] | select(.name == $name) | .id')
+          source_id=$(echo "$branches" | jq -r --arg name "${{ inputs.source_branch }}" '.branches[] | select(.name == $name) | .id')
+
+          if [ -z "$target_id" ]; then
+            echo "::error::No Neon branch found named '${{ inputs.target_branch }}'. Check Neon console → Branches for the exact name."
+            exit 1
+          fi
+          if [ -z "$source_id" ]; then
+            echo "::error::No Neon branch found named '${{ inputs.source_branch }}'."
+            exit 1
+          fi
+
+          echo "target_id=$target_id" >> "$GITHUB_OUTPUT"
+          echo "source_id=$source_id" >> "$GITHUB_OUTPUT"
+
+      - name: Reset target branch from source
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          backup_name="pre-reset-$(date +%Y%m%d%H%M%S)"
+
+          echo "Resetting '${{ inputs.target_branch }}' from '${{ inputs.source_branch }}' (current state saved as '$backup_name')"
+
+          curl -sf -X POST \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches/${{ steps.resolve.outputs.target_id }}/restore" \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"source_branch_id\": \"${{ steps.resolve.outputs.source_id }}\", \"preserve_under_name\": \"$backup_name\"}"
+
+          echo ""
+          echo "Done. '${{ inputs.target_branch }}' now matches '${{ inputs.source_branch }}'."
+          echo "If this wasn't what you wanted, the prior state was preserved as Neon branch '$backup_name'."
