@@ -116,6 +116,19 @@ This took three separate rounds of "the form works but the data isn't where I ex
 
 If you're troubleshooting "data isn't where I expected": check the _hostname_ in whichever `DATABASE_URL` is actually active (Neon gives each branch a distinct `ep-xxxx` hostname) before assuming the application code is wrong — in every case so far, it wasn't.
 
+### PR preview branches start with production's data, not preview/main's — resetting them is manual, on purpose
+
+Neither of Neon's Vercel integration modes lets you choose which branch a new PR preview branch forks from — it's always Neon's project **default branch** (`production` here), never `preview/main`. There's no setting for this; confirmed against Neon's own docs. So a fresh PR preview branch starts out looking like production (real registrant data, or whatever's actually there), not like the seeded dev data on `preview/main`.
+
+**Do not "fix" this by making `preview/main` the Neon default branch** — Vercel's Production environment is wired to Neon's default branch specifically (not by name), so that change would point real Production traffic at the dev database.
+
+Instead, `.github/workflows/reset-preview-branch.yml` is a manually-triggered (`workflow_dispatch`) action that resets one branch's data to match another's, via Neon's branch-restore API — copy-on-write, so it's fast regardless of data size. It's deliberately not automatic: an auto-reset on every push would wipe out whatever a reviewer was testing on that PR's preview between commits. To run it: **Actions tab → Reset Neon Preview Branch → Run workflow**, enter the PR's Neon branch name (e.g. `preview/my-feature` — check the exact name in the Neon console) as the target; it defaults to copying from `preview/main`. It refuses to target `production` or `preview/main` itself, and always preserves the target's prior state as a new branch first, in case the reset wasn't what you wanted.
+
+Needs two things added once, under **Settings → Secrets and variables → Actions**:
+
+- Secret `NEON_API_KEY` — Neon console → Account/Project Settings → API Keys → create one.
+- Variable `NEON_PROJECT_ID` — Neon console → Project Settings → General.
+
 ---
 
 ## 4. Resend (transactional email)
