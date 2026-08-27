@@ -4,6 +4,19 @@ CIL Winter League (Metro Atlanta, T15 format) portal: registration, fixtures, sc
 
 Also see [AGENTS.md](AGENTS.md) — Next.js-version-specific framework notes, auto-maintained by `next dev`. That file, not this one, is where breaking-change warnings for the installed Next.js version live.
 
+## Before pushing to any branch
+
+Run all four, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
+
+```bash
+npm run format:check   # prettier — run `npm run format` to auto-fix
+npm run lint            # eslint
+npm run typecheck       # tsc --noEmit
+npm run build           # next build — catches issues the others don't
+```
+
+`format:check` fails silently-looking-successful-until-CI more often than the others — it doesn't run as part of `lint`, so a file that's otherwise lint-clean and type-correct can still fail CI on formatting alone.
+
 ## Stack (see architecture.md §2/§4 for why)
 
 Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link + 6-digit-code auth (Auth.js v5), Cloudflare R2 for files, Resend for email, Vercel Cron for scheduled jobs, Tailwind + shadcn/ui. One repo, no microservices, no custom infra.
