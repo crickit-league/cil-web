@@ -43,28 +43,55 @@ body {
   color: var(--chalk);
 }
 
-/* Hero decoration: faint diagonal cross-hatch, masked to the top-right */
+/* Hero decoration: diagonal cross-hatch lattice, masked to the top-right, drifting with a light sweep */
 .hero-texture::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -26px;
   z-index: 0;
   background-image:
     repeating-linear-gradient(
       45deg,
-      rgb(242 238 226 / 2.8%) 0,
-      rgb(242 238 226 / 2.8%) 1px,
+      rgb(242 238 226 / 5%) 0,
+      rgb(242 238 226 / 5%) 1px,
       transparent 1px,
       transparent 26px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgb(242 238 226 / 2.8%) 0,
-      rgb(242 238 226 / 2.8%) 1px,
+      rgb(242 238 226 / 5%) 0,
+      rgb(242 238 226 / 5%) 1px,
       transparent 1px,
       transparent 26px
-    );
+    ),
+    linear-gradient(115deg, transparent 42%, rgb(242 238 226 / 22%) 50%, transparent 58%);
+  background-size:
+    auto,
+    auto,
+    280% 280%;
   mask-image: radial-gradient(ellipse 70% 60% at 70% 20%, black, transparent 75%);
+  animation: lattice-drift 12s linear infinite;
+}
+
+@keyframes lattice-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      -90% 0%;
+  }
+  to {
+    background-position:
+      52px 0,
+      -52px 0,
+      90% 0%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-texture::before {
+    animation: none;
+  }
 }
 
 /* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */
