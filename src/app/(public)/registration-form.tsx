@@ -59,7 +59,8 @@ function Field({
 
 export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
-  const [mobile, setMobile] = useState("");
+  const [captainMobile, setCaptainMobile] = useState("");
+  const [viceCaptainMobile, setViceCaptainMobile] = useState("");
 
   if (state.status === "success") {
     return (
@@ -80,37 +81,107 @@ export function RegistrationForm() {
           error={state.fieldErrors?.teamName}
         />
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <Field
-          id="captainFirstName"
-          label="Captain First Name"
-          placeholder="First name"
-          error={state.fieldErrors?.captainFirstName}
-        />
-        <Field
-          id="captainLastName"
-          label="Captain Last Name"
-          placeholder="Last name"
-          error={state.fieldErrors?.captainLastName}
-        />
+
+      <div className="mt-8">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">Captain</p>
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Field
+            id="captainName"
+            label="Captain Name"
+            placeholder="Full name"
+            error={state.fieldErrors?.captainName}
+          />
+          <Field
+            id="captainEmail"
+            label="Email Address"
+            type="email"
+            placeholder="captain@email.com"
+            error={state.fieldErrors?.captainEmail}
+          />
+          <Field
+            id="captainMobile"
+            label="Mobile Number"
+            type="tel"
+            placeholder="(404) 555-0142"
+            error={state.fieldErrors?.captainMobile}
+            value={captainMobile}
+            onChange={(event) => setCaptainMobile(formatPhoneInput(event.target.value))}
+          />
+        </div>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <Field
-          id="captainMobile"
-          label="Mobile Number"
-          type="tel"
-          placeholder="(404) 555-0142"
-          error={state.fieldErrors?.captainMobile}
-          value={mobile}
-          onChange={(event) => setMobile(formatPhoneInput(event.target.value))}
-        />
-        <Field
-          id="captainEmail"
-          label="Email Address"
-          type="email"
-          placeholder="captain@email.com"
-          error={state.fieldErrors?.captainEmail}
-        />
+
+      <div className="mt-8">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">Vice Captain</p>
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Field
+            id="viceCaptainName"
+            label="Vice Captain Name"
+            placeholder="Full name"
+            error={state.fieldErrors?.viceCaptainName}
+          />
+          <Field
+            id="viceCaptainEmail"
+            label="Email Address"
+            type="email"
+            placeholder="vicecaptain@email.com"
+            error={state.fieldErrors?.viceCaptainEmail}
+          />
+          <Field
+            id="viceCaptainMobile"
+            label="Mobile Number"
+            type="tel"
+            placeholder="(404) 555-0142"
+            error={state.fieldErrors?.viceCaptainMobile}
+            value={viceCaptainMobile}
+            onChange={(event) => setViceCaptainMobile(formatPhoneInput(event.target.value))}
+          />
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-col gap-3">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+          Team Registration Fee
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-8">
+          <label htmlFor="feeTier-standard" className="text-chalk flex items-center gap-2 text-[1.02rem]">
+            <input
+              id="feeTier-standard"
+              name="feeTier"
+              type="radio"
+              value="STANDARD"
+              defaultChecked
+              required
+              className="accent-clay h-4 w-4"
+            />
+            $650 — Standard
+          </label>
+          <label htmlFor="feeTier-sponsorship" className="text-chalk flex items-center gap-2 text-[1.02rem]">
+            <input
+              id="feeTier-sponsorship"
+              name="feeTier"
+              type="radio"
+              value="SPONSORSHIP"
+              required
+              className="accent-clay h-4 w-4"
+            />
+            $800 — With Sponsorship
+          </label>
+        </div>
+        {state.fieldErrors?.feeTier ? (
+          <span className="text-clay-bright text-sm">{state.fieldErrors.feeTier}</span>
+        ) : null}
+      </div>
+
+      <div className="mt-8">
+        <label htmlFor="marketingConsent" className="text-chalk flex items-start gap-2 text-sm">
+          <input
+            id="marketingConsent"
+            name="marketingConsent"
+            type="checkbox"
+            className="accent-clay mt-0.5 h-4 w-4"
+          />
+          I consent to receiving marketing emails from CIL.
+        </label>
       </div>
 
       {state.status === "error" && state.message ? (

@@ -2,8 +2,7 @@ import { Resend } from "resend";
 
 type RegistrationConfirmationInput = {
   captainEmail: string;
-  captainFirstName: string;
-  captainLastName: string;
+  captainName: string;
   paymentDeadline: Date;
 };
 
@@ -22,11 +21,9 @@ function formatDeadline(date: Date): string {
 // RESEND_API_KEY / console-log-in-dev pattern as src/lib/auth/send-magic-link.ts.
 export async function sendRegistrationConfirmationEmail({
   captainEmail,
-  captainFirstName,
-  captainLastName,
+  captainName,
   paymentDeadline,
 }: RegistrationConfirmationInput) {
-  const captainName = `${captainFirstName} ${captainLastName}`;
   const deadline = formatDeadline(paymentDeadline);
 
   const text = `Dear ${captainName},

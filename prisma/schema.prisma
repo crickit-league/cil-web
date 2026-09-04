@@ -120,6 +120,11 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+enum FeeTier {
+  STANDARD // $650
+  SPONSORSHIP // $800 "with Sponsorship"
+}
+
 model Season {
   id                    String       @id @default(cuid())
   name                  String // e.g. "2026-27"
@@ -143,11 +148,15 @@ model Registration {
   seasonId String
   season   Season @relation(fields: [seasonId], references: [id])
 
-  teamName         String
-  captainFirstName String
-  captainLastName  String
-  captainEmail     String
-  captainMobile    String
+  teamName          String
+  captainName       String
+  captainEmail      String
+  captainMobile     String
+  viceCaptainName   String
+  viceCaptainEmail  String
+  viceCaptainMobile String
+  feeTier           FeeTier @default(STANDARD)
+  marketingConsent  Boolean @default(false)
 
   status    RegistrationStatus @default(SUBMITTED)
   feeStatus FeeStatus          @default(UNPAID)

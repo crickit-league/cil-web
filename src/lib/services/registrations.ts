@@ -31,18 +31,21 @@ export async function submitRegistration(input: RegistrationInput) {
     data: {
       seasonId: openSeason.id,
       teamName: data.teamName,
-      captainFirstName: data.captainFirstName,
-      captainLastName: data.captainLastName,
+      captainName: data.captainName,
       captainEmail: data.captainEmail,
       captainMobile: data.captainMobile,
+      viceCaptainName: data.viceCaptainName,
+      viceCaptainEmail: data.viceCaptainEmail,
+      viceCaptainMobile: data.viceCaptainMobile,
+      feeTier: data.feeTier,
+      marketingConsent: data.marketingConsent,
     },
   });
 
   try {
     await sendRegistrationConfirmationEmail({
       captainEmail: data.captainEmail,
-      captainFirstName: data.captainFirstName,
-      captainLastName: data.captainLastName,
+      captainName: data.captainName,
       paymentDeadline: openSeason.registrationClosesAt,
     });
   } catch (error) {
