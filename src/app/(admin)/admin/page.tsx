@@ -38,9 +38,7 @@ export default async function AdminDashboardPage() {
                   </div>
                   <dl className="font-data mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Captain</dt>
-                    <dd>
-                      {r.captainFirstName} {r.captainLastName}
-                    </dd>
+                    <dd>{r.captainName}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Email</dt>
                     <dd className="truncate">{r.captainEmail}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Mobile</dt>
@@ -75,9 +73,7 @@ export default async function AdminDashboardPage() {
                   {registrations.map((r) => (
                     <tr key={r.id} className="border-line border-b last:border-0">
                       <td className="px-4 py-3 font-medium">{r.teamName}</td>
-                      <td className="px-4 py-3">
-                        {r.captainFirstName} {r.captainLastName}
-                      </td>
+                      <td className="px-4 py-3">{r.captainName}</td>
                       <td className="px-4 py-3">{r.captainEmail}</td>
                       <td className="px-4 py-3">{r.captainMobile}</td>
                       <td className="px-4 py-3">{r.season.name}</td>
