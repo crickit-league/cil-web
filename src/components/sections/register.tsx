@@ -37,7 +37,9 @@ export function Register() {
             </p>
           </div>
 
-          <RegistrationForm />
+          <div id="registration-form" className="scroll-mt-20">
+            <RegistrationForm />
+          </div>
         </div>
       </div>
     </section>
