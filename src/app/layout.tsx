@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Crick-It Inter League",
   description:
-    "Metro Atlanta's weekend cricket league. T15, hard tennis ball, on the city's baseball fields since 2013.",
+    "Metro Atlanta's weekend cricket league. F15, hard tennis ball, on the city's baseball fields since 2013.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

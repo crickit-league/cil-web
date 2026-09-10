@@ -43,13 +43,25 @@ export function UserMenu() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="font-data text-chalk-dim hover:text-chalk max-w-[10rem] truncate text-xs tracking-[0.1em] uppercase transition-colors"
+        aria-label="Account menu"
+        className="border-line text-chalk-dim hover:border-chalk-dim hover:text-chalk flex h-9 w-9 items-center justify-center rounded-full border transition-colors"
       >
-        {session.user.name || session.user.email}
+        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+          <path
+            d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
       {open ? (
         <div className="border-line bg-dugout absolute top-full right-0 z-50 mt-2 w-48 border py-1">
+          <div className="font-data text-chalk-faint border-line truncate border-b px-4 py-2.5 text-xs tracking-[0.08em] uppercase">
+            {session.user.name || session.user.email}
+          </div>
           {isAdmin ? (
             <Link
               href="/admin"

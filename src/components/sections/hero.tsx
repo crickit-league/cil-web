@@ -14,7 +14,7 @@ export function Hero() {
             <span className="text-clay">October 24.</span>
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
-            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. T15, hard tennis ball,
+            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. F15, hard tennis ball,
             one trophy. Team registration opens August&nbsp;31.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
@@ -46,7 +46,7 @@ export function Hero() {
           </div>
           <dl className="grid grid-cols-2">
             {[
-              ["T15", "Format"],
+              ["F15", "Format"],
               ["13th", "Season"],
             ].map(([value, label], i) => (
               <div key={label} className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""}`}>
