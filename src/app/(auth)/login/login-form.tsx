@@ -33,7 +33,7 @@ export function LoginForm({ action }: { action: (formData: FormData) => void }) 
       />
       <button
         type="submit"
-        className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright mt-4 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors"
+        className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright mt-4 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors"
       >
         Send Sign-In Link
       </button>

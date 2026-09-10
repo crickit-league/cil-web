@@ -40,7 +40,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-6">
           <a
             href="#registration-form"
-            className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-4 py-3 text-xs tracking-[0.08em] uppercase transition-colors sm:px-5"
+            className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-4 py-3 text-xs tracking-[0.08em] uppercase transition-colors sm:px-5"
           >
             <span className="sm:hidden">Register</span>
             <span className="hidden sm:inline">Register Team</span>

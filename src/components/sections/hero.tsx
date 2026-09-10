@@ -20,7 +20,7 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-4">
             <a
               href="#registration-form"
-              className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
+              className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
             >
               Register Your Team
             </a>

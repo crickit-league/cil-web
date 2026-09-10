@@ -126,7 +126,7 @@ export function AdminManagement({
         <button
           type="submit"
           disabled={pending}
-          className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright mt-2 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+          className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright mt-2 border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? "Granting…" : "Grant Admin Access"}
         </button>
