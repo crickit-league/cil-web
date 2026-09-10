@@ -15,7 +15,7 @@ export function Hero() {
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
             Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. T15, hard tennis ball,
-            two pools, one trophy. Team registration opens August&nbsp;31.
+            one trophy. Team registration opens August&nbsp;31.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
@@ -48,13 +48,8 @@ export function Hero() {
             {[
               ["T15", "Format"],
               ["13th", "Season"],
-              ["02", "Pools"],
-              ["10", "League Games / Team"],
             ].map(([value, label], i) => (
-              <div
-                key={label}
-                className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""} ${i < 2 ? "border-line border-b" : ""}`}
-              >
+              <div key={label} className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""}`}>
                 <dd className="font-data text-chalk text-3xl leading-none font-semibold">{value}</dd>
                 <dt className="font-data text-chalk-faint mt-1.5 text-[0.66rem] tracking-[0.1em] uppercase">
                   {label}

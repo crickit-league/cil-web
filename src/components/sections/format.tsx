@@ -9,7 +9,7 @@ const FACTS = [
   },
   {
     tag: "Overs",
-    body: "15 a side, 9 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
+    body: "15 a side, 10 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
   },
   {
     tag: "Schedule",
