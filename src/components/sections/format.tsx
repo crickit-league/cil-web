@@ -62,7 +62,7 @@ export function Format() {
                 <span
                   className={`bg-pitch absolute top-[0.35rem] -left-[5px] h-[9px] w-[9px] border-[1.5px] ${
                     item.now
-                      ? "border-gold bg-gold shadow-[0_0_0_4px_rgb(214_165_68/0.18)]"
+                      ? "border-gold bg-gold shadow-[0_0_0_4px_rgb(245_207_98/0.18)]"
                       : "border-chalk-faint"
                   }`}
                 />

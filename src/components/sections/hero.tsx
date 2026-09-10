@@ -37,7 +37,7 @@ export function Hero() {
           <div className="border-chalk/[0.06] absolute inset-1.5 border" />
           <div className="border-line flex items-center justify-between border-b px-4 py-3.5">
             <span className="font-data text-chalk-dim flex items-center gap-2 text-[0.68rem] tracking-[0.14em] uppercase">
-              <span className="bg-gold h-[7px] w-[7px] rounded-full shadow-[0_0_8px_rgb(214_165_68/0.7)]" />
+              <span className="bg-gold h-[7px] w-[7px] rounded-full shadow-[0_0_8px_rgb(245_207_98/0.7)]" />
               Season Card
             </span>
             <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.14em] uppercase">
