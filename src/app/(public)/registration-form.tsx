@@ -178,6 +178,7 @@ export function RegistrationForm() {
             id="marketingConsent"
             name="marketingConsent"
             type="checkbox"
+            defaultChecked
             className="accent-clay mt-0.5 h-4 w-4"
           />
           I consent to receiving marketing emails from CIL.
