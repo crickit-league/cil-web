@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bigShoulders.variable} ${libreFranklin.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${bigShoulders.variable} ${libreFranklin.variable} ${plexMono.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col overflow-x-hidden">
         <SessionProvider>{children}</SessionProvider>
