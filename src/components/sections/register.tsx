@@ -2,7 +2,7 @@ import { RegistrationForm } from "@/app/(public)/registration-form";
 
 export function Register() {
   return (
-    <section id="register" className="bg-pitch-deep py-16 sm:py-20 lg:py-24">
+    <section id="register" className="bg-pitch-deep scroll-mt-20 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-[1180px] px-5 sm:px-8">
         <div className="mb-10 flex max-w-[62ch] flex-col gap-2">
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">
@@ -37,7 +37,9 @@ export function Register() {
             </p>
           </div>
 
-          <RegistrationForm />
+          <div id="registration-form" className="scroll-mt-20">
+            <RegistrationForm />
+          </div>
         </div>
       </div>
     </section>

@@ -9,7 +9,7 @@ const FACTS = [
   },
   {
     tag: "Overs",
-    body: "15 a side, 9 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
+    body: "15 a side, 10 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
   },
   {
     tag: "Schedule",
@@ -27,7 +27,7 @@ const TIMELINE = [
 
 export function Format() {
   return (
-    <section id="format" className="py-16 sm:py-20 lg:py-24">
+    <section id="format" className="scroll-mt-20 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-11 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div className="mb-10 flex max-w-[62ch] flex-col gap-2">

@@ -4,6 +4,11 @@ import { listRegistrations } from "@/lib/services/registrations";
 import { listAdminAccounts } from "@/lib/services/admins";
 import { AdminManagement } from "./admin-management";
 
+const FEE_TIER_LABEL = {
+  STANDARD: "$650 Standard",
+  SPONSORSHIP: "$800 Sponsorship",
+} as const;
+
 export default async function AdminDashboardPage() {
   const session = await auth();
   const registrations = await listRegistrations(session!.user);
@@ -24,7 +29,7 @@ export default async function AdminDashboardPage() {
           <p className="text-chalk-dim">No registrations yet.</p>
         ) : (
           <>
-            {/* Cards below `sm` — an 8-column table doesn't fit a phone. See docs/architecture.md §13. */}
+            {/* Cards below `sm` — a wide table doesn't fit a phone. See docs/architecture.md §13. */}
             <div className="flex flex-col gap-4 sm:hidden">
               {registrations.map((r) => (
                 <div key={r.id} className="border-line bg-dugout border p-5">
@@ -38,17 +43,27 @@ export default async function AdminDashboardPage() {
                   </div>
                   <dl className="font-data mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Captain</dt>
-                    <dd>
-                      {r.captainFirstName} {r.captainLastName}
-                    </dd>
+                    <dd>{r.captainName}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Email</dt>
                     <dd className="truncate">{r.captainEmail}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Mobile</dt>
                     <dd>{r.captainMobile}</dd>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">
+                      Vice Captain
+                    </dt>
+                    <dd>{r.viceCaptainName}</dd>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Email</dt>
+                    <dd className="truncate">{r.viceCaptainEmail}</dd>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Mobile</dt>
+                    <dd>{r.viceCaptainMobile}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Season</dt>
                     <dd>{r.season.name}</dd>
-                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Fee</dt>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Fee Tier</dt>
+                    <dd>{FEE_TIER_LABEL[r.feeTier]}</dd>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Fee Status</dt>
                     <dd>{r.feeStatus}</dd>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Marketing</dt>
+                    <dd>{r.marketingConsent ? "Yes" : "No"}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Submitted</dt>
                     <dd>{r.createdAt.toLocaleDateString()}</dd>
                   </dl>
@@ -65,9 +80,14 @@ export default async function AdminDashboardPage() {
                     <th className="px-4 py-3">Captain</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Mobile</th>
+                    <th className="px-4 py-3">Vice Captain</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Mobile</th>
                     <th className="px-4 py-3">Season</th>
                     <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Fee</th>
+                    <th className="px-4 py-3">Fee Tier</th>
+                    <th className="px-4 py-3">Fee Status</th>
+                    <th className="px-4 py-3">Marketing</th>
                     <th className="px-4 py-3">Submitted</th>
                   </tr>
                 </thead>
@@ -75,14 +95,17 @@ export default async function AdminDashboardPage() {
                   {registrations.map((r) => (
                     <tr key={r.id} className="border-line border-b last:border-0">
                       <td className="px-4 py-3 font-medium">{r.teamName}</td>
-                      <td className="px-4 py-3">
-                        {r.captainFirstName} {r.captainLastName}
-                      </td>
+                      <td className="px-4 py-3">{r.captainName}</td>
                       <td className="px-4 py-3">{r.captainEmail}</td>
                       <td className="px-4 py-3">{r.captainMobile}</td>
+                      <td className="px-4 py-3">{r.viceCaptainName}</td>
+                      <td className="px-4 py-3">{r.viceCaptainEmail}</td>
+                      <td className="px-4 py-3">{r.viceCaptainMobile}</td>
                       <td className="px-4 py-3">{r.season.name}</td>
                       <td className="px-4 py-3">{r.status}</td>
+                      <td className="px-4 py-3">{FEE_TIER_LABEL[r.feeTier]}</td>
                       <td className="px-4 py-3">{r.feeStatus}</td>
+                      <td className="px-4 py-3">{r.marketingConsent ? "Yes" : "No"}</td>
                       <td className="text-chalk-dim px-4 py-3">{r.createdAt.toLocaleDateString()}</td>
                     </tr>
                   ))}

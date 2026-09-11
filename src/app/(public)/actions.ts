@@ -16,10 +16,14 @@ export async function submitRegistrationAction(
 ): Promise<RegistrationFormState> {
   const parsed = registrationSchema.safeParse({
     teamName: formData.get("teamName"),
-    captainFirstName: formData.get("captainFirstName"),
-    captainLastName: formData.get("captainLastName"),
+    captainName: formData.get("captainName"),
     captainEmail: formData.get("captainEmail"),
     captainMobile: formData.get("captainMobile"),
+    viceCaptainName: formData.get("viceCaptainName"),
+    viceCaptainEmail: formData.get("viceCaptainEmail"),
+    viceCaptainMobile: formData.get("viceCaptainMobile"),
+    feeTier: formData.get("feeTier"),
+    marketingConsent: formData.get("marketingConsent") === "on",
   });
 
   if (!parsed.success) {

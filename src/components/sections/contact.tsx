@@ -1,6 +1,6 @@
 export function Contact() {
   return (
-    <section id="contact" className="py-16 sm:py-20 lg:py-24">
+    <section id="contact" className="scroll-mt-20 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-[1180px] px-5 sm:px-8">
         <div className="mb-10 flex max-w-[62ch] flex-col gap-2">
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">Get in Touch</span>

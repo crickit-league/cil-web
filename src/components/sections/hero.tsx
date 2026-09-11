@@ -14,13 +14,13 @@ export function Hero() {
             <span className="text-clay">October 24.</span>
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
-            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. T15, hard tennis ball,
-            two pools, one trophy. Team registration opens August&nbsp;31.
+            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. F15, hard tennis ball,
+            one trophy. Team registration opens August&nbsp;31.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
-              href="#register"
-              className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
+              href="#registration-form"
+              className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
             >
               Register Your Team
             </a>
@@ -46,15 +46,10 @@ export function Hero() {
           </div>
           <dl className="grid grid-cols-2">
             {[
-              ["T15", "Format"],
+              ["F15", "Format"],
               ["13th", "Season"],
-              ["02", "Pools"],
-              ["10", "League Games / Team"],
             ].map(([value, label], i) => (
-              <div
-                key={label}
-                className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""} ${i < 2 ? "border-line border-b" : ""}`}
-              >
+              <div key={label} className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""}`}>
                 <dd className="font-data text-chalk text-3xl leading-none font-semibold">{value}</dd>
                 <dt className="font-data text-chalk-faint mt-1.5 text-[0.66rem] tracking-[0.1em] uppercase">
                   {label}
