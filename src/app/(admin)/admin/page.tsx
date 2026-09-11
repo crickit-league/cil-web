@@ -48,7 +48,9 @@ export default async function AdminDashboardPage() {
                     <dd className="truncate">{r.captainEmail}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Mobile</dt>
                     <dd>{r.captainMobile}</dd>
-                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Vice Captain</dt>
+                    <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">
+                      Vice Captain
+                    </dt>
                     <dd>{r.viceCaptainName}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Email</dt>
                     <dd className="truncate">{r.viceCaptainEmail}</dd>
