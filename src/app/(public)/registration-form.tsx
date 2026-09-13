@@ -78,7 +78,7 @@ export function RegistrationForm() {
         ref={successRef}
         tabIndex={-1}
         role="status"
-        className="animate-success-pop border-gold bg-dugout shadow-[0_0_0_4px_rgb(245_207_98/0.12)] flex flex-col items-center gap-4 border p-8 text-center outline-none sm:p-10"
+        className="animate-success-pop border-gold bg-dugout flex flex-col items-center gap-4 border p-8 text-center shadow-[0_0_0_4px_rgb(245_207_98/0.12)] outline-none sm:p-10"
       >
         <span className="bg-gold text-pitch-deep flex h-14 w-14 items-center justify-center rounded-full">
           <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
@@ -92,7 +92,9 @@ export function RegistrationForm() {
           </svg>
         </span>
         <div>
-          <p className="font-display text-2xl font-extrabold uppercase sm:text-3xl">You&rsquo;re on the card.</p>
+          <p className="font-display text-2xl font-extrabold uppercase sm:text-3xl">
+            You&rsquo;re on the card.
+          </p>
           <p className="text-chalk-dim mt-2">{state.message}</p>
         </div>
       </div>
