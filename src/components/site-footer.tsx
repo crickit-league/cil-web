@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CrestBadge } from "./crest-badge";
 
 export function SiteFooter() {
@@ -16,10 +17,13 @@ export function SiteFooter() {
           </span>
         </div>
 
-        <div className="font-data text-chalk-faint flex flex-wrap gap-6 text-[0.7rem] tracking-[0.08em] uppercase">
+        <div className="font-data text-chalk-faint flex flex-wrap items-center gap-6 text-[0.7rem] tracking-[0.08em] uppercase">
           <span>Metro Atlanta, GA</span>
           <span>Est. 2013</span>
           <span>2026&ndash;27 Season</span>
+          <Link href="/login" className="hover:text-chalk-dim transition-colors">
+            Admin
+          </Link>
         </div>
       </div>
     </footer>

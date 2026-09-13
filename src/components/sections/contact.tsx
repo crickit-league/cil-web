@@ -1,6 +1,6 @@
 export function Contact() {
   return (
-    <section id="contact" className="py-16 sm:py-20 lg:py-24">
+    <section id="contact" className="scroll-mt-20 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-[1180px] px-5 sm:px-8">
         <div className="mb-10 flex max-w-[62ch] flex-col gap-2">
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">Get in Touch</span>
@@ -12,12 +12,39 @@ export function Contact() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div className="border-line border p-7">
             <span className="font-data text-clay-bright block text-xs tracking-[0.18em] uppercase">
-              Committee Inbox
+              Registration
             </span>
-            <div className="font-data mt-1.5 text-[1.02rem]">CILcommittee@gmail.com</div>
-            <p className="text-chalk-dim mt-4 text-sm">
-              Monitored by the CIL committee &mdash; registration, scheduling, and general questions.
-            </p>
+            <a
+              href="mailto:registration@crickitinterleague.org"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
+            >
+              registration@crickitinterleague.org
+            </a>
+            <p className="text-chalk-dim mt-4 text-sm">For registration, roster, and fee questions.</p>
+          </div>
+          <div className="border-line border p-7">
+            <span className="font-data text-clay-bright block text-xs tracking-[0.18em] uppercase">
+              Site &amp; Admin
+            </span>
+            <a
+              href="mailto:admin@crickitinterleague.org"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
+            >
+              admin@crickitinterleague.org
+            </a>
+            <p className="text-chalk-dim mt-4 text-sm">For questions about the site itself.</p>
+          </div>
+          <div className="border-line border p-7">
+            <span className="font-data text-clay-bright block text-xs tracking-[0.18em] uppercase">
+              General
+            </span>
+            <a
+              href="mailto:mail@crickitinterleague.org"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
+            >
+              mail@crickitinterleague.org
+            </a>
+            <p className="text-chalk-dim mt-4 text-sm">For everything else.</p>
           </div>
           <div className="border-line border p-7">
             <span className="font-data text-clay-bright block text-xs tracking-[0.18em] uppercase">

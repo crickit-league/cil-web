@@ -37,6 +37,94 @@ enum FeeStatus {
   WAIVED
 }
 
+enum Role {
+  ADMIN
+  SUPER_ADMIN
+}
+
+// Not scoped beyond "global" yet — no season- or team-scoped roles
+// (captain, player) exist until Phase 1b. See docs/architecture.md §6/§7
+// for why this is a separate table rather than an enum on User.
+enum RoleScopeType {
+  GLOBAL
+}
+
+// Auth.js (magic link / email) — see docs/architecture.md §7.
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+
+  accounts Account[]
+  sessions Session[]
+  roles    UserRole[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model UserRole {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role
+  scopeType RoleScopeType @default(GLOBAL)
+  scopeId   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role, scopeType, scopeId])
+  @@map("user_roles")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum FeeTier {
+  STANDARD // $650
+  SPONSORSHIP // $800 "with Sponsorship"
+}
+
 model Season {
   id                    String       @id @default(cuid())
   name                  String // e.g. "2026-27"
@@ -60,11 +148,15 @@ model Registration {
   seasonId String
   season   Season @relation(fields: [seasonId], references: [id])
 
-  teamName         String
-  captainFirstName String
-  captainLastName  String
-  captainEmail     String
-  captainMobile    String
+  teamName          String
+  captainName       String
+  captainEmail      String
+  captainMobile     String
+  viceCaptainName   String?
+  viceCaptainEmail  String?
+  viceCaptainMobile String?
+  feeTier           FeeTier @default(STANDARD)
+  marketingConsent  Boolean @default(false)
 
   status    RegistrationStatus @default(SUBMITTED)
   feeStatus FeeStatus          @default(UNPAID)
@@ -79,6 +171,8 @@ model Registration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([seasonId, teamName])
+  @@unique([seasonId, captainEmail])
   @@index([seasonId, status])
   @@map("registrations")
 }

@@ -4,9 +4,22 @@ CIL Winter League (Metro Atlanta, T15 format) portal: registration, fixtures, sc
 
 Also see [AGENTS.md](AGENTS.md) — Next.js-version-specific framework notes, auto-maintained by `next dev`. That file, not this one, is where breaking-change warnings for the installed Next.js version live.
 
+## Before pushing to any branch
+
+Run all four, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
+
+```bash
+npm run format:check   # prettier — run `npm run format` to auto-fix
+npm run lint            # eslint
+npm run typecheck       # tsc --noEmit
+npm run build           # next build — catches issues the others don't
+```
+
+`format:check` fails silently-looking-successful-until-CI more often than the others — it doesn't run as part of `lint`, so a file that's otherwise lint-clean and type-correct can still fail CI on formatting alone.
+
 ## Stack (see architecture.md §2/§4 for why)
 
-Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (Auth.js/Clerk), Cloudflare R2 for files, Resend for email, Vercel Cron for scheduled jobs, Tailwind + shadcn/ui. One repo, no microservices, no custom infra.
+Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link + 6-digit-code auth (Auth.js v5), Cloudflare R2 for files, Resend for email, Vercel Cron for scheduled jobs, Tailwind + shadcn/ui. One repo, no microservices, no custom infra.
 
 ## The one structural rule that matters
 
@@ -15,9 +28,10 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (A
 - **Permissions**: explicit `can(user, action, resource)` checks in the service layer, not database row-level security. Never rely on a hidden UI button.
 - **Validation**: Zod schemas in `lib/validation/`, shared client and server. Never trust a form.
 - **Types**: `strict: true`, no `any`.
-- **Migrations**: Prisma migrations committed to git. Nobody edits the production DB by hand.
+- **Migrations**: Prisma migrations committed to git. Nobody edits the production DB by hand. `prisma migrate deploy` runs automatically at build time for Preview/Dev (`scripts/vercel-build.mjs`, gated on `VERCEL_ENV`) — Production is deliberately excluded from that automation and stays a manually-run step; see `docs/service-setup.md`.
 - **Prisma 7**: connection URLs live in `prisma.config.ts` / env, not in `schema.prisma`'s `datasource` block — that's a Prisma 7 breaking change from what the original architecture doc assumed. The runtime client uses `@prisma/adapter-neon` (`src/lib/db/prisma.ts`) against pooled `DATABASE_URL`; Migrate uses unpooled `DATABASE_URL_UNPOOLED`. Generated client output is `src/generated/prisma` (gitignored), imported via `@/generated/prisma`.
 - **Stats are derived, never hand-typed** — rebuilt from scorecards after every import — with one deliberate exception: `standings_adjustments` for committee-issued penalties (see below). Never overwrite that table from an import.
+- **Mobile-first, no exceptions** — every page, including internal/admin ones, must be checked at phone width before it's done. A table with more than ~3 columns is not a mobile layout on its own: render a stacked-card view below the `sm` breakpoint and the table at `sm` and up (`sm:hidden` / `hidden sm:block`), don't just let it scroll horizontally. See `(admin)/admin/page.tsx` and `admin-management.tsx` for the pattern.
 
 ## Facts that shape the data model — confirmed by the committee, don't re-litigate
 
@@ -29,7 +43,8 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (A
 - **Roster cap is 22; new players must be added by Friday to be eligible that weekend** — recurring weekly deadline, not one-time. Soft warning on the captain's roster screen, not necessarily a hard gate.
 - **Import cadence**: CricClubs scores are expected finalized by the Monday after a weekend's matches. Weekly import job should run Monday evening/Tuesday morning.
 - **Contact visibility**: a captain sees/edits their own team's player emails/phones; other captains and the public never do; committee sees everything. Umpire phone visible only to the two teams in that fixture, once logged in.
-- **Auth**: magic links only for now. Google sign-in can be added later without breaking anything (email is the identity key) — don't build around that assumption prematurely, just don't paint against it either.
+- **Auth**: magic link or a 6-digit code (same underlying token, just short-form — for signing in on a different device than the one the email arrived on), via Auth.js v5 with database sessions. No passwords. Google sign-in can be added later without breaking anything (email is the identity key) — don't build around that assumption prematurely, just don't paint against it either. **No rate-limiting yet on repeated wrong-code guesses** — a known gap, not an oversight; see `docs/STATUS.md`.
+- **Roles**: `UserRole` is a separate table (`userId, role, scopeType, scopeId`), not an enum on `User` — captain/player roles will need to be scoped to a specific team-season later, and retrofitting that onto an enum means a migration and a rewrite. Only `GLOBAL`-scoped `ADMIN`/`SUPER_ADMIN` exist today. **Managing admins (grant/revoke) is `SUPER_ADMIN`-only**, per the role table in architecture.md §7 — a plain `ADMIN` is scoped to one season of operational work, not to granting access itself. The admin console's "manage admins" section can only grant/revoke `ADMIN`; `SUPER_ADMIN` is CLI-only via `npm run admin:promote -- <email> SUPER_ADMIN`.
 
 ## Still genuinely open — don't guess, ask the user/committee
 
@@ -38,7 +53,7 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link auth (A
 
 ## Admin/org facts
 
-5 admin accounts. Shared inbox `CILcommittee@gmail.com` (existing Gmail, not yet on the branded domain). Domain not purchased as of last check — see STATUS.md for current state.
+5 admin accounts. Shared inbox `CILcommittee@gmail.com` (existing Gmail, not yet on the branded domain, though `mail@crickitinterleague.org` now forwards to a verified inbox via Cloudflare Email Routing). Domain `crickitinterleague.org` is purchased and live: DNS, Email Routing, and Resend (transactional email, verified against the `mail.` subdomain) are all working. Turnstile still pending — see STATUS.md for current state.
 
 ## External services
 

@@ -1,33 +1,33 @@
 const FACTS = [
   {
     tag: "Ball",
-    body: "Hard tennis (red/yellow). CIL supplies the balls for every scheduled match — no need to bring your own.",
+    body: "Hard tennis (red/yellow). CIL supplies the balls for every scheduled match.",
   },
   {
     tag: "Ground",
-    body: "Baseball fields across Metro Atlanta. Boundary scoring is set per field category, from a tight 2D-and-out to a full 4-over-the-fence.",
+    body: "Baseball fields across Metro Atlanta. Boundary scoring is set per field category.",
   },
   {
     tag: "Overs",
-    body: "15 a side, 9 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
+    body: "15 a side, 10 players. No LBWs, no last-man batting, max four overs per bowler.",
   },
   {
     tag: "Schedule",
-    body: "Saturdays and Sundays. Matches can move by mutual agreement between captains — CIL keeps the ground booked either way.",
+    body: "Saturday or Sunday based on ground availability.",
   },
 ];
 
 const TIMELINE = [
-  { when: "Aug 31", what: "Registration Opens", now: true },
+  { when: "Sep 12", what: "Registration Opens", now: true },
   { when: "Sep 30", what: "Registration Closes" },
-  { when: "Early Oct", what: "Teams Approved & Pools Set" },
+  { when: "Oct 14", what: "Captains Meet" },
   { when: "Oct 24", what: "League Stage Begins" },
   { when: "TBD", what: "Playoffs & Final" },
 ];
 
 export function Format() {
   return (
-    <section id="format" className="py-16 sm:py-20 lg:py-24">
+    <section id="format" className="scroll-mt-20 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-11 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div className="mb-10 flex max-w-[62ch] flex-col gap-2">
@@ -62,7 +62,7 @@ export function Format() {
                 <span
                   className={`bg-pitch absolute top-[0.35rem] -left-[5px] h-[9px] w-[9px] border-[1.5px] ${
                     item.now
-                      ? "border-gold bg-gold shadow-[0_0_0_4px_rgb(214_165_68/0.18)]"
+                      ? "border-gold bg-gold shadow-[0_0_0_4px_rgb(245_207_98/0.18)]"
                       : "border-chalk-faint"
                   }`}
                 />

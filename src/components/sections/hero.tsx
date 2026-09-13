@@ -7,20 +7,18 @@ export function Hero() {
             Metro Atlanta &middot; Est. 2013
           </span>
           <h1 className="font-display mt-3 text-[3rem] leading-[0.92] font-extrabold text-balance uppercase sm:text-[4.5rem] lg:text-[6.3rem]">
-            The 2026&ndash;27
+            CIL Winter League
             <br />
-            Season Begins
-            <br />
-            <span className="text-clay">October 24.</span>
+            <span className="text-clay">Championship</span>
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
-            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. T15, hard tennis ball,
-            two pools, one trophy. Team registration opens August&nbsp;31.
+            Over 13 years of weekend cricket at Atlanta continues with another exciting season. Registration
+            opens now.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
-              href="#register"
-              className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
+              href="#registration-form"
+              className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
             >
               Register Your Team
             </a>
@@ -37,7 +35,7 @@ export function Hero() {
           <div className="border-chalk/[0.06] absolute inset-1.5 border" />
           <div className="border-line flex items-center justify-between border-b px-4 py-3.5">
             <span className="font-data text-chalk-dim flex items-center gap-2 text-[0.68rem] tracking-[0.14em] uppercase">
-              <span className="bg-gold h-[7px] w-[7px] rounded-full shadow-[0_0_8px_rgb(214_165_68/0.7)]" />
+              <span className="bg-gold h-[7px] w-[7px] rounded-full shadow-[0_0_8px_rgb(245_207_98/0.7)]" />
               Season Card
             </span>
             <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.14em] uppercase">
@@ -46,15 +44,10 @@ export function Hero() {
           </div>
           <dl className="grid grid-cols-2">
             {[
-              ["T15", "Format"],
+              ["F15", "Format"],
               ["13th", "Season"],
-              ["02", "Pools"],
-              ["10", "League Games / Team"],
             ].map(([value, label], i) => (
-              <div
-                key={label}
-                className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""} ${i < 2 ? "border-line border-b" : ""}`}
-              >
+              <div key={label} className={`p-[1.15rem] ${i % 2 === 0 ? "border-line border-r" : ""}`}>
                 <dd className="font-data text-chalk text-3xl leading-none font-semibold">{value}</dd>
                 <dt className="font-data text-chalk-faint mt-1.5 text-[0.66rem] tracking-[0.1em] uppercase">
                   {label}

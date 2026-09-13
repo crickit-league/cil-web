@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
+/* Winter League palette — deep night-sky navy, icy chalk, gold championship
+   accent. Reference: committee-supplied championship poster (navy/gold/ice,
+   floodlit stadium at night). Token names kept from the previous pitch/clay
+   theme so component classes didn't need touching — only the hues moved. */
 :root {
-  --pitch: #0d1913;
-  --pitch-deep: #08110d;
-  --dugout: #16271f;
-  --dugout-2: #1e362b;
-  --line: #2c4738;
-  --chalk: #f2eee2;
-  --chalk-dim: #a9b7ac;
-  --chalk-faint: #6e8177;
-  --clay: #c34b2e;
-  --clay-bright: #e06840;
-  --gold: #d6a544;
+  --pitch: #0a1526;
+  --pitch-deep: #050b16;
+  --dugout: #13213c;
+  --dugout-2: #1c3155;
+  --line: #2e4468;
+  --chalk: #eef4fc;
+  --chalk-dim: #a7b8d8;
+  --chalk-faint: #64749c;
+  --clay: #d6a544;
+  --clay-bright: #f0c66c;
+  --gold: #f5cf62;
 }
 
 @theme inline {
@@ -43,28 +47,76 @@ body {
   color: var(--chalk);
 }
 
-/* Hero decoration: faint diagonal cross-hatch, masked to the top-right */
+/* Hero decoration: diagonal cross-hatch lattice, masked to the top-right, drifting with a light sweep */
 .hero-texture::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -26px;
   z-index: 0;
   background-image:
     repeating-linear-gradient(
       45deg,
-      rgb(242 238 226 / 2.8%) 0,
-      rgb(242 238 226 / 2.8%) 1px,
+      rgb(238 244 252 / 5%) 0,
+      rgb(238 244 252 / 5%) 1px,
       transparent 1px,
       transparent 26px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgb(242 238 226 / 2.8%) 0,
-      rgb(242 238 226 / 2.8%) 1px,
+      rgb(238 244 252 / 5%) 0,
+      rgb(238 244 252 / 5%) 1px,
       transparent 1px,
       transparent 26px
-    );
+    ),
+    linear-gradient(115deg, transparent 42%, rgb(238 244 252 / 22%) 50%, transparent 58%);
+  background-size:
+    auto,
+    auto,
+    280% 280%;
   mask-image: radial-gradient(ellipse 70% 60% at 70% 20%, black, transparent 75%);
+  animation: lattice-drift 12s linear infinite;
+}
+
+@keyframes lattice-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      -90% 0%;
+  }
+  to {
+    background-position:
+      52px 0,
+      -52px 0,
+      90% 0%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-texture::before {
+    animation: none;
+  }
+}
+
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-success-pop {
+  animation: success-pop 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-success-pop {
+    animation: none;
+  }
 }
 
 /* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */

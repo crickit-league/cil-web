@@ -1,9 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { submitRegistrationAction, type RegistrationFormState } from "./actions";
 
 const initialState: RegistrationFormState = { status: "idle" };
+
+// Formats digits as the user types into a US-style "(404) 555-0142" mask.
+function formatPhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length === 0) return "";
+  if (digits.length < 4) return `(${digits}`;
+  if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 
 function Field({
   id,
@@ -11,12 +20,18 @@ function Field({
   type = "text",
   placeholder,
   error,
+  value,
+  onChange,
+  optional = false,
 }: {
   id: string;
   label: string;
   type?: string;
   placeholder: string;
   error?: string;
+  value?: string;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  optional?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -30,7 +45,9 @@ function Field({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        required
+        required={!optional}
+        value={value}
+        onChange={onChange}
         className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay focus-visible:outline-gold border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
       />
       {error ? (
@@ -44,55 +61,184 @@ function Field({
 
 export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
+  const [teamName, setTeamName] = useState("");
+  const [captainName, setCaptainName] = useState("");
+  const [captainEmail, setCaptainEmail] = useState("");
+  const [captainMobile, setCaptainMobile] = useState("");
+  const [viceCaptainName, setViceCaptainName] = useState("");
+  const [viceCaptainEmail, setViceCaptainEmail] = useState("");
+  const [viceCaptainMobile, setViceCaptainMobile] = useState("");
+  const [feeTier, setFeeTier] = useState("STANDARD");
+  const [marketingConsent, setMarketingConsent] = useState(true);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      successRef.current?.focus();
+    }
+  }, [state.status]);
 
   if (state.status === "success") {
     return (
-      <div className="border-line bg-dugout border p-8 text-center">
-        <p className="font-display text-2xl font-extrabold uppercase">You&rsquo;re on the card.</p>
-        <p className="text-chalk-dim mt-2">{state.message}</p>
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        role="status"
+        className="animate-success-pop border-gold bg-dugout flex flex-col items-center gap-4 border p-8 text-center shadow-[0_0_0_4px_rgb(245_207_98/0.12)] outline-none sm:p-10"
+      >
+        <span className="bg-gold text-pitch-deep flex h-14 w-14 items-center justify-center rounded-full">
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <div>
+          <p className="font-display text-2xl font-extrabold uppercase sm:text-3xl">
+            You&rsquo;re on the card.
+          </p>
+          <p className="text-chalk-dim mt-2">{state.message}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <form action={formAction} className="border-line bg-dugout border p-6 sm:p-9" noValidate>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6">
         <Field
           id="teamName"
           label="Team Name"
           placeholder="e.g. Peachtree Panthers"
           error={state.fieldErrors?.teamName}
-        />
-        <Field
-          id="captainFirstName"
-          label="Captain First Name"
-          placeholder="First name"
-          error={state.fieldErrors?.captainFirstName}
+          value={teamName}
+          onChange={(event) => setTeamName(event.target.value)}
         />
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <Field
-          id="captainLastName"
-          label="Captain Last Name"
-          placeholder="Last name"
-          error={state.fieldErrors?.captainLastName}
-        />
-        <Field
-          id="captainMobile"
-          label="Mobile Number"
-          type="tel"
-          placeholder="(404) 555-0142"
-          error={state.fieldErrors?.captainMobile}
-        />
+
+      <div className="mt-8">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">Captain</p>
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Field
+            id="captainName"
+            label="Captain Name"
+            placeholder="Full name"
+            error={state.fieldErrors?.captainName}
+            value={captainName}
+            onChange={(event) => setCaptainName(event.target.value)}
+          />
+          <Field
+            id="captainEmail"
+            label="Email Address"
+            type="email"
+            placeholder="captain@email.com"
+            error={state.fieldErrors?.captainEmail}
+            value={captainEmail}
+            onChange={(event) => setCaptainEmail(event.target.value)}
+          />
+          <Field
+            id="captainMobile"
+            label="Mobile Number"
+            type="tel"
+            placeholder="(404) 555-0142"
+            error={state.fieldErrors?.captainMobile}
+            value={captainMobile}
+            onChange={(event) => setCaptainMobile(formatPhoneInput(event.target.value))}
+          />
+        </div>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6">
-        <Field
-          id="captainEmail"
-          label="Email Address"
-          type="email"
-          placeholder="captain@email.com"
-          error={state.fieldErrors?.captainEmail}
-        />
+
+      <div className="mt-8">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+          Vice Captain <span className="text-chalk-faint normal-case">(optional)</span>
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Field
+            id="viceCaptainName"
+            label="Vice Captain Name"
+            placeholder="Full name"
+            error={state.fieldErrors?.viceCaptainName}
+            value={viceCaptainName}
+            onChange={(event) => setViceCaptainName(event.target.value)}
+            optional
+          />
+          <Field
+            id="viceCaptainEmail"
+            label="Email Address"
+            type="email"
+            placeholder="vicecaptain@email.com"
+            error={state.fieldErrors?.viceCaptainEmail}
+            value={viceCaptainEmail}
+            onChange={(event) => setViceCaptainEmail(event.target.value)}
+            optional
+          />
+          <Field
+            id="viceCaptainMobile"
+            label="Mobile Number"
+            type="tel"
+            placeholder="(404) 555-0142"
+            error={state.fieldErrors?.viceCaptainMobile}
+            value={viceCaptainMobile}
+            onChange={(event) => setViceCaptainMobile(formatPhoneInput(event.target.value))}
+            optional
+          />
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-col gap-3">
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+          Team Registration Fee
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-8">
+          <label htmlFor="feeTier-standard" className="text-chalk flex items-center gap-2 text-[1.02rem]">
+            <input
+              id="feeTier-standard"
+              name="feeTier"
+              type="radio"
+              value="STANDARD"
+              checked={feeTier === "STANDARD"}
+              onChange={() => setFeeTier("STANDARD")}
+              required
+              className="accent-clay h-4 w-4"
+            />
+            $650 — Standard
+          </label>
+          <label htmlFor="feeTier-sponsorship" className="text-chalk flex items-center gap-2 text-[1.02rem]">
+            <input
+              id="feeTier-sponsorship"
+              name="feeTier"
+              type="radio"
+              value="SPONSORSHIP"
+              checked={feeTier === "SPONSORSHIP"}
+              onChange={() => setFeeTier("SPONSORSHIP")}
+              required
+              className="accent-clay h-4 w-4"
+            />
+            $800 — With Sponsorship
+          </label>
+        </div>
+        {state.fieldErrors?.feeTier ? (
+          <span className="text-clay-bright text-sm">{state.fieldErrors.feeTier}</span>
+        ) : null}
+      </div>
+
+      <div className="mt-8">
+        <label htmlFor="marketingConsent" className="text-chalk flex items-start gap-2 text-sm">
+          <input
+            id="marketingConsent"
+            name="marketingConsent"
+            type="checkbox"
+            checked={marketingConsent}
+            onChange={(event) => setMarketingConsent(event.target.checked)}
+            className="accent-clay mt-0.5 h-4 w-4"
+          />
+          I consent to receiving marketing emails from CIL.
+        </label>
       </div>
 
       {state.status === "error" && state.message ? (
@@ -104,7 +250,7 @@ export function RegistrationForm() {
       <button
         type="submit"
         disabled={pending}
-        className="font-data border-clay bg-clay text-chalk hover:border-clay-bright hover:bg-clay-bright mt-8 w-full border px-5 py-4 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+        className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright mt-8 w-full border px-5 py-4 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Submitting…" : "Submit Registration"}
       </button>

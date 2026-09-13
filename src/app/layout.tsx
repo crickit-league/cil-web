@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Big_Shoulders, Libre_Franklin, IBM_Plex_Mono } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const bigShoulders = Big_Shoulders({
@@ -24,16 +25,18 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Crick-It Inter League",
   description:
-    "Metro Atlanta's weekend cricket league. T15, hard tennis ball, on the city's baseball fields since 2013.",
+    "Metro Atlanta's weekend cricket league. F15, hard tennis ball, on the city's baseball fields since 2013.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${bigShoulders.variable} ${libreFranklin.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${bigShoulders.variable} ${libreFranklin.variable} ${plexMono.variable} h-full scroll-smooth antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden">{children}</body>
+      <body className="flex min-h-full flex-col overflow-x-hidden">
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

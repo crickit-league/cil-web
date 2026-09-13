@@ -2,7 +2,12 @@
 
 import { z } from "zod";
 import { registrationSchema } from "@/lib/validation/registration";
-import { NoOpenSeasonError, submitRegistration } from "@/lib/services/registrations";
+import {
+  DuplicateCaptainEmailError,
+  DuplicateTeamNameError,
+  NoOpenSeasonError,
+  submitRegistration,
+} from "@/lib/services/registrations";
 
 export type RegistrationFormState = {
   status: "idle" | "success" | "error";
@@ -16,10 +21,14 @@ export async function submitRegistrationAction(
 ): Promise<RegistrationFormState> {
   const parsed = registrationSchema.safeParse({
     teamName: formData.get("teamName"),
-    captainFirstName: formData.get("captainFirstName"),
-    captainLastName: formData.get("captainLastName"),
+    captainName: formData.get("captainName"),
     captainEmail: formData.get("captainEmail"),
     captainMobile: formData.get("captainMobile"),
+    viceCaptainName: formData.get("viceCaptainName"),
+    viceCaptainEmail: formData.get("viceCaptainEmail"),
+    viceCaptainMobile: formData.get("viceCaptainMobile"),
+    feeTier: formData.get("feeTier"),
+    marketingConsent: formData.get("marketingConsent") === "on",
   });
 
   if (!parsed.success) {
@@ -33,11 +42,24 @@ export async function submitRegistrationAction(
 
   try {
     await submitRegistration(parsed.data);
-    // TODO: confirmation/payment-reminder email via Resend (docs/architecture.md §9)
     // TODO: Cloudflare Turnstile before this ships live
   } catch (error) {
     if (error instanceof NoOpenSeasonError) {
       return { status: "error", message: error.message };
+    }
+    if (error instanceof DuplicateTeamNameError) {
+      return {
+        status: "error",
+        message: "Check the highlighted fields.",
+        fieldErrors: { teamName: error.message },
+      };
+    }
+    if (error instanceof DuplicateCaptainEmailError) {
+      return {
+        status: "error",
+        message: "Check the highlighted fields.",
+        fieldErrors: { captainEmail: error.message },
+      };
     }
     console.error("Registration submission failed:", error);
     return {

@@ -26,11 +26,13 @@ This is receive-and-forward only — see the note below before assuming it's a f
 
 1. Cloudflare dashboard → your domain → **Email → Email Routing → Get started**.
 2. Cloudflare adds the necessary MX and TXT records to your DNS automatically (no manual DNS editing needed for this part, unlike the Resend records in step 4).
-3. **Destination addresses** → add **your own email** (the one you can verify right now) → verify it (Cloudflare emails a confirmation link there). Add `CILcommittee@gmail.com` as a second destination later, once someone has access to click that inbox's verification link — no rush, it's additive.
-4. **Routing rules → Create address** → custom address `mail@crickitinterleague.org` (also worth adding `registration@`, `admin@` while you're in here) → action **Send to** → the address you just verified.
+3. **Destination addresses** → add the destination inbox → verify it (Cloudflare emails a confirmation link there). This has since been switched over to `CILcommittee@gmail.com` (originally set up with a personal email to get through verification immediately — see general rule above — then swapped once the committee inbox was reachable); no other steps below need to change when the destination changes.
+4. **Routing rules → Create address** → custom address `mail@crickitinterleague.org` (also worth adding `registration@`, `admin@` while you're in here) → action **Send to** → the verified destination address.
 5. From this point on, `mail@crickitinterleague.org` is a real, working address — that's the one to use as the practical committee address going forward, independent of whether anyone ever gets into the old Gmail.
 
-**What this does and doesn't do:** mail sent _to_ `mail@crickitinterleague.org` now lands in your inbox. Replying still shows your personal email as the sender, not `mail@crickitinterleague.org` — Cloudflare Email Routing doesn't provide the SMTP credentials needed for a "Send mail as" setup. If the committee wants replies to genuinely come from `mail@crickitinterleague.org`, use the Zoho path below instead. Neither is needed for Phase 1a — the confirmation/approval emails the app sends are automated via Resend regardless, not sent by a human from this inbox.
+**What this does and doesn't do:** mail sent _to_ `mail@crickitinterleague.org` now lands in `CILcommittee@gmail.com`. Replying still shows the sender as `CILcommittee@gmail.com`, not `mail@crickitinterleague.org` — Cloudflare Email Routing doesn't provide the SMTP credentials needed for a "Send mail as" setup. If the committee wants replies to genuinely come from `mail@crickitinterleague.org`, use the Zoho path below instead. Neither is needed for Phase 1a — the confirmation/approval emails the app sends are automated via Resend regardless, not sent by a human from this inbox.
+
+**Telling the aliases apart in Gmail:** since `mail@`, `admin@`, and `registration@` all forward into the same `CILcommittee@gmail.com` inbox, the original alias is only preserved in the `To:` header — set up one Gmail filter per alias to label them apart: Gmail search bar → dropdown arrow → **To** field → the alias (e.g. `admin@crickitinterleague.org`) → **Create filter** → **Apply the label** (new label per alias) → **Create filter**. Repeat for each of the three.
 
 ### Zoho Mail (free) — a real mailbox instead of forwarding
 
@@ -50,11 +52,28 @@ This is receive-and-forward only — see the note below before assuming it's a f
 2. **Add New → Project** → import `crickit-league/cil-web`.
 3. Framework preset should auto-detect as Next.js — accept the defaults.
 4. **Don't deploy yet** — it'll fail without a real `DATABASE_URL`. Come back to this after step 3 (Neon) and step 4 (Resend), then trigger a deploy from the Vercel dashboard or just push to `main`.
-5. Once you have real values for every variable in `.env.example`, add them under **Project Settings → Environment Variables** (Production **and** Preview environments — Preview lets every pull request get its own working deploy, which is worth having from day one).
+5. Once you have real values for every variable in `.env.example`, add them under **Project Settings → Environment Variables**. See §3's branch topology note for exactly which scope each one belongs in — it's not simply "Production and Preview."
 6. Invite the other admins: **Team Settings → Members → Invite**.
 7. Decide on Hobby vs. Pro (see `docs/architecture.md` §12 for the licensing nuance — Hobby is technically for non-commercial use, and this site collects registration fees). If the committee has any budget, Pro ($20/mo) is the clean answer.
 
+### Two git branches, one deliberate release gate
+
+This repo uses `main` for everyday work and a separate `production` branch as the actual release gate — not the Vercel default of deploying `main` straight to Production.
+
+1. **Settings → Git → Production Branch** → change it from `main` to **`production`**.
+2. From then on: PRs merge into `main` as normal. `main` itself gets redeployed automatically on every merge, but as a **Preview** deployment (not Production) — Vercel gives it a stable, persistent URL (`cil-web-git-main-<team>.vercel.app`) that's effectively "the dev site."
+3. **To release to production**: merge `main` into `production` (open a PR from `main` → `production`, or fast-forward-merge it) whenever you're ready. That push is what triggers the real Production deployment. This gives you an actual reviewable diff of what's shipping, and a permanent git record of every release.
+
 Nothing to put in `.env` — Vercel holds its own copy of these variables separately from your local `.env`.
+
+### Migrations run automatically on Preview/Dev, never on Production
+
+`scripts/vercel-build.mjs` runs before `next build` (see the `build` script in `package.json`) and checks `VERCEL_ENV`, which Vercel sets for every deployment:
+
+- `preview` — covers both PR branches and the persistent `main` deploy, since only the `production` git branch is scoped as Vercel's Production environment (see above). `prisma migrate deploy` runs automatically against that deployment's Neon branch.
+- `production` — the script skips migrating and logs that it did. Applying a migration to real registrant data is a deliberate, manually-run step: pull that deployment's real `DATABASE_URL_UNPOOLED` (`vercel env pull`) and run `npx prisma migrate deploy` against it yourself, on purpose, not as a side effect of merging code.
+
+This exists because every PR gets a freshly auto-created Neon branch (per the branch topology above) with no guarantee it already has whatever's in `prisma/migrations` — auto-migrating Preview means you never have to remember to do it by hand for a database nothing real depends on, while Production keeps a human in the loop.
 
 ---
 
@@ -75,13 +94,42 @@ Nothing to put in `.env` — Vercel holds its own copy of these variables separa
    ```
    This creates the actual `seasons` / `registrations` tables from `prisma/schema.prisma`.
 
-### Branch topology — don't re-derive this, it already bit us once
+### Branch topology — read this before touching any DATABASE_URL scope
 
-Neon gives a new project's default branch the name **`production`**. Connecting the Vercel integration afterward creates a **second branch, `vercel-dev`**, scoped only to Vercel's **Development** environment — that's the integration working as intended, so local dev doesn't touch real data.
+This took three separate rounds of "the form works but the data isn't where I expected" to get right (see git history 2026-08-26). Don't re-derive it by trial and error.
 
-**The trap**: if you ever widen an env var's scope in Vercel's dashboard (e.g. "just add Production to this Development-scoped variable" to fix a mismatch), you can accidentally point live traffic at `vercel-dev` instead of `production` without any error — both are valid, reachable databases, so nothing complains. This happened once already (see git history around 2026-08-26) and produced a confusing "the site works but my registration isn't where I expected" symptom, not a crash.
+**How Neon's native Vercel integration actually behaves**, once installed via **Vercel dashboard → Settings → Integrations** (or found from the Neon console side under the project's **Integration → Vercel integration** tab if it's not obvious in Vercel's UI — it can live in either place depending on how it was installed):
 
-**Current, correct state**: Vercel's **Production** and **Preview** environments → Neon's **`production`** branch. Vercel's **Development** environment → Neon's **`vercel-dev`** branch. If you're troubleshooting "data isn't where I expected," check the _hostname_ in the relevant env var (Neon gives each branch a distinct `ep-xxxx` hostname) before assuming the code is wrong.
+- Neon's project **Default branch** (named `production` from when the project was first created) is **permanently, statically** mapped to whatever git branch is configured as Vercel's **Production Branch** — that's `production`, per the two-branch setup in §2. This mapping is not something you configure per env-var; it's how the integration works.
+- **Every other Vercel branch — including `main`, and every PR branch — automatically gets its own fresh Neon branch**, created on first deploy. Neon console → your project → **Settings → Integrations → Vercel integration → Branches** lists these.
+- Ephemeral PR branches get auto-deleted when their git branch is merged or deleted (**Automation workflows → Automatically delete obsolete Neon branches**, on by default). `main` never merges or gets deleted, so its Neon branch is effectively **permanent** — that's `preview/main`, and it's what we're using as _the_ stable dev database, not a name we chose ourselves.
+- **The integration injects `DATABASE_URL`/`DATABASE_URL_UNPOOLED` dynamically per branch**, and a branch-specific entry (e.g. scoped to "Preview · main") always wins over a broader one (e.g. "All Pre-Production Environments"). **Do not manually create or widen a general Preview/Development-scoped `DATABASE_URL`** — it will look like it's doing something, silently get overridden by the integration's branch-specific entry, and produce exactly the "works but writes to the wrong place" symptom that cost us three rounds of debugging. Let the integration own Preview/Development entirely; only Production's env vars should ever be hand-managed.
+
+**Current, correct state:**
+
+| Environment       | Vercel              | Neon                                           | Managed by                                                               |
+| ----------------- | ------------------- | ---------------------------------------------- | ------------------------------------------------------------------------ |
+| Production        | `production` branch | `production` (Default)                         | Manual — the only hand-set `DATABASE_URL`                                |
+| Dev (persistent)  | `main` branch       | `preview/main`                                 | Neon integration, automatic                                              |
+| PR previews       | any other branch    | auto-created per branch, auto-deleted on merge | Neon integration, automatic                                              |
+| Local development | —                   | `preview/main`                                 | Manual — copy `preview/main`'s connection strings into your local `.env` |
+
+**Local dev must never point at the `production` branch.** Copy `preview/main`'s pooled/unpooled connection strings from the Neon console into your local `.env` instead — that way nobody's local testing (including ad-hoc scripts, `prisma migrate reset`, etc.) can touch real registrant data. There's no automatic sync for this; if Neon ever rotates or recreates `preview/main`, everyone's local `.env` needs a manual refresh.
+
+If you're troubleshooting "data isn't where I expected": check the _hostname_ in whichever `DATABASE_URL` is actually active (Neon gives each branch a distinct `ep-xxxx` hostname) before assuming the application code is wrong — in every case so far, it wasn't.
+
+### PR preview branches start with production's data, not preview/main's — resetting them is manual, on purpose
+
+Neither of Neon's Vercel integration modes lets you choose which branch a new PR preview branch forks from — it's always Neon's project **default branch** (`production` here), never `preview/main`. There's no setting for this; confirmed against Neon's own docs. So a fresh PR preview branch starts out looking like production (real registrant data, or whatever's actually there), not like the seeded dev data on `preview/main`.
+
+**Do not "fix" this by making `preview/main` the Neon default branch** — Vercel's Production environment is wired to Neon's default branch specifically (not by name), so that change would point real Production traffic at the dev database.
+
+Instead, `.github/workflows/reset-preview-branch.yml` is a manually-triggered (`workflow_dispatch`) action that resets one branch's data to match another's, via Neon's branch-restore API — copy-on-write, so it's fast regardless of data size. It's deliberately not automatic: an auto-reset on every push would wipe out whatever a reviewer was testing on that PR's preview between commits. To run it: **Actions tab → Reset Neon Preview Branch → Run workflow**, enter the PR's Neon branch name (e.g. `preview/my-feature` — check the exact name in the Neon console) as the target; it defaults to copying from `preview/main`. It refuses to target `production` or `preview/main` itself, and always preserves the target's prior state as a new branch first, in case the reset wasn't what you wanted.
+
+Needs two things added once, under **Settings → Secrets and variables → Actions**:
+
+- Secret `NEON_API_KEY` — Neon console → Account/Project Settings → API Keys → create one.
+- Variable `NEON_PROJECT_ID` — Neon console → Project Settings → General.
 
 ---
 
