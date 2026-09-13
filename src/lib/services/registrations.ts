@@ -79,7 +79,7 @@ export async function submitRegistration(input: RegistrationInput) {
     await sendRegistrationConfirmationEmail({
       captainEmail: data.captainEmail,
       captainName: data.captainName,
-      paymentDeadline: openSeason.registrationClosesAt,
+      teamName: data.teamName,
     });
   } catch (error) {
     // The registration itself is already saved — don't fail the whole

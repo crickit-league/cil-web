@@ -3,48 +3,32 @@ import { Resend } from "resend";
 type RegistrationConfirmationInput = {
   captainEmail: string;
   captainName: string;
-  paymentDeadline: Date;
+  teamName: string;
 };
 
-function formatDeadline(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    timeZone: "America/New_York",
-    month: "2-digit",
-    day: "2-digit",
-    year: "2-digit",
-  });
-}
-
-// The "registration.submitted" confirmation/payment-reminder email, per
-// docs/architecture.md §9 — fires immediately on submission, separate from
-// the later "registration.approved" invite email (Phase 1b). Same
-// RESEND_API_KEY / console-log-in-dev pattern as src/lib/auth/send-magic-link.ts.
+// The "registration.submitted" confirmation email, per docs/architecture.md
+// §9 — fires immediately on submission, separate from the later
+// "registration.approved" invite email (Phase 1b). Same RESEND_API_KEY /
+// console-log-in-dev pattern as src/lib/auth/send-magic-link.ts. Fixed copy
+// provided by the committee.
 export async function sendRegistrationConfirmationEmail({
   captainEmail,
   captainName,
-  paymentDeadline,
+  teamName,
 }: RegistrationConfirmationInput) {
-  const deadline = formatDeadline(paymentDeadline);
+  const text = `Hi ${captainName},
 
-  const text = `Dear ${captainName},
+Thank you for registering your team ${teamName} for the CIL Winter League Championship 2026–27! 🏏
 
-Congratulations! Your registration has been successfully completed for the 2026–2027 CIL Winter League.
+We will share the registration payment details soon. Please stay tuned for further updates.
 
-To confirm and secure your team's spot, please complete the registration payment and send the payment screenshot to CILcommittee@gmail.com without fail before ${deadline}.
-
-For any questions or further clarification, please contact Naren at +1 (916) 616-9339.
-
-Thank you, and we look forward to an exciting CIL Winter League season!
-
-Best regards,
+Thanks,
 CIL Committee`;
 
-  const html = `<p>Dear ${captainName},</p>
-<p>Congratulations! Your registration has been successfully completed for the 2026&ndash;2027 CIL Winter League.</p>
-<p>To confirm and secure your team&rsquo;s spot, please complete the registration payment and send the payment screenshot to <a href="mailto:CILcommittee@gmail.com">CILcommittee@gmail.com</a> without fail before ${deadline}.</p>
-<p>For any questions or further clarification, please contact Naren at +1 (916) 616-9339.</p>
-<p>Thank you, and we look forward to an exciting CIL Winter League season!</p>
-<p>Best regards,<br>CIL Committee</p>`;
+  const html = `<p>Hi ${captainName},</p>
+<p>Thank you for registering your team ${teamName} for the CIL Winter League Championship 2026&ndash;27! 🏏</p>
+<p>We will share the registration payment details soon. Please stay tuned for further updates.</p>
+<p>Thanks,<br>CIL Committee</p>`;
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -58,7 +42,7 @@ CIL Committee`;
   const { error } = await resend.emails.send({
     from,
     to: captainEmail,
-    subject: "Registration Confirmed — CIL Winter League 2026–2027",
+    subject: "CIL Winter League Championship 2026-27 Registration",
     text,
     html,
   });
