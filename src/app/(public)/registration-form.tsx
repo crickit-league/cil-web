@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { submitRegistrationAction, type RegistrationFormState } from "./actions";
 
 const initialState: RegistrationFormState = { status: "idle" };
@@ -63,12 +63,38 @@ export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
   const [captainMobile, setCaptainMobile] = useState("");
   const [viceCaptainMobile, setViceCaptainMobile] = useState("");
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      successRef.current?.focus();
+    }
+  }, [state.status]);
 
   if (state.status === "success") {
     return (
-      <div className="border-line bg-dugout border p-8 text-center">
-        <p className="font-display text-2xl font-extrabold uppercase">You&rsquo;re on the card.</p>
-        <p className="text-chalk-dim mt-2">{state.message}</p>
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        role="status"
+        className="animate-success-pop border-gold bg-dugout shadow-[0_0_0_4px_rgb(245_207_98/0.12)] flex flex-col items-center gap-4 border p-8 text-center outline-none sm:p-10"
+      >
+        <span className="bg-gold text-pitch-deep flex h-14 w-14 items-center justify-center rounded-full">
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <div>
+          <p className="font-display text-2xl font-extrabold uppercase sm:text-3xl">You&rsquo;re on the card.</p>
+          <p className="text-chalk-dim mt-2">{state.message}</p>
+        </div>
       </div>
     );
   }

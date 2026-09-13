@@ -98,6 +98,27 @@ body {
   }
 }
 
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-success-pop {
+  animation: success-pop 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-success-pop {
+    animation: none;
+  }
+}
+
 /* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */
 .hero-crest-watermark::after {
   content: "";
