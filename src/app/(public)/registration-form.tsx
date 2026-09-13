@@ -37,7 +37,6 @@ function Field({
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
         {label}
-        {optional ? <span className="text-chalk-faint normal-case"> (optional)</span> : null}
       </label>
       <input
         id={id}

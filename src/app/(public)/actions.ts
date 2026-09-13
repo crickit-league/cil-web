@@ -2,7 +2,12 @@
 
 import { z } from "zod";
 import { registrationSchema } from "@/lib/validation/registration";
-import { NoOpenSeasonError, submitRegistration } from "@/lib/services/registrations";
+import {
+  DuplicateCaptainEmailError,
+  DuplicateTeamNameError,
+  NoOpenSeasonError,
+  submitRegistration,
+} from "@/lib/services/registrations";
 
 export type RegistrationFormState = {
   status: "idle" | "success" | "error";
@@ -41,6 +46,20 @@ export async function submitRegistrationAction(
   } catch (error) {
     if (error instanceof NoOpenSeasonError) {
       return { status: "error", message: error.message };
+    }
+    if (error instanceof DuplicateTeamNameError) {
+      return {
+        status: "error",
+        message: "Check the highlighted fields.",
+        fieldErrors: { teamName: error.message },
+      };
+    }
+    if (error instanceof DuplicateCaptainEmailError) {
+      return {
+        status: "error",
+        message: "Check the highlighted fields.",
+        fieldErrors: { captainEmail: error.message },
+      };
     }
     console.error("Registration submission failed:", error);
     return {
