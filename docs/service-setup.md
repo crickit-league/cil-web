@@ -26,11 +26,13 @@ This is receive-and-forward only — see the note below before assuming it's a f
 
 1. Cloudflare dashboard → your domain → **Email → Email Routing → Get started**.
 2. Cloudflare adds the necessary MX and TXT records to your DNS automatically (no manual DNS editing needed for this part, unlike the Resend records in step 4).
-3. **Destination addresses** → add **your own email** (the one you can verify right now) → verify it (Cloudflare emails a confirmation link there). Add `CILcommittee@gmail.com` as a second destination later, once someone has access to click that inbox's verification link — no rush, it's additive.
-4. **Routing rules → Create address** → custom address `mail@crickitinterleague.org` (also worth adding `registration@`, `admin@` while you're in here) → action **Send to** → the address you just verified.
+3. **Destination addresses** → add the destination inbox → verify it (Cloudflare emails a confirmation link there). This has since been switched over to `CILcommittee@gmail.com` (originally set up with a personal email to get through verification immediately — see general rule above — then swapped once the committee inbox was reachable); no other steps below need to change when the destination changes.
+4. **Routing rules → Create address** → custom address `mail@crickitinterleague.org` (also worth adding `registration@`, `admin@` while you're in here) → action **Send to** → the verified destination address.
 5. From this point on, `mail@crickitinterleague.org` is a real, working address — that's the one to use as the practical committee address going forward, independent of whether anyone ever gets into the old Gmail.
 
-**What this does and doesn't do:** mail sent _to_ `mail@crickitinterleague.org` now lands in your inbox. Replying still shows your personal email as the sender, not `mail@crickitinterleague.org` — Cloudflare Email Routing doesn't provide the SMTP credentials needed for a "Send mail as" setup. If the committee wants replies to genuinely come from `mail@crickitinterleague.org`, use the Zoho path below instead. Neither is needed for Phase 1a — the confirmation/approval emails the app sends are automated via Resend regardless, not sent by a human from this inbox.
+**What this does and doesn't do:** mail sent _to_ `mail@crickitinterleague.org` now lands in `CILcommittee@gmail.com`. Replying still shows the sender as `CILcommittee@gmail.com`, not `mail@crickitinterleague.org` — Cloudflare Email Routing doesn't provide the SMTP credentials needed for a "Send mail as" setup. If the committee wants replies to genuinely come from `mail@crickitinterleague.org`, use the Zoho path below instead. Neither is needed for Phase 1a — the confirmation/approval emails the app sends are automated via Resend regardless, not sent by a human from this inbox.
+
+**Telling the aliases apart in Gmail:** since `mail@`, `admin@`, and `registration@` all forward into the same `CILcommittee@gmail.com` inbox, the original alias is only preserved in the `To:` header — set up one Gmail filter per alias to label them apart: Gmail search bar → dropdown arrow → **To** field → the alias (e.g. `admin@crickitinterleague.org`) → **Create filter** → **Apply the label** (new label per alias) → **Create filter**. Repeat for each of the three.
 
 ### Zoho Mail (free) — a real mailbox instead of forwarding
 

@@ -7,15 +7,13 @@ export function Hero() {
             Metro Atlanta &middot; Est. 2013
           </span>
           <h1 className="font-display mt-3 text-[3rem] leading-[0.92] font-extrabold text-balance uppercase sm:text-[4.5rem] lg:text-[6.3rem]">
-            The 2026&ndash;27
+            CIL Winter League
             <br />
-            Season Begins
-            <br />
-            <span className="text-clay">October 24.</span>
+            <span className="text-clay">Championship</span>
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
-            Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. F15, hard tennis ball,
-            one trophy. Team registration opens September&nbsp;12.
+            Over 13 years of weekend cricket at Atlanta continues with another exciting season. Registration
+            opens now.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
