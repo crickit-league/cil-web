@@ -5,7 +5,6 @@ import { UserMenu } from "./user-menu";
 const NAV = [
   { href: "#format", label: "Format" },
   { href: "#registration-form", label: "Register" },
-  { href: "#prizes", label: "Prizes" },
   { href: "#contact", label: "Contact" },
 ];
 

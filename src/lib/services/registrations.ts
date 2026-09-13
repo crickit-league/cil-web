@@ -10,6 +10,20 @@ export class NoOpenSeasonError extends Error {
   }
 }
 
+export class DuplicateTeamNameError extends Error {
+  constructor() {
+    super("A team with this name has already registered for this season.");
+    this.name = "DuplicateTeamNameError";
+  }
+}
+
+export class DuplicateCaptainEmailError extends Error {
+  constructor() {
+    super("This email address has already been used to register a team for this season.");
+    this.name = "DuplicateCaptainEmailError";
+  }
+}
+
 /**
  * Validates and stores a Phase 1a team registration against whichever
  * season currently has registration open, then sends the captain the
@@ -25,6 +39,25 @@ export async function submitRegistration(input: RegistrationInput) {
 
   if (!openSeason) {
     throw new NoOpenSeasonError();
+  }
+
+  // Checked up front, not just left to the DB's unique constraint, so a
+  // duplicate submission gets a message pointing at the actual field
+  // instead of a generic failure.
+  const [existingTeam, existingCaptainEmail] = await Promise.all([
+    prisma.registration.findUnique({
+      where: { seasonId_teamName: { seasonId: openSeason.id, teamName: data.teamName } },
+    }),
+    prisma.registration.findUnique({
+      where: { seasonId_captainEmail: { seasonId: openSeason.id, captainEmail: data.captainEmail } },
+    }),
+  ]);
+
+  if (existingTeam) {
+    throw new DuplicateTeamNameError();
+  }
+  if (existingCaptainEmail) {
+    throw new DuplicateCaptainEmailError();
   }
 
   const registration = await prisma.registration.create({
@@ -46,7 +79,7 @@ export async function submitRegistration(input: RegistrationInput) {
     await sendRegistrationConfirmationEmail({
       captainEmail: data.captainEmail,
       captainName: data.captainName,
-      paymentDeadline: openSeason.registrationClosesAt,
+      teamName: data.teamName,
     });
   } catch (error) {
     // The registration itself is already saved — don't fail the whole

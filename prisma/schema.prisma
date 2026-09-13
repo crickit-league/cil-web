@@ -152,9 +152,9 @@ model Registration {
   captainName       String
   captainEmail      String
   captainMobile     String
-  viceCaptainName   String
-  viceCaptainEmail  String
-  viceCaptainMobile String
+  viceCaptainName   String?
+  viceCaptainEmail  String?
+  viceCaptainMobile String?
   feeTier           FeeTier @default(STANDARD)
   marketingConsent  Boolean @default(false)
 
@@ -171,6 +171,8 @@ model Registration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([seasonId, teamName])
+  @@unique([seasonId, captainEmail])
   @@index([seasonId, status])
   @@map("registrations")
 }

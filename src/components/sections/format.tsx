@@ -1,26 +1,26 @@
 const FACTS = [
   {
     tag: "Ball",
-    body: "Hard tennis (red/yellow). CIL supplies the balls for every scheduled match — no need to bring your own.",
+    body: "Hard tennis (red/yellow). CIL supplies the balls for every scheduled match.",
   },
   {
     tag: "Ground",
-    body: "Baseball fields across Metro Atlanta. Boundary scoring is set per field category, from a tight 2D-and-out to a full 4-over-the-fence.",
+    body: "Baseball fields across Metro Atlanta. Boundary scoring is set per field category.",
   },
   {
     tag: "Overs",
-    body: "15 a side, 10 players plus a super-sub. No LBWs, no last-man batting, max four overs per bowler.",
+    body: "15 a side, 10 players. No LBWs, no last-man batting, max four overs per bowler.",
   },
   {
     tag: "Schedule",
-    body: "Saturdays and Sundays. Matches can move by mutual agreement between captains — CIL keeps the ground booked either way.",
+    body: "Saturday or Sunday based on ground availability.",
   },
 ];
 
 const TIMELINE = [
-  { when: "Aug 31", what: "Registration Opens", now: true },
+  { when: "Sep 12", what: "Registration Opens", now: true },
   { when: "Sep 30", what: "Registration Closes" },
-  { when: "Early Oct", what: "Teams Approved & Pools Set" },
+  { when: "Oct 14", what: "Captains Meet" },
   { when: "Oct 24", what: "League Stage Begins" },
   { when: "TBD", what: "Playoffs & Final" },
 ];

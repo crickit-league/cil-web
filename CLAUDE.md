@@ -53,7 +53,7 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link + 6-dig
 
 ## Admin/org facts
 
-5 admin accounts. Shared inbox `CILcommittee@gmail.com` (existing Gmail, not yet on the branded domain). Domain not purchased as of last check — see STATUS.md for current state.
+5 admin accounts. Shared inbox `CILcommittee@gmail.com` (existing Gmail, not yet on the branded domain, though `mail@crickitinterleague.org` now forwards to a verified inbox via Cloudflare Email Routing). Domain `crickitinterleague.org` is purchased and live: DNS, Email Routing, and Resend (transactional email, verified against the `mail.` subdomain) are all working. Turnstile still pending — see STATUS.md for current state.
 
 ## External services
 

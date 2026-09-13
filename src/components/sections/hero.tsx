@@ -15,7 +15,7 @@ export function Hero() {
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
             Thirteen years of weekend cricket on Atlanta&rsquo;s ballfields continues. F15, hard tennis ball,
-            one trophy. Team registration opens August&nbsp;31.
+            one trophy. Team registration opens September&nbsp;12.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a

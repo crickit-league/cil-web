@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { submitRegistrationAction, type RegistrationFormState } from "./actions";
 
 const initialState: RegistrationFormState = { status: "idle" };
@@ -22,6 +22,7 @@ function Field({
   error,
   value,
   onChange,
+  optional = false,
 }: {
   id: string;
   label: string;
@@ -30,6 +31,7 @@ function Field({
   error?: string;
   value?: string;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  optional?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -43,7 +45,7 @@ function Field({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        required
+        required={!optional}
         value={value}
         onChange={onChange}
         className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay focus-visible:outline-gold border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -61,12 +63,40 @@ export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
   const [captainMobile, setCaptainMobile] = useState("");
   const [viceCaptainMobile, setViceCaptainMobile] = useState("");
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      successRef.current?.focus();
+    }
+  }, [state.status]);
 
   if (state.status === "success") {
     return (
-      <div className="border-line bg-dugout border p-8 text-center">
-        <p className="font-display text-2xl font-extrabold uppercase">You&rsquo;re on the card.</p>
-        <p className="text-chalk-dim mt-2">{state.message}</p>
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        role="status"
+        className="animate-success-pop border-gold bg-dugout flex flex-col items-center gap-4 border p-8 text-center shadow-[0_0_0_4px_rgb(245_207_98/0.12)] outline-none sm:p-10"
+      >
+        <span className="bg-gold text-pitch-deep flex h-14 w-14 items-center justify-center rounded-full">
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <div>
+          <p className="font-display text-2xl font-extrabold uppercase sm:text-3xl">
+            You&rsquo;re on the card.
+          </p>
+          <p className="text-chalk-dim mt-2">{state.message}</p>
+        </div>
       </div>
     );
   }
@@ -111,13 +141,16 @@ export function RegistrationForm() {
       </div>
 
       <div className="mt-8">
-        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">Vice Captain</p>
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+          Vice Captain <span className="text-chalk-faint normal-case">(optional)</span>
+        </p>
         <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field
             id="viceCaptainName"
             label="Vice Captain Name"
             placeholder="Full name"
             error={state.fieldErrors?.viceCaptainName}
+            optional
           />
           <Field
             id="viceCaptainEmail"
@@ -125,6 +158,7 @@ export function RegistrationForm() {
             type="email"
             placeholder="vicecaptain@email.com"
             error={state.fieldErrors?.viceCaptainEmail}
+            optional
           />
           <Field
             id="viceCaptainMobile"
@@ -134,6 +168,7 @@ export function RegistrationForm() {
             error={state.fieldErrors?.viceCaptainMobile}
             value={viceCaptainMobile}
             onChange={(event) => setViceCaptainMobile(formatPhoneInput(event.target.value))}
+            optional
           />
         </div>
       </div>
