@@ -61,8 +61,15 @@ function Field({
 
 export function RegistrationForm() {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, initialState);
+  const [teamName, setTeamName] = useState("");
+  const [captainName, setCaptainName] = useState("");
+  const [captainEmail, setCaptainEmail] = useState("");
   const [captainMobile, setCaptainMobile] = useState("");
+  const [viceCaptainName, setViceCaptainName] = useState("");
+  const [viceCaptainEmail, setViceCaptainEmail] = useState("");
   const [viceCaptainMobile, setViceCaptainMobile] = useState("");
+  const [feeTier, setFeeTier] = useState("STANDARD");
+  const [marketingConsent, setMarketingConsent] = useState(true);
   const successRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,6 +116,8 @@ export function RegistrationForm() {
           label="Team Name"
           placeholder="e.g. Peachtree Panthers"
           error={state.fieldErrors?.teamName}
+          value={teamName}
+          onChange={(event) => setTeamName(event.target.value)}
         />
       </div>
 
@@ -120,6 +129,8 @@ export function RegistrationForm() {
             label="Captain Name"
             placeholder="Full name"
             error={state.fieldErrors?.captainName}
+            value={captainName}
+            onChange={(event) => setCaptainName(event.target.value)}
           />
           <Field
             id="captainEmail"
@@ -127,6 +138,8 @@ export function RegistrationForm() {
             type="email"
             placeholder="captain@email.com"
             error={state.fieldErrors?.captainEmail}
+            value={captainEmail}
+            onChange={(event) => setCaptainEmail(event.target.value)}
           />
           <Field
             id="captainMobile"
@@ -150,6 +163,8 @@ export function RegistrationForm() {
             label="Vice Captain Name"
             placeholder="Full name"
             error={state.fieldErrors?.viceCaptainName}
+            value={viceCaptainName}
+            onChange={(event) => setViceCaptainName(event.target.value)}
             optional
           />
           <Field
@@ -158,6 +173,8 @@ export function RegistrationForm() {
             type="email"
             placeholder="vicecaptain@email.com"
             error={state.fieldErrors?.viceCaptainEmail}
+            value={viceCaptainEmail}
+            onChange={(event) => setViceCaptainEmail(event.target.value)}
             optional
           />
           <Field
@@ -184,7 +201,8 @@ export function RegistrationForm() {
               name="feeTier"
               type="radio"
               value="STANDARD"
-              defaultChecked
+              checked={feeTier === "STANDARD"}
+              onChange={() => setFeeTier("STANDARD")}
               required
               className="accent-clay h-4 w-4"
             />
@@ -196,6 +214,8 @@ export function RegistrationForm() {
               name="feeTier"
               type="radio"
               value="SPONSORSHIP"
+              checked={feeTier === "SPONSORSHIP"}
+              onChange={() => setFeeTier("SPONSORSHIP")}
               required
               className="accent-clay h-4 w-4"
             />
@@ -213,7 +233,8 @@ export function RegistrationForm() {
             id="marketingConsent"
             name="marketingConsent"
             type="checkbox"
-            defaultChecked
+            checked={marketingConsent}
+            onChange={(event) => setMarketingConsent(event.target.checked)}
             className="accent-clay mt-0.5 h-4 w-4"
           />
           I consent to receiving marketing emails from CIL.
