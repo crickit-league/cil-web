@@ -51,11 +51,11 @@ export default async function AdminDashboardPage() {
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">
                       Vice Captain
                     </dt>
-                    <dd>{r.viceCaptainName}</dd>
+                    <dd>{r.viceCaptainName ?? "—"}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Email</dt>
-                    <dd className="truncate">{r.viceCaptainEmail}</dd>
+                    <dd className="truncate">{r.viceCaptainEmail ?? "—"}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Mobile</dt>
-                    <dd>{r.viceCaptainMobile}</dd>
+                    <dd>{r.viceCaptainMobile ?? "—"}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Season</dt>
                     <dd>{r.season.name}</dd>
                     <dt className="text-chalk-dim text-[0.62rem] tracking-[0.08em] uppercase">Fee Tier</dt>
@@ -98,9 +98,9 @@ export default async function AdminDashboardPage() {
                       <td className="px-4 py-3">{r.captainName}</td>
                       <td className="px-4 py-3">{r.captainEmail}</td>
                       <td className="px-4 py-3">{r.captainMobile}</td>
-                      <td className="px-4 py-3">{r.viceCaptainName}</td>
-                      <td className="px-4 py-3">{r.viceCaptainEmail}</td>
-                      <td className="px-4 py-3">{r.viceCaptainMobile}</td>
+                      <td className="px-4 py-3">{r.viceCaptainName ?? "—"}</td>
+                      <td className="px-4 py-3">{r.viceCaptainEmail ?? "—"}</td>
+                      <td className="px-4 py-3">{r.viceCaptainMobile ?? "—"}</td>
                       <td className="px-4 py-3">{r.season.name}</td>
                       <td className="px-4 py-3">{r.status}</td>
                       <td className="px-4 py-3">{FEE_TIER_LABEL[r.feeTier]}</td>

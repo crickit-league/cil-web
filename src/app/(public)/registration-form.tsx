@@ -22,6 +22,7 @@ function Field({
   error,
   value,
   onChange,
+  optional = false,
 }: {
   id: string;
   label: string;
@@ -30,11 +31,13 @@ function Field({
   error?: string;
   value?: string;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  optional?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
         {label}
+        {optional ? <span className="text-chalk-faint normal-case"> (optional)</span> : null}
       </label>
       <input
         id={id}
@@ -43,7 +46,7 @@ function Field({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        required
+        required={!optional}
         value={value}
         onChange={onChange}
         className="border-line text-chalk placeholder:text-chalk-faint focus:border-clay focus-visible:outline-gold border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-[1.02rem] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -111,13 +114,16 @@ export function RegistrationForm() {
       </div>
 
       <div className="mt-8">
-        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">Vice Captain</p>
+        <p className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase">
+          Vice Captain <span className="text-chalk-faint normal-case">(optional)</span>
+        </p>
         <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field
             id="viceCaptainName"
             label="Vice Captain Name"
             placeholder="Full name"
             error={state.fieldErrors?.viceCaptainName}
+            optional
           />
           <Field
             id="viceCaptainEmail"
@@ -125,6 +131,7 @@ export function RegistrationForm() {
             type="email"
             placeholder="vicecaptain@email.com"
             error={state.fieldErrors?.viceCaptainEmail}
+            optional
           />
           <Field
             id="viceCaptainMobile"
@@ -134,6 +141,7 @@ export function RegistrationForm() {
             error={state.fieldErrors?.viceCaptainMobile}
             value={viceCaptainMobile}
             onChange={(event) => setViceCaptainMobile(formatPhoneInput(event.target.value))}
+            optional
           />
         </div>
       </div>

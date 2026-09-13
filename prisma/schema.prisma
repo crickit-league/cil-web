@@ -152,9 +152,9 @@ model Registration {
   captainName       String
   captainEmail      String
   captainMobile     String
-  viceCaptainName   String
-  viceCaptainEmail  String
-  viceCaptainMobile String
+  viceCaptainName   String?
+  viceCaptainEmail  String?
+  viceCaptainMobile String?
   feeTier           FeeTier @default(STANDARD)
   marketingConsent  Boolean @default(false)
 
