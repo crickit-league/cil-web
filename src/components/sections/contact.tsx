@@ -9,14 +9,14 @@ export function Contact() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div className="border-line border p-7">
             <span className="font-data text-clay-bright block text-xs tracking-[0.18em] uppercase">
               Registration
             </span>
             <a
               href="mailto:registration@crickitinterleague.org"
-              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
             >
               registration@crickitinterleague.org
             </a>
@@ -28,7 +28,7 @@ export function Contact() {
             </span>
             <a
               href="mailto:admin@crickitinterleague.org"
-              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
             >
               admin@crickitinterleague.org
             </a>
@@ -40,7 +40,7 @@ export function Contact() {
             </span>
             <a
               href="mailto:mail@crickitinterleague.org"
-              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all"
+              className="font-data hover:text-clay-bright mt-1.5 block text-[1.02rem] break-all lg:break-normal lg:whitespace-nowrap"
             >
               mail@crickitinterleague.org
             </a>
