@@ -1,7 +1,9 @@
+import ExcelJS from "exceljs";
 import { prisma } from "@/lib/db/prisma";
 import { registrationSchema, type RegistrationInput } from "@/lib/validation/registration";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { sendRegistrationConfirmationEmail } from "@/lib/email/send-registration-confirmation";
+import { FEE_TIER_LABEL } from "@/lib/registrations/labels";
 
 export class NoOpenSeasonError extends Error {
   constructor() {
@@ -105,4 +107,61 @@ export async function listRegistrations(user: SessionUser) {
     include: { season: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
   });
+}
+
+/**
+ * Builds an .xlsx workbook of every registration (same rows and order as
+ * the admin table) for the committee to work with offline. Permission is
+ * enforced by `listRegistrations`, so this is safe to call from any route.
+ */
+export async function exportRegistrationsToExcel(user: SessionUser): Promise<ArrayBuffer> {
+  const registrations = await listRegistrations(user);
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "CIL Web";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Registrations", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  });
+
+  sheet.columns = [
+    { header: "Team", key: "teamName", width: 28 },
+    { header: "Captain", key: "captainName", width: 24 },
+    { header: "Captain Email", key: "captainEmail", width: 32 },
+    { header: "Captain Mobile", key: "captainMobile", width: 16 },
+    { header: "Vice Captain", key: "viceCaptainName", width: 24 },
+    { header: "Vice Captain Email", key: "viceCaptainEmail", width: 32 },
+    { header: "Vice Captain Mobile", key: "viceCaptainMobile", width: 18 },
+    { header: "Season", key: "season", width: 20 },
+    { header: "Status", key: "status", width: 14 },
+    { header: "Fee Tier", key: "feeTier", width: 18 },
+    { header: "Fee Status", key: "feeStatus", width: 12 },
+    { header: "Marketing Consent", key: "marketingConsent", width: 18 },
+    { header: "Submitted", key: "createdAt", width: 20, style: { numFmt: "yyyy-mm-dd hh:mm" } },
+  ];
+
+  for (const r of registrations) {
+    sheet.addRow({
+      teamName: r.teamName,
+      captainName: r.captainName,
+      captainEmail: r.captainEmail,
+      // Stored as text so Excel doesn't strip leading zeros or `+`.
+      captainMobile: r.captainMobile,
+      viceCaptainName: r.viceCaptainName ?? "",
+      viceCaptainEmail: r.viceCaptainEmail ?? "",
+      viceCaptainMobile: r.viceCaptainMobile ?? "",
+      season: r.season.name,
+      status: r.status,
+      feeTier: FEE_TIER_LABEL[r.feeTier],
+      feeStatus: r.feeStatus,
+      marketingConsent: r.marketingConsent ? "Yes" : "No",
+      createdAt: r.createdAt,
+    });
+  }
+
+  sheet.getRow(1).font = { bold: true };
+  sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: sheet.columnCount } };
+
+  return workbook.xlsx.writeBuffer() as Promise<ArrayBuffer>;
 }
