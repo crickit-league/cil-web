@@ -2,12 +2,8 @@ import { auth } from "@/lib/auth";
 import { can } from "@/lib/auth/permissions";
 import { listRegistrations } from "@/lib/services/registrations";
 import { listAdminAccounts } from "@/lib/services/admins";
+import { FEE_TIER_LABEL } from "@/lib/registrations/labels";
 import { AdminManagement } from "./admin-management";
-
-const FEE_TIER_LABEL = {
-  STANDARD: "$650 Standard",
-  SPONSORSHIP: "$800 Sponsorship",
-} as const;
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -18,11 +14,24 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-12">
       <section className="flex flex-col gap-8">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold tracking-wide uppercase">Registrations</h1>
-          <p className="text-chalk-dim mt-1 text-sm">
-            {registrations.length} submission{registrations.length === 1 ? "" : "s"} received.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold tracking-wide uppercase">Registrations</h1>
+            <p className="text-chalk-dim mt-1 text-sm">
+              {registrations.length} submission{registrations.length === 1 ? "" : "s"} received.
+            </p>
+          </div>
+          {registrations.length > 0 ? (
+            // Plain link, not <Link>: this is a file download from a route
+            // handler, not a client-side navigation.
+            <a
+              href="/admin/registrations/export"
+              download
+              className="font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex items-center justify-center self-start border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors sm:self-auto"
+            >
+              Download Excel
+            </a>
+          ) : null}
         </div>
 
         {registrations.length === 0 ? (
