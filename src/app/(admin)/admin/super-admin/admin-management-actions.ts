@@ -23,7 +23,7 @@ export async function grantAdminAction(_prev: GrantAdminState, formData: FormDat
     return { status: "error", message: error instanceof Error ? error.message : "Something went wrong." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/super-admin");
   return { status: "success", message: `Granted admin access to ${email.toLowerCase()}.` };
 }
 
@@ -40,5 +40,5 @@ export async function revokeAdminAction(formData: FormData) {
     console.error("Failed to revoke admin role:", error);
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/super-admin");
 }
