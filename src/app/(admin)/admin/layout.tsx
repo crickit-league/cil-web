@@ -22,15 +22,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Sections are listed here so adding one is a one-line change. Super Admin
   // is hidden from plain admins; its page re-checks the permission itself.
-  const navItems: AdminNavItem[] = [{ href: "/admin/registrations", label: "Registration" }];
+  const navItems: AdminNavItem[] = [
+    { href: "/admin/registrations", label: "Registration", icon: "registration" },
+  ];
   if (can(session.user, "manage-admins")) {
-    navItems.push({ href: "/admin/super-admin", label: "Super Admin" });
+    navItems.push({ href: "/admin/super-admin", label: "Super Admin", icon: "super-admin" });
   }
 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1180px] flex-1 px-5 py-8 sm:px-8">
+      <main className="w-full flex-1 px-5 py-8 sm:px-8">
         <div className="flex flex-col gap-8 md:flex-row">
           <AdminNav items={navItems} />
           <div className="min-w-0 flex-1">{children}</div>
