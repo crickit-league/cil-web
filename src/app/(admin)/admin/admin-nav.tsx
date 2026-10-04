@@ -45,9 +45,10 @@ function NavIcon({ name }: { name: AdminNavIcon }) {
   );
 }
 
-// Left sidebar at `md` and up (collapsible to an icon rail, remembered per
-// browser); a horizontally scrollable tab strip below it, so it works at
-// phone width without eating vertical space. Collapse only applies at `md`+.
+// Left sidebar at `md` and up: a floating card, sticky below the site header so
+// it stays pinned while the page scrolls, and collapsible to an icon rail
+// (remembered per browser). Below `md` it's a horizontally scrollable tab strip
+// so it works at phone width without eating vertical space.
 export function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -77,8 +78,8 @@ export function AdminNav({ items }: { items: AdminNavItem[] }) {
   return (
     <nav
       aria-label="Admin sections"
-      className={`border-line -mx-5 flex gap-1 overflow-x-auto border-b px-5 sm:-mx-8 sm:px-8 md:mx-0 md:shrink-0 md:flex-col md:overflow-visible md:border-r md:border-b-0 md:px-0 md:pr-3 ${
-        collapsed ? "md:w-14" : "md:w-52"
+      className={`border-line md:bg-dugout -mx-5 flex gap-1 overflow-x-auto border-b px-5 sm:-mx-8 sm:px-8 md:sticky md:top-24 md:mx-0 md:shrink-0 md:flex-col md:self-start md:overflow-visible md:border md:p-2 md:shadow-lg md:shadow-black/30 ${
+        collapsed ? "md:w-16" : "md:w-56"
       }`}
     >
       <button
