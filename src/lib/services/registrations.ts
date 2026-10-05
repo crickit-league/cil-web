@@ -7,6 +7,7 @@ import {
 } from "@/lib/validation/registration";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { sendRegistrationConfirmationEmail } from "@/lib/email/send-registration-confirmation";
+import { diffRecords, recordAudit } from "@/lib/services/audit";
 import { FEE_TIER_LABEL } from "@/lib/registrations/labels";
 
 export class NoOpenSeasonError extends Error {
@@ -148,22 +149,37 @@ export async function updateRegistration(user: SessionUser, id: string, input: u
   if (teamClash) throw new DuplicateTeamNameError();
   if (emailClash) throw new DuplicateCaptainEmailError();
 
-  return prisma.registration.update({
-    where: { id },
-    data: {
-      teamName: data.teamName,
-      captainName: data.captainName,
-      captainEmail: data.captainEmail,
-      captainMobile: data.captainMobile,
-      // `?? null` so clearing a field actually clears it (undefined = "leave alone" to Prisma).
-      viceCaptainName: data.viceCaptainName ?? null,
-      viceCaptainEmail: data.viceCaptainEmail ?? null,
-      viceCaptainMobile: data.viceCaptainMobile ?? null,
-      feeTier: data.feeTier,
-      marketingConsent: data.marketingConsent,
-      status: data.status,
-      feeStatus: data.feeStatus,
-    },
+  const next = {
+    teamName: data.teamName,
+    captainName: data.captainName,
+    captainEmail: data.captainEmail,
+    captainMobile: data.captainMobile,
+    // `?? null` so clearing a field actually clears it (undefined = "leave alone" to Prisma).
+    viceCaptainName: data.viceCaptainName ?? null,
+    viceCaptainEmail: data.viceCaptainEmail ?? null,
+    viceCaptainMobile: data.viceCaptainMobile ?? null,
+    feeTier: data.feeTier,
+    marketingConsent: data.marketingConsent,
+    status: data.status,
+    feeStatus: data.feeStatus,
+  };
+
+  const changes = diffRecords(existing, next);
+  if (Object.keys(changes).length === 0) {
+    return existing;
+  }
+
+  // Update and audit entry commit together � no change without a log line.
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.registration.update({ where: { id }, data: next });
+    await recordAudit(tx, user, {
+      action: "registration.update",
+      entityType: "Registration",
+      entityId: id,
+      summary: `edited registration "${updated.teamName}"`,
+      changes,
+    });
+    return updated;
   });
 }
 

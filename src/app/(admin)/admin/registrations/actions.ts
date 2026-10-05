@@ -26,5 +26,6 @@ export async function updateRegistrationAction(
   }
 
   revalidatePath("/admin/registrations");
+  revalidatePath("/admin/activity");
   return { ok: true };
 }

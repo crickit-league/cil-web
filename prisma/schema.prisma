@@ -64,6 +64,7 @@ model User {
   person               Person?
   standingsAdjustments StandingsAdjustment[]
   importRuns           ImportRun[]
+  auditLogs            AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -762,4 +763,35 @@ model NameAlias {
   createdAt DateTime @default(now())
 
   @@map("name_aliases")
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────
+//
+// Append-only record of admin actions: who did what to which record, with
+// old/new values of the fields that changed. Written from the service layer
+// inside the same transaction as the change itself (services/audit.ts), so a
+// change can't commit without its log entry. The application never updates or
+// deletes rows here. `actorEmail` is a copy so the trail survives deletion of
+// the user.
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  actorUserId String?
+  actor       User?   @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorEmail  String
+
+  // Dotted verb, e.g. "registration.update", "admin.grant".
+  action     String
+  entityType String
+  entityId   String
+  summary    String
+
+  // { field: [oldValue, newValue] } — only fields that changed.
+  changes Json?
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_log")
 }

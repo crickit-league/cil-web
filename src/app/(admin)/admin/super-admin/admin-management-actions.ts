@@ -24,6 +24,7 @@ export async function grantAdminAction(_prev: GrantAdminState, formData: FormDat
   }
 
   revalidatePath("/admin/super-admin");
+  revalidatePath("/admin/activity");
   return { status: "success", message: `Granted admin access to ${email.toLowerCase()}.` };
 }
 
@@ -41,4 +42,5 @@ export async function revokeAdminAction(formData: FormData) {
   }
 
   revalidatePath("/admin/super-admin");
+  revalidatePath("/admin/activity");
 }
