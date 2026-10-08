@@ -75,7 +75,13 @@ type DataTableProps<T extends object, D> = {
   searchPlaceholder?: string;
   pageSize?: number;
   edit?: EditConfig<T, D>;
+  /** Keep the first column pinned while scrolling sideways. Default true. */
+  pinFirstColumn?: boolean;
 };
+
+// Pinned cells need an opaque background so scrolled content doesn't show
+// through, and a right-edge line to mark where the pinned area ends.
+const PIN_CELL = "sticky left-0 shadow-[inset_-1px_0_0_var(--color-line)]";
 
 const buttonClass =
   "font-data inline-flex items-center justify-center border px-3 py-2 text-[0.68rem] tracking-[0.08em] uppercase transition-colors disabled:opacity-50";
@@ -91,6 +97,7 @@ export function DataTable<T extends object, D = never>({
   searchPlaceholder = "Search…",
   pageSize = 25,
   edit,
+  pinFirstColumn = true,
 }: DataTableProps<T, D>) {
   const table = useTable({
     features: adminTableFeatures,
@@ -300,22 +307,26 @@ export function DataTable<T extends object, D = never>({
             })}
           </div>
 
-          {/* Table at `sm` and up. */}
-          <div className="border-line hidden overflow-x-auto border sm:block">
+          {/* Table at `sm` and up. The header sticks inside this scroll box (a sticky header can't escape an overflow container). */}
+          <div className="border-line hidden max-h-[calc(100vh-12rem)] overflow-auto border sm:block">
             <table className="w-full text-left text-sm">
               <thead>
                 {table.getHeaderGroups().map((group) => (
                   <tr
                     key={group.id}
-                    className="font-data border-line text-chalk-dim border-b text-[0.68rem] tracking-[0.1em] uppercase"
+                    className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] uppercase"
                   >
-                    {group.headers.map((header) => {
+                    {group.headers.map((header, index) => {
                       const sorted = header.column.getIsSorted();
                       const canSort = header.column.getCanSort();
                       return (
                         <th
                           key={header.id}
-                          className="px-4 py-3 whitespace-nowrap"
+                          className={`bg-dugout sticky top-0 px-4 py-3 whitespace-nowrap ${
+                            pinFirstColumn && index === 0
+                              ? "left-0 z-20 shadow-[inset_-1px_-1px_0_var(--color-line)]"
+                              : "z-10 shadow-[inset_0_-1px_0_var(--color-line)]"
+                          }`}
                           aria-sort={
                             sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined
                           }
@@ -338,7 +349,7 @@ export function DataTable<T extends object, D = never>({
                       );
                     })}
                     {edit ? (
-                      <th className="px-4 py-3">
+                      <th className="bg-dugout sticky top-0 z-10 px-4 py-3 shadow-[inset_0_-1px_0_var(--color-line)]">
                         <span className="sr-only">Actions</span>
                       </th>
                     ) : null}
@@ -348,8 +359,13 @@ export function DataTable<T extends object, D = never>({
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id} className="border-line border-b align-top last:border-0">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="min-w-28 px-4 py-3">
+                    {row.getVisibleCells().map((cell, index) => (
+                      <td
+                        key={cell.id}
+                        className={`min-w-28 px-4 py-3 ${
+                          pinFirstColumn && index === 0 ? `${PIN_CELL} bg-pitch z-10` : ""
+                        }`}
+                      >
                         {renderCell(cell, row.id)}
                       </td>
                     ))}
