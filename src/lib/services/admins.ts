@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
+import { recordAudit } from "@/lib/services/audit";
 import { grantAdminSchema } from "@/lib/validation/admin";
 
 /**
@@ -51,7 +52,16 @@ export async function grantAdminRole(actingUser: SessionUser, rawEmail: string) 
   });
   if (existing) return;
 
-  await prisma.userRole.create({ data: { userId: user.id, role: "ADMIN" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.userRole.create({ data: { userId: user.id, role: "ADMIN" } });
+    await recordAudit(tx, actingUser, {
+      action: "admin.grant",
+      entityType: "User",
+      entityId: user.id,
+      summary: `granted admin access to ${email}`,
+      changes: { role: [null, "ADMIN"] },
+    });
+  });
 }
 
 /**
@@ -75,5 +85,16 @@ export async function revokeAdminRole(actingUser: SessionUser, userRoleId: strin
     throw new Error("You can't revoke your own admin access.");
   }
 
-  await prisma.userRole.delete({ where: { id: userRoleId } });
+  const target = await prisma.user.findUnique({ where: { id: role.userId }, select: { email: true } });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.userRole.delete({ where: { id: userRoleId } });
+    await recordAudit(tx, actingUser, {
+      action: "admin.revoke",
+      entityType: "User",
+      entityId: role.userId,
+      summary: `revoked admin access from ${target?.email ?? role.userId}`,
+      changes: { role: ["ADMIN", null] },
+    });
+  });
 }

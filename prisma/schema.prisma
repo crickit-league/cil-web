@@ -1,10 +1,10 @@
 // Crick-It Inter League — data model
 //
-// Scope note: this schema currently covers only what Phase 1a needs
-// (season windows + team registration). The full target domain model —
-// teams, rosters, fixtures, scorecards, stats, standings — is documented
-// in docs/architecture.md §6 and grows incrementally as each phase's
-// features are actually built, not speculatively ahead of them.
+// Scope note: Phase 1 (season windows, registration, auth) plus the
+// Phase 2 league model (series, teams, people, fixtures, results). CricClubs
+// stays the primary scoring platform — the league model is shaped around
+// importing its admin exports, so most league tables carry a CricClubs
+// external ref. Target domain model: docs/architecture.md §6.
 
 generator client {
   provider = "prisma-client-js"
@@ -60,6 +60,11 @@ model User {
   accounts Account[]
   sessions Session[]
   roles    UserRole[]
+
+  person               Person?
+  standingsAdjustments StandingsAdjustment[]
+  importRuns           ImportRun[]
+  auditLogs            AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,14 +130,20 @@ enum FeeTier {
   SPONSORSHIP // $800 "with Sponsorship"
 }
 
+// A season is the Oct–Sep league year (e.g. "2026-27"). It can hold more
+// than one series — 2025-26 had the Winter Championship and the E8
+// Championship; 2016-17 had a winter league, a spring championship and a
+// summer KO. Registration windows are nullable because historic seasons
+// imported from CricClubs never had one on this site.
 model Season {
-  id                    String       @id @default(cuid())
-  name                  String // e.g. "2026-27"
-  status                SeasonStatus @default(UPCOMING)
-  registrationOpensAt   DateTime
-  registrationClosesAt  DateTime
+  id                   String       @id @default(cuid())
+  name                 String       @unique // e.g. "2026-27"
+  status               SeasonStatus @default(UPCOMING)
+  registrationOpensAt  DateTime?
+  registrationClosesAt DateTime?
 
   registrations Registration[]
+  series        Series[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -168,6 +179,9 @@ model Registration {
   reviewedBy String?
   reviewedAt DateTime?
 
+  // Set once an approved registration becomes a team in a series.
+  teamEntry TeamEntry?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -175,4 +189,609 @@ model Registration {
   @@unique([seasonId, captainEmail])
   @@index([seasonId, status])
   @@map("registrations")
+}
+
+// ─── League (Phase 2) ────────────────────────────────────────────────────
+//
+// Source of truth for scoring is CricClubs. Rows here are created either by
+// the admin console (fixtures we publish) or by importing CricClubs admin
+// exports (series list, per-series matches, per-series team list, member
+// list) — see ImportRun. Standings and player stats are computed from
+// Match/Innings/scorecard rows on read, never stored, so a re-import can't
+// leave them stale. StandingsAdjustment is the one hand-entered input.
+
+enum SeriesStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+}
+
+// CricClubs calls a competition a "series". Format rules live here rather
+// than in code because they genuinely vary by series: 15 overs for the
+// Winter Championship, 8 for E8, 10 for KO 2017; 10-a-side recently, 9
+// before 2023; 1, 2 or 4 groups.
+model Series {
+  id       String @id @default(cuid())
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  name      String // full name incl. any title sponsor, e.g. "Tangent CIL Winter Championship 2023-24"
+  status    SeriesStatus @default(UPCOMING)
+  startDate DateTime     @db.Date
+
+  ballType       String @default("Hard Tennis Ball")
+  playersPerSide Int    @default(10) // CricClubs "Max. Players per Team" — the playing XI, not the 22-player roster cap
+  maxOvers       Int    @default(15)
+  groupCount     Int    @default(2)
+
+  // Points scale, per CricClubs' series config (2/0/1/1 in every CIL series so far).
+  winPoints      Int @default(2)
+  lossPoints     Int @default(0)
+  tiePoints      Int @default(1)
+  noResultPoints Int @default(1)
+
+  // Stored, not derived, because historic series may only ever be imported
+  // as a winner/runner-up line with no match data behind them.
+  championEntryId String?    @unique
+  championEntry   TeamEntry? @relation("SeriesChampion", fields: [championEntryId], references: [id])
+  runnerUpEntryId String?    @unique
+  runnerUpEntry   TeamEntry? @relation("SeriesRunnerUp", fields: [runnerUpEntryId], references: [id])
+
+  cricclubsSeriesId Int? @unique // "Series ID" in the CricClubs series export
+
+  teamEntries   TeamEntry[]     @relation("SeriesTeamEntries")
+  rosterEntries RosterEntry[]
+  matches       Match[]
+  sponsors      SeriesSponsor[]
+  importRuns    ImportRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seasonId, name])
+  @@map("series")
+}
+
+// Durable team identity across seasons. Names drift with sponsors
+// ("Whales" → "Cozy Whales", "Tangent Sharks"), and similar names can be
+// different teams ("Sharks" vs "Sharkians"), so linking an entry to a Team
+// is an admin decision made once, not a name match.
+model Team {
+  id   String @id @default(cuid())
+  name String @unique // canonical name, e.g. "Sharks"
+
+  entries TeamEntry[]
+  aliases NameAlias[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teams")
+}
+
+// A team's participation in one series (architecture.md §6 calls this
+// team_seasons; it's per series because a season can hold several).
+model TeamEntry {
+  id       String @id @default(cuid())
+  seriesId String
+  series   Series @relation("SeriesTeamEntries", fields: [seriesId], references: [id])
+  teamId   String
+  team     Team   @relation(fields: [teamId], references: [id])
+
+  displayName String // name as entered for this series, sponsor prefix and all
+  shortName   String? // "JA", "KY" — CricClubs' and the schedule's compact label
+  logoKey     String? // R2 object key; per entry because logos change with sponsors
+  pool        String? // "A", "B", ... — not in any CricClubs export, so set by an admin
+  homeFieldId String?
+  homeField   Field?  @relation(fields: [homeFieldId], references: [id])
+
+  registrationId String?       @unique
+  registration   Registration? @relation(fields: [registrationId], references: [id])
+
+  roster           RosterEntry[]
+  matchesAsTeamOne Match[]               @relation("MatchTeamOne")
+  matchesAsTeamTwo Match[]               @relation("MatchTeamTwo")
+  matchesWon       Match[]               @relation("MatchWinner")
+  inningsBatted    Innings[]             @relation("InningsBatting")
+  umpiringDuties   MatchUmpire[]
+  appearances      MatchAppearance[]
+  adjustments      StandingsAdjustment[]
+  championOf       Series?               @relation("SeriesChampion")
+  runnerUpOf       Series?               @relation("SeriesRunnerUp")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seriesId, teamId])
+  @@unique([seriesId, displayName])
+  @@map("team_entries")
+}
+
+enum PlayingRole {
+  BATTER
+  BOWLER
+  ALL_ROUNDER
+}
+
+// Durable human identity, decoupled from User (most players never sign in;
+// historic ones can't). cricclubsPlayerId is CricClubs' global player ID and
+// the import's matching key. Email is what links a Person to a User on
+// first sign-in. Date of birth is deliberately not stored until the minors'
+// public-profile question is resolved (CLAUDE.md "Still genuinely open").
+model Person {
+  id                String       @id @default(cuid())
+  fullName          String
+  email             String? // not unique — family members can share an address
+  phone             String?
+  playingRole       PlayingRole?
+  cricclubsPlayerId Int?         @unique
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  rosterEntries       RosterEntry[]
+  appearances         MatchAppearance[]
+  umpiringDuties      MatchUmpire[]
+  battingLines        BattingLine[]     @relation("BattingLineBatter")
+  dismissalsAsBowler  BattingLine[]     @relation("BattingLineBowler")
+  dismissalsAsFielder BattingLine[]     @relation("BattingLineFielder")
+  runOutsAsSecond     BattingLine[]     @relation("BattingLineSecondFielder")
+  bowlingLines        BowlingLine[]
+  playerOfMatch       Match[]           @relation("PlayerOfMatch")
+  aliases             NameAlias[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("people")
+}
+
+enum RosterRole {
+  PLAYER
+  CAPTAIN
+  VICE_CAPTAIN
+}
+
+// Person ↔ team entry. One team per person per series (committee rule:
+// no mid-season moves) is enforced by the denormalised seriesId unique.
+model RosterEntry {
+  id          String    @id @default(cuid())
+  teamEntryId String
+  teamEntry   TeamEntry @relation(fields: [teamEntryId], references: [id], onDelete: Cascade)
+  seriesId    String
+  series      Series    @relation(fields: [seriesId], references: [id])
+  personId    String
+  person      Person    @relation(fields: [personId], references: [id])
+
+  role         RosterRole @default(PLAYER)
+  jerseyNumber String?
+  addedAt      DateTime   @default(now()) // drives the weekly Friday eligibility warning
+
+  @@unique([seriesId, personId])
+  @@index([teamEntryId])
+  @@map("roster_entries")
+}
+
+// A park (address, map link, weather location) holding one or more fields.
+// CricClubs flattens the two into one name ("Nickajack Park 2", "Harrison
+// Field 7", "RAP 3"); the import maps those to a Field via NameAlias.
+model Ground {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Harrison Park"
+  address   String?
+  mapsUrl   String?
+  latitude  Decimal? @db.Decimal(9, 6) // NWS weather lookups
+  longitude Decimal? @db.Decimal(9, 6)
+  notes     String?
+
+  fields Field[]
+
+  @@map("grounds")
+}
+
+// One playable pitch at a ground. Category is the rule book's ground/field
+// category (Cat 1/2/3), which drives boundary-size rules.
+model Field {
+  id       String  @id @default(cuid())
+  groundId String
+  ground   Ground  @relation(fields: [groundId], references: [id], onDelete: Cascade)
+  label    String // "F7", "2" — empty string for single-field grounds
+  category String? // "Cat 1", "Cat 2", "Cat 3"
+
+  matches     Match[]
+  homeEntries TeamEntry[]
+  aliases     NameAlias[]
+
+  @@unique([groundId, label])
+  @@map("fields")
+}
+
+enum MatchStage {
+  LEAGUE
+  PRE_QUARTER_FINAL // CricClubs "Qualifier"
+  QUARTER_FINAL
+  SEMI_FINAL
+  FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  COMPLETED
+  ABANDONED // "Abandoned." in CricClubs — scores as a no result
+  CANCELLED // removed from the schedule, never counted
+}
+
+enum ResultType {
+  RUNS // "X won by N Runs"
+  WICKETS // "X won by N Wickets"
+  TIE
+  SUPER_OVER // tied, winner decided by super over
+  NO_RESULT
+  FORFEIT // "Forfeited. Winner: X" — points to winner, no NRR effect
+}
+
+// CricClubs lists teams as "team one"/"team two", not home/away, so that's
+// what's stored. The CricClubs export has no match ID, so the import's key
+// is (series, startsAt, teamOne, teamTwo); cricclubsMatchId is filled in
+// when known (it's visible on the public scorecard page).
+//
+// Playoff fixtures are published before the teams are known ("A1 v winner
+// PQ4"), so both teams are nullable and teamOneSource/teamTwoSource say how
+// the slot fills: "A1" (pool A, 1st), "W:PQ4" (winner of PQ4), "L:Q1"
+// (loser of Q1). The bracket service resolves sources into team IDs.
+model Match {
+  id          String     @id @default(cuid())
+  seriesId    String
+  series      Series     @relation(fields: [seriesId], references: [id])
+  matchNumber Int? // "M81" — running number within the series
+  week        Int? // schedule round, "Week 3"; null for playoffs
+  stage       MatchStage @default(LEAGUE)
+  bracketSlot String? // "PQ1", "Q3", "S2", "F" — the slot in architecture.md §1.2's bracket
+
+  // Draft fixtures stay hidden until the committee releases them, a few
+  // weeks at a time.
+  isPublished Boolean @default(false)
+
+  startsAt DateTime // UTC; rendered in America/New_York
+  fieldId  String?
+  field    Field?   @relation(fields: [fieldId], references: [id])
+
+  // Null means the series' maxOvers. Set when rain shortens a match (the
+  // full quota NRR charges an all-out side is this, not the series default).
+  oversPerSide Int?
+
+  teamOneId     String?
+  teamOne       TeamEntry? @relation("MatchTeamOne", fields: [teamOneId], references: [id])
+  teamOneSource String?
+  teamTwoId     String?
+  teamTwo       TeamEntry? @relation("MatchTeamTwo", fields: [teamTwoId], references: [id])
+  teamTwoSource String?
+
+  status        MatchStatus @default(SCHEDULED)
+  resultType    ResultType?
+  winnerId      String?
+  winner        TeamEntry?  @relation("MatchWinner", fields: [winnerId], references: [id])
+  marginRuns    Int?
+  marginWickets Int?
+  resultText    String? // CricClubs' own wording, kept verbatim
+
+  tossWinnerIsTeamOne Boolean?
+  tossDecision        String? // "bat" | "bowl"
+  playerOfMatchId     String?
+  playerOfMatch       Person?  @relation("PlayerOfMatch", fields: [playerOfMatchId], references: [id])
+
+  cricclubsMatchId Int? @unique
+
+  innings     Innings[]
+  umpires     MatchUmpire[]
+  appearances MatchAppearance[]
+  adjustments StandingsAdjustment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seriesId, startsAt, teamOneId, teamTwoId])
+  @@unique([seriesId, matchNumber])
+  @@unique([seriesId, bracketSlot])
+  @@index([seriesId, stage])
+  @@index([startsAt])
+  @@map("matches")
+}
+
+// CricClubs has four free-text umpire slots per match, and each holds
+// either a team ("Thalaivas" — that team supplies the umpires) or a person
+// ("Mathana Suresh Subbaraj"). rawName keeps the export value; the import
+// resolves it to exactly one of teamEntryId/personId, or leaves both null
+// for the admin review queue.
+model MatchUmpire {
+  id          String     @id @default(cuid())
+  matchId     String
+  match       Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  slot        Int // 1–4
+  rawName     String
+  teamEntryId String?
+  teamEntry   TeamEntry? @relation(fields: [teamEntryId], references: [id])
+  personId    String?
+  person      Person?    @relation(fields: [personId], references: [id])
+
+  @@unique([matchId, slot])
+  @@map("match_umpires")
+}
+
+// Team-level innings totals. The CricClubs matches export's score summary
+// ("Cricket United: 31/8(7.5) …") fills these, which is all that points,
+// NRR and the tie-break cascade need. Overs are stored as legal balls
+// (7.5 → 47); allOut matters because NRR then counts the full quota of
+// overs. Extras are nullable because the summary doesn't carry them.
+model Innings {
+  id             String    @id @default(cuid())
+  matchId        String
+  match          Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  number         Int // 1, 2; 3+ for a super over
+  isSuperOver    Boolean   @default(false)
+  battingEntryId String
+  battingEntry   TeamEntry @relation("InningsBatting", fields: [battingEntryId], references: [id])
+
+  runs       Int
+  wickets    Int
+  legalBalls Int
+  allOut     Boolean @default(false)
+
+  byes      Int?
+  legByes   Int?
+  wides     Int?
+  noBalls   Int?
+  penalties Int?
+
+  battingLines BattingLine[]
+  bowlingLines BowlingLine[]
+
+  @@unique([matchId, number])
+  @@map("innings")
+}
+
+// ─── Scorecard detail ────────────────────────────────────────────────────
+// No CricClubs export carries these yet; they're filled by CSV upload or
+// manual entry until one does. Player stats depend on them, and the
+// ≥3-league-match playoff eligibility rule depends on MatchAppearance.
+
+// Who took the field for a team in a match (the playing XI).
+model MatchAppearance {
+  id          String    @id @default(cuid())
+  matchId     String
+  match       Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  teamEntryId String
+  teamEntry   TeamEntry @relation(fields: [teamEntryId], references: [id])
+  personId    String
+  person      Person    @relation(fields: [personId], references: [id])
+  isCaptain   Boolean   @default(false)
+  isKeeper    Boolean   @default(false)
+
+  @@unique([matchId, personId])
+  @@map("match_appearances")
+}
+
+enum DismissalType {
+  NOT_OUT
+  BOWLED
+  CAUGHT
+  LBW
+  RUN_OUT
+  STUMPED
+  HIT_WICKET
+  RETIRED_HURT
+  RETIRED_OUT
+  OTHER
+}
+
+model BattingLine {
+  id        String  @id @default(cuid())
+  inningsId String
+  innings   Innings @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  position  Int
+  personId  String
+  person    Person  @relation("BattingLineBatter", fields: [personId], references: [id])
+
+  runs  Int
+  balls Int
+  fours Int @default(0)
+  sixes Int @default(0)
+
+  dismissal       DismissalType @default(NOT_OUT)
+  dismissalText   String? // CricClubs' own text, e.g. "c †Snehal P b Tarun G"
+  bowlerId        String?
+  bowler          Person?       @relation("BattingLineBowler", fields: [bowlerId], references: [id])
+  fielderId       String?
+  fielder         Person?       @relation("BattingLineFielder", fields: [fielderId], references: [id])
+  secondFielderId String? // run outs can credit two fielders: "run out (A/B)"
+  secondFielder   Person?       @relation("BattingLineSecondFielder", fields: [secondFielderId], references: [id])
+
+  @@unique([inningsId, personId])
+  @@map("batting_lines")
+}
+
+model BowlingLine {
+  id        String  @id @default(cuid())
+  inningsId String
+  innings   Innings @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  personId  String
+  person    Person  @relation(fields: [personId], references: [id])
+
+  legalBalls Int
+  maidens    Int  @default(0)
+  dots       Int?
+  runs       Int
+  wickets    Int
+  wides      Int  @default(0)
+  noBalls    Int  @default(0)
+
+  @@unique([inningsId, personId])
+  @@map("bowling_lines")
+}
+
+// The one hand-entered input to standings (CLAUDE.md "Stats are derived"):
+// a committee penalty such as awarding a match or deducting 20 runs. Applied
+// on top of computed standings, never written back into Match/Innings, so a
+// re-import can't erase it.
+model StandingsAdjustment {
+  id          String    @id @default(cuid())
+  teamEntryId String
+  teamEntry   TeamEntry @relation(fields: [teamEntryId], references: [id])
+  matchId     String?
+  match       Match?    @relation(fields: [matchId], references: [id])
+
+  pointsDelta Int    @default(0)
+  runsDelta   Int    @default(0) // feeds NRR "runs for"
+  reason      String
+
+  appliedById String
+  appliedBy   User     @relation(fields: [appliedById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([teamEntryId])
+  @@map("standings_adjustments")
+}
+
+// ─── Sponsors ────────────────────────────────────────────────────────────
+
+enum SponsorTier {
+  TITLE // named in the series title, e.g. "Tangent CIL Winter Championship"
+  GOLD
+  SILVER
+  PARTNER
+}
+
+model Sponsor {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  logoKey    String? // R2 object key
+  websiteUrl String?
+
+  series SeriesSponsor[]
+
+  @@map("sponsors")
+}
+
+model SeriesSponsor {
+  id           String      @id @default(cuid())
+  seriesId     String
+  series       Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  sponsorId    String
+  sponsor      Sponsor     @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  tier         SponsorTier
+  displayOrder Int         @default(0)
+
+  @@unique([seriesId, sponsorId])
+  @@map("series_sponsors")
+}
+
+// ─── Import provenance ───────────────────────────────────────────────────
+
+enum ImportKind {
+  CRICCLUBS_SERIES // league-wide series list export
+  CRICCLUBS_MATCHES // per-series matches export
+  CRICCLUBS_TEAMS // per-series team list export
+  CRICCLUBS_MEMBERS // league-wide member list export
+  CSV_SCORECARD
+}
+
+enum ImportStatus {
+  STAGED // parsed, waiting for review
+  COMMITTED
+  FAILED
+  DISCARDED
+}
+
+model ImportRun {
+  id       String       @id @default(cuid())
+  kind     ImportKind
+  status   ImportStatus @default(STAGED)
+  fileName String
+  seriesId String?
+  series   Series?      @relation(fields: [seriesId], references: [id])
+  error    String?
+
+  startedById String
+  startedBy   User      @relation(fields: [startedById], references: [id])
+  createdAt   DateTime  @default(now())
+  committedAt DateTime?
+
+  rows ImportRow[]
+
+  @@index([kind, createdAt])
+  @@map("import_runs")
+}
+
+enum ImportRowStatus {
+  PENDING
+  UNMATCHED // a name couldn't be resolved — goes to the admin review queue
+  READY
+  COMMITTED
+  SKIPPED
+}
+
+// Every source row is kept verbatim as JSON so a parser fix can be replayed
+// without re-downloading (architecture.md §6). Member-list rows contain
+// contact details and dates of birth — admin-only.
+model ImportRow {
+  id        String          @id @default(cuid())
+  runId     String
+  run       ImportRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  rowNumber Int
+  raw       Json
+  status    ImportRowStatus @default(PENDING)
+  message   String?
+
+  @@unique([runId, rowNumber])
+  @@map("import_rows")
+}
+
+// A free-text name from an import, mapped once by an admin so the mapping
+// sticks: umpire slots, team names that changed with a sponsor, ground
+// spellings. Exactly one target is set (enforced in the service layer).
+model NameAlias {
+  id       String  @id @default(cuid())
+  rawName  String  @unique // stored normalised: trimmed, lower-cased, single-spaced
+  teamId   String?
+  team     Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  personId String?
+  person   Person? @relation(fields: [personId], references: [id], onDelete: Cascade)
+  fieldId  String?
+  field    Field?  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("name_aliases")
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────
+//
+// Append-only record of admin actions: who did what to which record, with
+// old/new values of the fields that changed. Written from the service layer
+// inside the same transaction as the change itself (services/audit.ts), so a
+// change can't commit without its log entry. The application never updates or
+// deletes rows here. `actorEmail` is a copy so the trail survives deletion of
+// the user.
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  actorUserId String?
+  actor       User?   @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorEmail  String
+
+  // Dotted verb, e.g. "registration.update", "admin.grant".
+  action     String
+  entityType String
+  entityId   String
+  summary    String
+
+  // { field: [oldValue, newValue] } — only fields that changed.
+  changes Json?
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_log")
 }
