@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { listRegistrations } from "@/lib/services/registrations";
-import { RegistrationsList } from "./registrations-list";
+import { RegistrationsTable } from "./registrations-table";
 
 export default async function RegistrationsPage() {
   const session = await auth();
@@ -31,7 +31,7 @@ export default async function RegistrationsPage() {
       {registrations.length === 0 ? (
         <p className="text-chalk-dim">No registrations yet.</p>
       ) : (
-        <RegistrationsList
+        <RegistrationsTable
           rows={registrations.map((r) => ({
             id: r.id,
             teamName: r.teamName,
@@ -47,6 +47,7 @@ export default async function RegistrationsPage() {
             feeStatus: r.feeStatus,
             marketingConsent: r.marketingConsent,
             submitted: r.createdAt.toLocaleDateString(),
+            submittedAt: r.createdAt.toISOString(),
           }))}
         />
       )}
