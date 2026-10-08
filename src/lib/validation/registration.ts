@@ -33,3 +33,13 @@ export const registrationSchema = z.object({
 });
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
+
+// Admin edits can also correct the review/payment state. Season is
+// deliberately not editable — moving a registration between seasons would
+// silently change which duplicate-name/email rules apply.
+export const adminRegistrationUpdateSchema = registrationSchema.extend({
+  status: z.enum(["SUBMITTED", "APPROVED", "REJECTED", "WITHDRAWN"]),
+  feeStatus: z.enum(["UNPAID", "PAID", "WAIVED"]),
+});
+
+export type AdminRegistrationUpdateInput = z.infer<typeof adminRegistrationUpdateSchema>;
