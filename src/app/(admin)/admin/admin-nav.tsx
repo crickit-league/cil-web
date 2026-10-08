@@ -138,6 +138,13 @@ export function AdminNav({ items }: { items: AdminNavItem[] }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            onClick={(event) => {
+              // Tapping the tab you're already on scrolls back to the top (phone tab strip only).
+              if (active && window.matchMedia("(max-width: 767px)").matches) {
+                event.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
             title={item.label}
             className={`font-data -mb-px flex shrink-0 items-center gap-3 border-b-2 px-4 py-3 text-xs tracking-[0.1em] whitespace-nowrap uppercase transition-colors md:mb-0 md:border-b-0 md:border-l-2 md:px-3 ${
               active ? "border-clay text-chalk" : "text-chalk-dim hover:text-chalk border-transparent"
