@@ -55,10 +55,24 @@ function NavIcon({ name }: { name: AdminNavIcon }) {
 // Left sidebar at `md` and up: a floating card, sticky below the site header so
 // it stays pinned while the page scrolls, and collapsible to an icon rail
 // (remembered per browser). Below `md` it's a horizontally scrollable tab strip
-// so it works at phone width without eating vertical space.
+// so it works at phone width without eating vertical space � and it sticks
+// under the site header there, so you can switch sections from deep in a page.
 export function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  // The site header is sticky and its height varies with how it wraps on a
+  // phone, so measure it instead of hard-coding the tab strip's offset.
+  const [headerHeight, setHeaderHeight] = useState(72);
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (!header) return;
+    const update = () => setHeaderHeight(header.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   // Read after mount so server and first client render match.
   useEffect(() => {
@@ -85,7 +99,8 @@ export function AdminNav({ items }: { items: AdminNavItem[] }) {
   return (
     <nav
       aria-label="Admin sections"
-      className={`border-line md:bg-dugout -mx-5 flex gap-1 overflow-x-auto border-b px-5 sm:-mx-8 sm:px-8 md:sticky md:top-24 md:mx-0 md:shrink-0 md:flex-col md:self-start md:overflow-visible md:border md:p-2 md:shadow-lg md:shadow-black/30 ${
+      style={{ "--admin-header-h": `${headerHeight}px` } as React.CSSProperties}
+      className={`border-line bg-pitch md:bg-dugout sticky top-(--admin-header-h) z-30 -mx-5 flex gap-1 overflow-x-auto border-b px-5 sm:-mx-8 sm:px-8 md:top-24 md:z-auto md:mx-0 md:shrink-0 md:flex-col md:self-start md:overflow-visible md:border md:p-2 md:shadow-lg md:shadow-black/30 ${
         collapsed ? "md:w-16" : "md:w-56"
       }`}
     >
