@@ -15,7 +15,7 @@ Living doc. Update this whenever you finish a session's work so the next person 
 - Landing page ported to real React components (`src/components/sections/*`), served from the `(public)` route group.
 - **Prisma schema** for what Phase 1a actually needs — `Season`, `Registration` (`prisma/schema.prisma`). The rest of the domain model in architecture.md §6 lands incrementally as Phase 1b/2/3 features are actually built, not ahead of them.
 - Prisma 7 + `@prisma/adapter-neon` configured (`prisma.config.ts`, `src/lib/db/prisma.ts`), including the `ws` WebSocket polyfill Vercel's serverless runtime needs (see git history 2026-08-26 if this regresses — it fails silently with a useless `ErrorEvent` without it).
-- Registration form (`src/app/(public)/registration-form.tsx`) is a real client component with a server action (`actions.ts`) that validates with Zod and writes to Postgres via the service layer (`src/lib/services/registrations.ts`).
+- **Registration for 2026-27 closed (2026-10-08) and the public form was removed** — the form component, its server action and the landing-page Register section/header buttons are gone (recoverable from git history before `feature/close-registration`). The hero now says registration is closed, and the Key Dates timeline highlights Captains Meet. The service layer (`submitRegistration` in `src/lib/services/registrations.ts`) and `lib/validation/registration.ts` are kept for next season; nothing public calls them now, and `submitRegistration` refuses anyway unless a season is `REGISTRATION_OPEN`. Admin registrations listing/export are unaffected.
 - CI workflow (`.github/workflows/ci.yml`): format check, lint, typecheck, build on every push/PR.
 - `npm run format|lint|typecheck|build` all pass clean as of this writing.
 - **Vercel project live** under the `crickit-league` Team (not a personal account). **Two git branches**: `main` (everyday work, PRs merge here) and `production` (the actual Vercel Production Branch — a deliberate release gate, not auto-deployed). Releasing = merging `main` → `production`.
@@ -29,11 +29,11 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 ## Blocking
 
-- **Cloudflare Turnstile** not set up yet — the only remaining piece of the domain/DNS punch list from `docs/service-setup.md`. Needed before the registration form goes live to real users (no bot protection currently).
+- Nothing currently. (Cloudflare Turnstile is still not set up, but with the public registration form removed it no longer blocks anything — it's needed again before registration reopens next season.)
 
 ## Explicitly not done yet — don't assume otherwise
 
-- **No bot protection** on the registration form (Cloudflare Turnstile) — flagged with a `TODO` in `actions.ts`. Needed before this goes live to real users.
+- **No bot protection** for registration (Cloudflare Turnstile) — moot while the form is removed, but required before it comes back next season.
 - **No approve/reject workflow.** The new admin console (see above) can only list registrations, not act on them — that plus invite issuance and the post-approval `registration.approved` email is Phase 1b.
 - **No rate-limiting on the 6-digit sign-in code.** See the auth bullet above — worth fixing before this is relied on for real accounts, not just admins.
 - **No league services, pages or importers.** The league tables exist but nothing reads or writes them yet. No CricClubs export of scorecards or per-series rosters has been found, so player stats have no automated source.
@@ -47,7 +47,9 @@ Living doc. Update this whenever you finish a session's work so the next person 
 
 ## Next up
 
-1. Cloudflare Turnstile: create the site against `crickitinterleague.org` (see `docs/service-setup.md` §5), add the site/secret keys to Vercel, then wire it into the registration form (code side — `TODO` in `actions.ts`).
+1. Pages for the registered teams — the first league slice: admin creates the 2026-27 series, turns registrations into teams (`Team`/`TeamEntry` + captain/VC as `Person`/`RosterEntry`), assigns pools; then a public series page listing teams by pool.
 2. Admin console: approve/reject registrations, export CSV, then the `registration.approved` invite email. Auth, read-only listing, and the submission-confirmation email are done (see above).
 3. Rate-limit the 6-digit sign-in code before treating it as production-ready for non-admin accounts.
-4. League importers, in this order: CricClubs series export → member list (people) → per-series team list → per-series matches (fixtures, umpires, results, innings totals). Then the standings service (5-level tie-break, with dedicated tests) and the bracket service. Ask CricClubs support whether scorecards/rosters can be exported.
+4. Move the 2026-27 season's status from `REGISTRATION_OPEN` to `ACTIVE` in production — there's no admin UI for season status yet. Until then the service would still accept a registration if anything called it (nothing public does).
+5. Before registration reopens next season: create the new season, restore the form from git history, and wire up Cloudflare Turnstile (`docs/service-setup.md` §5).
+6. League importers, in this order: CricClubs series export → member list (people) → per-series team list → per-series matches (fixtures, umpires, results, innings totals). Then the standings service (5-level tie-break, with dedicated tests) and the bracket service. Ask CricClubs support whether scorecards/rosters can be exported.

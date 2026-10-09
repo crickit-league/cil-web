@@ -18,9 +18,9 @@ const FACTS = [
 ];
 
 const TIMELINE = [
-  { when: "Sep 12", what: "Registration Opens", now: true },
+  { when: "Sep 12", what: "Registration Opens" },
   { when: "Sep 30", what: "Registration Closes" },
-  { when: "Oct 14", what: "Captains Meet" },
+  { when: "Oct 14", what: "Captains Meet", now: true },
   { when: "Oct 24", what: "League Stage Begins" },
   { when: "TBD", what: "Playoffs & Final" },
 ];
