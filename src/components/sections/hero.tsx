@@ -1,3 +1,6 @@
+import Image from "next/image";
+import { titleSponsor } from "@/lib/sponsors";
+
 export function Hero() {
   return (
     <section className="hero-texture hero-crest-watermark relative overflow-hidden py-16 sm:py-24 lg:py-28">
@@ -11,6 +14,31 @@ export function Hero() {
             <br />
             <span className="text-clay">Championship</span>
           </h1>
+          {titleSponsor && (
+            <div className="mt-6 flex items-center gap-4">
+              <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.18em] uppercase">
+                Presented by
+              </span>
+              <a
+                href={titleSponsor.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${titleSponsor.name} (opens Instagram)`}
+                className="border-line hover:border-clay-bright block border bg-white p-1.5 transition-colors"
+              >
+                <span className="relative block aspect-[2.45/1] w-[150px] overflow-hidden sm:w-[200px]">
+                  <Image
+                    src={titleSponsor.logo}
+                    alt={`${titleSponsor.name} logo`}
+                    fill
+                    priority
+                    sizes="(min-width: 640px) 200px, 150px"
+                    className="scale-[1.08] object-cover"
+                  />
+                </span>
+              </a>
+            </div>
+          )}
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
             Over 13 years of weekend cricket at Atlanta continues with another exciting season. Registration
             for 2026&ndash;27 is closed &mdash; the league stage begins October 24.
