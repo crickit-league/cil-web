@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { CrestBadge } from "./crest-badge";
 import { UserMenu } from "./user-menu";
 
+// Hash links scroll to a home-page section; plain paths are their own pages.
 const NAV = [
+  { href: "/league", label: "League" },
   { href: "#format", label: "Format" },
   { href: "#contact", label: "Contact" },
 ];
@@ -14,7 +16,9 @@ export function SiteHeader() {
   const pathname = usePathname();
   const onHome = pathname === "/";
 
-  const sectionHref = (hash: string) => (onHome ? hash : `/${hash}`);
+  const sectionHref = (href: string) => (!href.startsWith("#") || onHome ? href : `/${href}`);
+  const isCurrent = (href: string) =>
+    !href.startsWith("#") && (pathname === href || pathname.startsWith(`${href}/`));
 
   const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (onHome) {
@@ -43,7 +47,10 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={sectionHref(item.href)}
-              className="font-data text-chalk-dim hover:border-clay hover:text-chalk border-b border-transparent text-xs tracking-[0.1em] uppercase transition-colors"
+              aria-current={isCurrent(item.href) ? "page" : undefined}
+              className={`font-data hover:border-clay hover:text-chalk border-b text-xs tracking-[0.1em] uppercase transition-colors ${
+                isCurrent(item.href) ? "border-clay text-chalk" : "text-chalk-dim border-transparent"
+              }`}
             >
               {item.label}
             </Link>
@@ -51,6 +58,16 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-6">
+          {/* The nav above is hidden on phones, so the league pages get a
+              button there (fixtures and umpire entry live under it). */}
+          {isCurrent("/league") ? null : (
+            <Link
+              href="/league"
+              className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-4 py-3 text-xs tracking-[0.08em] uppercase transition-colors md:hidden"
+            >
+              League
+            </Link>
+          )}
           <UserMenu />
         </div>
       </div>
