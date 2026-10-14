@@ -6,12 +6,13 @@ Also see [AGENTS.md](AGENTS.md) — Next.js-version-specific framework notes, au
 
 ## Before pushing to any branch
 
-Run all four, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
+Run all five, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
 
 ```bash
 npm run format:check   # prettier — run `npm run format` to auto-fix
 npm run lint            # eslint
 npm run typecheck       # tsc --noEmit
+npm test                # vitest — standings tie-break cascade, import parsing
 npm run build           # next build — catches issues the others don't
 ```
 

@@ -6,7 +6,7 @@ import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatMatchDay, formatMatchTime } from "@/lib/time";
 import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
 import { UmpireForm } from "@/components/umpires/umpire-form";
-import { ResultLine, StatusBadge, teamLabel, UmpireNames } from "../fixture-card";
+import { ResultLine, ScoreLine, StatusBadge, teamLabel, UmpireNames } from "../fixture-card";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +44,7 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
           {teamLabel(m.teamTwo, m.teamTwoSource)}
         </h2>
         <ResultLine result={m.result} className="text-base" />
+        <ScoreLine scores={m.scores} className="-mt-2 text-sm" />
         <div className="text-chalk-dim text-sm">{m.ground ?? "Ground to be confirmed"}</div>
         <div className="grid gap-4 text-sm sm:grid-cols-2">
           <div>

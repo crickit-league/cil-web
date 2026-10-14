@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { FixtureStatus, MatchResult, ScheduleMatch } from "@/lib/services/schedule";
+import type { FixtureStatus, MatchResult, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatMatchTime } from "@/lib/time";
 import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
@@ -35,6 +35,35 @@ export function ResultLine({ result, className = "" }: { result: MatchResult; cl
       ) : (
         <span className="text-chalk">{result.text}</span>
       )}
+    </p>
+  );
+}
+
+/** "11.5" — legal balls in the usual overs.balls notation. */
+function formatOvers(legalBalls: number) {
+  const balls = legalBalls % 6;
+  return balls === 0 ? String(legalBalls / 6) : `${(legalBalls - balls) / 6}.${balls}`;
+}
+
+/**
+ * Both sides' totals in batting order: "Sharks 112/6 (15) · Hawks 98/9 (15)".
+ * On phones each side gets its own line; from `sm` up they share one.
+ */
+export function ScoreLine({ scores, className = "" }: { scores: MatchScore[]; className?: string }) {
+  if (scores.length === 0) return null;
+  return (
+    <p
+      className={`font-data text-chalk-dim flex flex-col text-xs sm:flex-row sm:flex-wrap sm:gap-x-2 ${className}`}
+    >
+      {scores.map((s, i) => (
+        <span key={s.team.id}>
+          {i > 0 ? <span className="text-chalk-faint mr-2 hidden sm:inline">·</span> : null}
+          {s.team.name}{" "}
+          <span className="text-chalk whitespace-nowrap">
+            {s.runs}/{s.wickets} ({formatOvers(s.legalBalls)})
+          </span>
+        </span>
+      ))}
     </p>
   );
 }
@@ -91,6 +120,7 @@ export function FixtureCard({
           {name(m.teamTwo, m.teamTwoSource)}
         </div>
         <ResultLine result={m.result} className="mt-1.5" />
+        <ScoreLine scores={m.scores} className="mt-1" />
         <div className="text-chalk-dim mt-1 text-sm">{m.ground ?? "Ground to be confirmed"}</div>
       </div>
 
