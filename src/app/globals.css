@@ -134,3 +134,38 @@ body {
   opacity: 0.05;
   z-index: 0;
 }
+
+/* Photo carousel: floodlit-stage glow behind the slides, and the active-slide
+   treatment (embla-carousel-class-names adds .is-snapped to the centred slide). */
+.photo-stage {
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 55%, rgb(214 165 68 / 14%), transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgb(46 68 104 / 45%), transparent 70%);
+}
+
+.photo-viewport.is-draggable {
+  cursor: grab;
+}
+
+.photo-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.photo-slide {
+  opacity: 0.4;
+  transform: scale(0.92);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+.photo-slide.is-snapped {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-slide {
+    transition: none;
+  }
+}

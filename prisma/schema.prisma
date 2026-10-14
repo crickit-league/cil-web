@@ -65,6 +65,7 @@ model User {
   standingsAdjustments StandingsAdjustment[]
   importRuns           ImportRun[]
   auditLogs            AuditLog[]
+  photos               Photo[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -794,4 +795,26 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId])
   @@map("audit_log")
+}
+
+// ─── Photos ──────────────────────────────────────────────────────────────
+//
+// Weekly match photos shown in the homepage carousel. The image itself lives
+// in Cloudflare R2 under `storageKey`; the public URL is derived from that key
+// plus R2_PUBLIC_BASE_URL (src/lib/storage/r2.ts), so changing the public
+// domain never needs a data migration.
+model Photo {
+  id         String  @id @default(cuid())
+  storageKey String  @unique
+  caption    String?
+  width      Int
+  height     Int
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("photos")
 }
