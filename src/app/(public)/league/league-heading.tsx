@@ -2,12 +2,11 @@
 
 import { usePathname } from "next/navigation";
 
-// Fixtures, Results and Points Table are top-level items in the site header,
+// Fixtures and Points Table are top-level items in the site header,
 // so the league pages have no tab bar of their own. The shared layout's
 // heading names whichever one you're on (fixture pages count as Fixtures).
 const SECTIONS = [
   { href: "/league/fixtures", title: "Fixtures" },
-  { href: "/league/results", title: "Results" },
   { href: "/league/points-table", title: "Points Table" },
 ] as const;
 

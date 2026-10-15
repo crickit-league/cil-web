@@ -5,7 +5,7 @@ import { LeagueHeading } from "./league-heading";
 // import, so nothing under /league is prerendered.
 export const dynamic = "force-dynamic";
 
-// Shared shell for the league pages (Fixtures / Results / Points Table, each
+// Shared shell for the league pages (Fixtures / Points Table, each
 // its own route segment under /league and its own item in the site header).
 export default async function LeagueLayout({ children }: { children: React.ReactNode }) {
   const { season, series } = await findCurrentSeries();

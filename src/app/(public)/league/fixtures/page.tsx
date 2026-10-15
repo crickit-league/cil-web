@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Fixtures · CIL Winter League",
   description:
-    "Upcoming matches, grounds, umpiring teams and umpires for this season's CIL Winter Championship.",
+    "Every match of this season's CIL Winter Championship: results, upcoming fixtures, grounds, umpiring teams and umpires.",
 };
 
 export default async function FixturesPage({ searchParams }: { searchParams: Promise<{ team?: string }> }) {
@@ -28,8 +28,9 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
   return (
     <div className="flex flex-col gap-8">
       <p className="text-chalk-dim max-w-[66ch] text-sm">
-        All times Atlanta time. The schedule is set in CricClubs and can change — check back before match day.
-        The umpiring team enters its two umpires on each fixture.
+        Every match of the season, with results as they come in. All times Atlanta time. The schedule is set
+        in CricClubs and can change — check back before match day. The umpiring team enters its two umpires on
+        each upcoming fixture.
       </p>
 
       {series && !entryOpen ? (
@@ -43,7 +44,7 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
       {matches.length === 0 ? (
         <p className="text-chalk-dim border-line bg-dugout border p-6">
           {selectedTeamId
-            ? "No upcoming matches for this team."
+            ? "No matches for this team yet."
             : "Fixtures will appear here once the committee publishes the schedule."}
         </p>
       ) : (

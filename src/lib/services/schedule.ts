@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MatchStage, MatchStatus } from "@/generated/prisma";
+import type { MatchStage, MatchStatus, ResultType } from "@/generated/prisma";
 import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
@@ -24,7 +24,11 @@ const scheduleSelect = {
   stage: true,
   startsAt: true,
   status: true,
+  resultType: true,
   resultText: true,
+  marginRuns: true,
+  marginWickets: true,
+  winner: { select: { id: true, displayName: true } },
   teamOne: { select: { id: true, displayName: true } },
   teamTwo: { select: { id: true, displayName: true } },
   teamOneSource: true,
@@ -38,11 +42,26 @@ const scheduleSelect = {
   },
 } as const;
 
+/**
+ * How a played match is shown on a fixture card. "win" splits out the winner
+ * so it can be emphasised ("Sharks" + "won by 5 wickets"); everything else is
+ * one line. Null while the match is still to be played.
+ */
+export type MatchResult =
+  | { kind: "win"; winner: { id: string; name: string }; text: string }
+  | { kind: "other"; text: string }
+  | null;
+
+/** Scheduled or completed, for the fixture badge. Abandoned matches are completed (no result). */
+export type FixtureStatus = "SCHEDULED" | "COMPLETED";
+
 export type ScheduleMatch = {
   id: string;
   stage: MatchStage;
   startsAt: Date;
   status: MatchStatus;
+  fixtureStatus: FixtureStatus;
+  result: MatchResult;
   resultText: string | null;
   teamOne: { id: string; name: string } | null;
   teamTwo: { id: string; name: string } | null;
@@ -60,7 +79,11 @@ type ScheduleRow = {
   stage: MatchStage;
   startsAt: Date;
   status: MatchStatus;
+  resultType: ResultType | null;
   resultText: string | null;
+  marginRuns: number | null;
+  marginWickets: number | null;
+  winner: { id: string; displayName: string } | null;
   teamOne: { id: string; displayName: string } | null;
   teamTwo: { id: string; displayName: string } | null;
   teamOneSource: string | null;
@@ -75,6 +98,37 @@ type ScheduleRow = {
   } | null;
 };
 
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/** Builds the result line from what the import stored on Match (see parseResult). */
+function describeResult(m: ScheduleRow): MatchResult {
+  if (m.status === "SCHEDULED" || m.status === "CANCELLED") return null;
+  if (m.status === "ABANDONED") return { kind: "other", text: "No result — match abandoned" };
+
+  const winner = m.winner ? { id: m.winner.id, name: m.winner.displayName } : null;
+  switch (m.resultType) {
+    case "RUNS":
+      if (winner && m.marginRuns !== null)
+        return { kind: "win", winner, text: `won by ${plural(m.marginRuns, "run")}` };
+      break;
+    case "WICKETS":
+      if (winner && m.marginWickets !== null)
+        return { kind: "win", winner, text: `won by ${plural(m.marginWickets, "wicket")}` };
+      break;
+    case "SUPER_OVER":
+      if (winner) return { kind: "win", winner, text: "won the super over" };
+      break;
+    case "TIE":
+      return { kind: "other", text: "Match tied" };
+    case "NO_RESULT":
+      return { kind: "other", text: "No result" };
+    case "FORFEIT":
+      // CricClubs' own wording, e.g. "Forfeited. Winner: Sharks".
+      break;
+  }
+  return { kind: "other", text: m.resultText ?? "Result to be confirmed" };
+}
+
 function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
   const team = (t: { id: string; displayName: string } | null) =>
     t ? { id: t.id, name: t.displayName } : null;
@@ -83,6 +137,8 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
     stage: m.stage,
     startsAt: m.startsAt,
     status: m.status,
+    fixtureStatus: m.status === "SCHEDULED" ? "SCHEDULED" : "COMPLETED",
+    result: describeResult(m),
     resultText: m.resultText,
     teamOne: team(m.teamOne),
     teamTwo: team(m.teamTwo),
@@ -103,8 +159,9 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
 }
 
 /**
- * The Fixtures tab: matches still to be played (results land on the Results
- * tab), optionally for one team — playing or umpiring. Umpire names are
+ * The Fixtures tab: every match of the series, played or not, oldest first —
+ * played ones carry their result — optionally for one team, playing or
+ * umpiring. Cancelled matches (dropped from a later CricClubs file) are left out. Umpire names are
  * public; phone numbers are not in here (see revealUmpirePhones).
  */
 export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
@@ -121,7 +178,7 @@ export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
   const matches = await prisma.match.findMany({
     where: {
       seriesId: series.id,
-      status: "SCHEDULED",
+      status: { not: "CANCELLED" },
       ...(teamFilter
         ? { OR: [{ teamOneId: teamFilter }, { teamTwoId: teamFilter }, { umpiringTeamId: teamFilter }] }
         : {}),

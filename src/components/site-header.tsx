@@ -6,12 +6,11 @@ import { CrestBadge } from "./crest-badge";
 import { UserMenu } from "./user-menu";
 
 // Hash links scroll to a home-page section; plain paths are their own pages.
-// The league pages keep their /league/... URLs (the results and points-table
-// work builds on them) but are top-level items here.
+// The league pages keep their /league/... URLs (the points-table work builds
+// on them) but are top-level items here. Results are shown on Fixtures.
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/league/fixtures", label: "Fixtures" },
-  { href: "/league/results", label: "Results" },
   { href: "/league/points-table", label: "Points Table" },
   { href: "#contact", label: "Contact" },
 ];
