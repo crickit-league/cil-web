@@ -5,7 +5,7 @@ export function Contact() {
         <div className="mb-10 flex max-w-[62ch] flex-col gap-2">
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">Get in Touch</span>
           <h2 className="font-display text-[2rem] font-extrabold text-balance uppercase sm:text-[2.75rem]">
-            Questions before you register?
+            Questions about the season?
           </h2>
         </div>
 

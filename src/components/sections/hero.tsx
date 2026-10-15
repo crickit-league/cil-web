@@ -13,20 +13,20 @@ export function Hero() {
           </h1>
           <p className="text-chalk-dim mt-6 max-w-[46ch] text-lg">
             Over 13 years of weekend cricket at Atlanta continues with another exciting season. Registration
-            opens now.
+            for 2026&ndash;27 is closed &mdash; the league stage begins October 24.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
-              href="#registration-form"
+              href="#format"
               className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
             >
-              Register Your Team
+              See the Format
             </a>
             <a
-              href="#format"
+              href="#contact"
               className="font-data border-line text-chalk hover:border-chalk-dim hover:bg-dugout-2 inline-flex items-center gap-2 border bg-transparent px-6 py-3.5 text-xs tracking-[0.08em] uppercase transition-colors"
             >
-              See the Format
+              Contact the Committee
             </a>
           </div>
         </div>
