@@ -1,12 +1,12 @@
 import { findCurrentSeries } from "@/lib/services/series";
-import { LeagueTabs } from "./league-tabs";
+import { LeagueHeading } from "./league-heading";
 
-// Reads the current series, and every tab shows data that changes with each
+// Reads the current series, and every page shows data that changes with each
 // import, so nothing under /league is prerendered.
 export const dynamic = "force-dynamic";
 
-// Shared shell for the league pages: heading plus the Fixtures / Results /
-// Points Table tabs. Each tab is its own route segment under /league.
+// Shared shell for the league pages (Fixtures / Results / Points Table, each
+// its own route segment under /league and its own item in the site header).
 export default async function LeagueLayout({ children }: { children: React.ReactNode }) {
   const { season, series } = await findCurrentSeries();
 
@@ -17,12 +17,9 @@ export default async function LeagueLayout({ children }: { children: React.React
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">
             {season ? `Season ${season.name.replace("-", "–")}` : "This Season"}
           </span>
-          <h1 className="font-display text-[2.5rem] leading-none font-extrabold uppercase sm:text-[3.5rem]">
-            League
-          </h1>
+          <LeagueHeading />
           {series ? <p className="text-chalk-dim mt-1">{series.name}</p> : null}
         </div>
-        <LeagueTabs />
         <div className="mt-8">{children}</div>
       </div>
     </section>

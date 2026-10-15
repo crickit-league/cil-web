@@ -6,9 +6,13 @@ import { CrestBadge } from "./crest-badge";
 import { UserMenu } from "./user-menu";
 
 // Hash links scroll to a home-page section; plain paths are their own pages.
+// The league pages keep their /league/... URLs (the results and points-table
+// work builds on them) but are top-level items here.
 const NAV = [
-  { href: "/league", label: "League" },
-  { href: "#format", label: "Format" },
+  { href: "/", label: "Home" },
+  { href: "/league/fixtures", label: "Fixtures" },
+  { href: "/league/results", label: "Results" },
+  { href: "/league/points-table", label: "Points Table" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -17,8 +21,9 @@ export function SiteHeader() {
   const onHome = pathname === "/";
 
   const sectionHref = (href: string) => (!href.startsWith("#") || onHome ? href : `/${href}`);
+  // Home only on "/" itself; a league item also on the pages under it (e.g. a fixture's page).
   const isCurrent = (href: string) =>
-    !href.startsWith("#") && (pathname === href || pathname.startsWith(`${href}/`));
+    href === "/" ? onHome : !href.startsWith("#") && (pathname === href || pathname.startsWith(`${href}/`));
 
   const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (onHome) {
@@ -42,13 +47,19 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        {/* One nav for every width: inline on desktop, its own full-width row
+            under the logo on phones (all five items fit at 375px). */}
+        <nav
+          aria-label="Main"
+          className="order-last flex w-full items-center justify-between gap-3 md:order-none md:w-auto md:justify-start md:gap-8"
+        >
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={sectionHref(item.href)}
+              onClick={item.href === "/" ? handleLogoClick : undefined}
               aria-current={isCurrent(item.href) ? "page" : undefined}
-              className={`font-data hover:border-clay hover:text-chalk border-b text-xs tracking-[0.1em] uppercase transition-colors ${
+              className={`font-data hover:border-clay hover:text-chalk border-b py-1 text-[0.68rem] tracking-[0.06em] whitespace-nowrap uppercase transition-colors md:py-0 md:text-xs md:tracking-[0.1em] ${
                 isCurrent(item.href) ? "border-clay text-chalk" : "text-chalk-dim border-transparent"
               }`}
             >
@@ -57,19 +68,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-6">
-          {/* The nav above is hidden on phones, so the league pages get a
-              button there (fixtures and umpire entry live under it). */}
-          {isCurrent("/league") ? null : (
-            <Link
-              href="/league"
-              className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center gap-2 border px-4 py-3 text-xs tracking-[0.08em] uppercase transition-colors md:hidden"
-            >
-              League
-            </Link>
-          )}
-          <UserMenu />
-        </div>
+        <UserMenu />
       </div>
     </header>
   );
