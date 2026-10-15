@@ -59,7 +59,10 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
             <UmpireNames m={m} />
           </div>
         </div>
-        {m.umpires.hasPhones ? <RevealPhonesButton matchId={m.id} /> : null}
+        {/* Played matches show umpire names only; the service refuses their numbers too. */}
+        {m.umpires.hasPhones && m.fixtureStatus === "SCHEDULED" ? (
+          <RevealPhonesButton matchId={m.id} />
+        ) : null}
       </div>
 
       {canEditUmpires ? (

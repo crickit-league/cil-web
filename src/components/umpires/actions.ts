@@ -54,7 +54,8 @@ export async function saveUmpiresAction(
 
 export async function revealUmpirePhonesAction(matchId: string): Promise<RevealResult> {
   try {
-    return { ok: true, ...(await revealUmpirePhones(matchId)) };
+    const session = await auth();
+    return { ok: true, ...(await revealUmpirePhones(session?.user ?? null, matchId)) };
   } catch (error) {
     return { ok: false, message: errorMessage(error) };
   }

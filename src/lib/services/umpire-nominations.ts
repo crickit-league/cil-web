@@ -142,11 +142,12 @@ export async function saveUmpireNomination(actor: SessionUser | null, matchId: s
 }
 
 /**
- * The one read that returns umpire phone numbers. Deliberately no permission
- * check (see the note at the top of this file) — callers are the "Show umpire
- * numbers" button and the admin pages.
+ * The one read that returns umpire phone numbers. No sign-in needed for a
+ * match still to be played (see the note at the top of this file). Once it's
+ * been played the numbers are no use to the public, so only admins get them —
+ * the committee's call: played fixtures show umpire names only.
  */
-export async function revealUmpirePhones(matchId: string) {
+export async function revealUmpirePhones(actor: SessionUser | null, matchId: string) {
   const match = await prisma.match.findUnique({
     where: { id: matchId },
     select: {
@@ -157,6 +158,9 @@ export async function revealUmpirePhones(matchId: string) {
     },
   });
   if (!match || match.status === "CANCELLED") throw new MatchNotFoundError();
+  if (match.status !== "SCHEDULED" && !can(actor, "manage-league")) {
+    throw new UmpireEntryClosedError("Umpire numbers are only shown for matches still to be played.");
+  }
   const n = match.umpireNomination;
   const slot = (name: string | null | undefined, phone: string | null | undefined) =>
     name && phone ? { name, phone } : null;

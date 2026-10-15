@@ -105,7 +105,7 @@ export function FixtureCard({
           <span className={smallLabel}>Umpires</span>
           <UmpireNames m={m} />
         </div>
-        {m.umpires.hasPhones ? <RevealPhonesButton matchId={m.id} /> : null}
+        {m.umpires.hasPhones && !completed ? <RevealPhonesButton matchId={m.id} /> : null}
         {/* The public form only takes umpires for matches still to be played
             (enforced in saveUmpireNomination), so played ones get no link. */}
         {entryOpen && !completed ? (
