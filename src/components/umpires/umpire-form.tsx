@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveUmpiresAction, type UmpireFormState } from "./actions";
+import { PhoneInput } from "./phone-input";
 
 const initialState: UmpireFormState = { status: "idle" };
 
@@ -39,14 +40,10 @@ function Slot({
         <span className={labelClass}>Phone</span>
         {/* Never pre-filled with a saved number — those stay out of the page.
             Only what was just typed comes back, after a failed save. */}
-        <input
+        <PhoneInput
           name={`umpire${n}Phone`}
           defaultValue={phone}
-          type="tel"
-          inputMode="tel"
-          autoComplete="off"
-          maxLength={30}
-          placeholder={hasSavedName ? "Leave blank to keep the saved number" : "404-555-0123"}
+          placeholder={hasSavedName ? "Leave blank to keep the saved number" : "(404) 555-0123"}
           className={inputClass}
         />
       </label>

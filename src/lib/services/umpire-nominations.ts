@@ -52,9 +52,9 @@ function resolveSlot(label: string, name: string, phone: string | null, saved: S
   return { name, phone: resolved };
 }
 
-/** "404-555-0123" → "•••-•••-0123", so the audit log records that a number changed without storing it again. */
+/** "4045550123" → "(•••) •••-0123", so the audit log records that a number changed without storing it again. */
 function maskPhone(phone: string | null) {
-  return phone ? `•••-•••-${phone.slice(-4)}` : null;
+  return phone ? `(•••) •••-${phone.slice(-4)}` : null;
 }
 
 /**
