@@ -28,6 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (can(session.user, "manage-league")) {
     navItems.push({ href: "/admin/teams", label: "Teams", icon: "teams" });
     navItems.push({ href: "/admin/schedule", label: "Fixtures", icon: "schedule" });
+    navItems.push({ href: "/admin/points-table", label: "Points Table", icon: "points-table" });
   }
   navItems.push({ href: "/admin/activity", label: "Activity", icon: "activity" });
   if (can(session.user, "manage-admins")) {

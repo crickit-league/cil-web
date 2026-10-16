@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export type AdminNavIcon = "registration" | "teams" | "schedule" | "activity" | "super-admin";
+export type AdminNavIcon =
+  "registration" | "teams" | "schedule" | "points-table" | "activity" | "super-admin";
 export type AdminNavItem = { href: string; label: string; icon: AdminNavIcon };
 
 const STORAGE_KEY = "cil-admin-nav-collapsed";
@@ -31,6 +32,13 @@ const ICON_PATHS: Record<AdminNavIcon, React.ReactNode> = {
     <>
       <rect x="4" y="5" width="16" height="15" rx="1.5" />
       <path d="M4 10h16M8 3v4M16 3v4" />
+    </>
+  ),
+  // Table: header row and lines
+  "points-table": (
+    <>
+      <rect x="4" y="5" width="16" height="14" rx="1.5" />
+      <path d="M4 9.5h16M4 14h16M9.5 9.5V19" />
     </>
   ),
   // Clock
