@@ -25,6 +25,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const navItems: AdminNavItem[] = [
     { href: "/admin/registrations", label: "Registration", icon: "registration" },
   ];
+  if (can(session.user, "manage-league")) {
+    navItems.push({ href: "/admin/teams", label: "Teams", icon: "teams" });
+    navItems.push({ href: "/admin/schedule", label: "Fixtures", icon: "schedule" });
+  }
   navItems.push({ href: "/admin/activity", label: "Activity", icon: "activity" });
   if (can(session.user, "manage-admins")) {
     navItems.push({ href: "/admin/super-admin", label: "Super Admin", icon: "super-admin" });

@@ -230,6 +230,10 @@ model Series {
   tiePoints      Int @default(1)
   noResultPoints Int @default(1)
 
+  // Closes the public umpire-nomination form for every match in the series
+  // (admins can still edit). See services/umpire-nominations.ts.
+  umpireEntryLocked Boolean @default(false)
+
   // Stored, not derived, because historic series may only ever be imported
   // as a winner/runner-up line with no match data behind them.
   championEntryId String?    @unique
@@ -288,16 +292,17 @@ model TeamEntry {
   registrationId String?       @unique
   registration   Registration? @relation(fields: [registrationId], references: [id])
 
-  roster           RosterEntry[]
-  matchesAsTeamOne Match[]               @relation("MatchTeamOne")
-  matchesAsTeamTwo Match[]               @relation("MatchTeamTwo")
-  matchesWon       Match[]               @relation("MatchWinner")
-  inningsBatted    Innings[]             @relation("InningsBatting")
-  umpiringDuties   MatchUmpire[]
-  appearances      MatchAppearance[]
-  adjustments      StandingsAdjustment[]
-  championOf       Series?               @relation("SeriesChampion")
-  runnerUpOf       Series?               @relation("SeriesRunnerUp")
+  roster              RosterEntry[]
+  matchesAsTeamOne    Match[]               @relation("MatchTeamOne")
+  matchesAsTeamTwo    Match[]               @relation("MatchTeamTwo")
+  matchesWon          Match[]               @relation("MatchWinner")
+  inningsBatted       Innings[]             @relation("InningsBatting")
+  umpiringDuties      MatchUmpire[]
+  umpiringAssignments Match[]               @relation("MatchUmpiringTeam")
+  appearances         MatchAppearance[]
+  adjustments         StandingsAdjustment[]
+  championOf          Series?               @relation("SeriesChampion")
+  runnerUpOf          Series?               @relation("SeriesRunnerUp")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -422,6 +427,14 @@ enum MatchStatus {
   CANCELLED // removed from the schedule, never counted
 }
 
+// Where a match's umpiring team came from. ADMIN means someone set it on this
+// site, and a later CricClubs import won't overwrite it (the import preview
+// flags any disagreement instead).
+enum AssignmentSource {
+  IMPORT
+  ADMIN
+}
+
 enum ResultType {
   RUNS // "X won by N Runs"
   WICKETS // "X won by N Wickets"
@@ -432,9 +445,12 @@ enum ResultType {
 }
 
 // CricClubs lists teams as "team one"/"team two", not home/away, so that's
-// what's stored. The CricClubs export has no match ID, so the import's key
-// is (series, startsAt, teamOne, teamTwo); cricclubsMatchId is filled in
-// when known (it's visible on the public scorecard page).
+// what's stored. The CricClubs export has no match ID, so the import matches
+// on (series, stage, unordered team pair) — see lib/import/schedule-plan.ts;
+// cricclubsMatchId is filled in when known (it's on the public scorecard page).
+//
+// Results: status/resultType/winnerId/margins/resultText are filled by the
+// same import from the export's "Result" column; team totals go in Innings.
 //
 // Playoff fixtures are published before the teams are known ("A1 v winner
 // PQ4"), so both teams are nullable and teamOneSource/teamTwoSource say how
@@ -468,6 +484,13 @@ model Match {
   teamTwo       TeamEntry? @relation("MatchTeamTwo", fields: [teamTwoId], references: [id])
   teamTwoSource String?
 
+  // The team that supplies this match's umpires (its captain/VC nominate
+  // two people). Comes from CricClubs' "Umpire One" column when that holds a
+  // team name, or from an admin override — see AssignmentSource.
+  umpiringTeamId     String?
+  umpiringTeam       TeamEntry?        @relation("MatchUmpiringTeam", fields: [umpiringTeamId], references: [id])
+  umpiringTeamSource AssignmentSource?
+
   status        MatchStatus @default(SCHEDULED)
   resultType    ResultType?
   winnerId      String?
@@ -483,10 +506,11 @@ model Match {
 
   cricclubsMatchId Int? @unique
 
-  innings     Innings[]
-  umpires     MatchUmpire[]
-  appearances MatchAppearance[]
-  adjustments StandingsAdjustment[]
+  innings          Innings[]
+  umpires          MatchUmpire[]
+  umpireNomination UmpireNomination?
+  appearances      MatchAppearance[]
+  adjustments      StandingsAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -499,11 +523,11 @@ model Match {
   @@map("matches")
 }
 
-// CricClubs has four free-text umpire slots per match, and each holds
-// either a team ("Thalaivas" — that team supplies the umpires) or a person
-// ("Mathana Suresh Subbaraj"). rawName keeps the export value; the import
-// resolves it to exactly one of teamEntryId/personId, or leaves both null
-// for the admin review queue.
+// CricClubs has four free-text umpire slots per match. A slot holding a team
+// name becomes Match.umpiringTeam; anything else is a person's name (usually
+// typed in by the scorer — who actually stood), kept here as rawName and
+// replaced on every import. Admin-only. The umpires nominated on this site
+// live in UmpireNomination instead, which imports never touch.
 model MatchUmpire {
   id          String     @id @default(cuid())
   matchId     String
@@ -517,6 +541,27 @@ model MatchUmpire {
 
   @@unique([matchId, slot])
   @@map("match_umpires")
+}
+
+// The two umpires an umpiring team nominates for a match, entered on this site
+// by anyone (no sign-in — the committee's call) or by an admin. Its own table,
+// not Match columns, so a CricClubs re-import (which rewrites Match and
+// MatchUmpire) can never wipe it. Names are public; phone numbers are only
+// ever read by revealUmpirePhones, never by a page query.
+model UmpireNomination {
+  id      String @id @default(cuid())
+  matchId String @unique
+  match   Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  umpireOneName  String?
+  umpireOnePhone String? // 10 bare digits, "4045550123"; formatted for display (lib/phone.ts)
+  umpireTwoName  String? // the backup umpire
+  umpireTwoPhone String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("umpire_nominations")
 }
 
 // Team-level innings totals. The CricClubs matches export's score summary

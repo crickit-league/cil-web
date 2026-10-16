@@ -33,16 +33,24 @@ export function diffRecords<A extends Record<string, AuditValue>>(
   return changes;
 }
 
+/** actorEmail recorded for changes made through a public, no-sign-in form. */
+export const PUBLIC_ACTOR = "public (not signed in)";
+
 /**
  * Appends an audit entry. Call it with the transaction client from the same
  * `prisma.$transaction` as the change being logged, so the two commit or roll
  * back together. Every admin action's service function should call this.
+ * `actor` is null for the few changes the public may make without signing in.
  */
-export async function recordAudit(tx: Prisma.TransactionClient, actor: SessionUser, entry: AuditEntry) {
+export async function recordAudit(
+  tx: Prisma.TransactionClient,
+  actor: SessionUser | null,
+  entry: AuditEntry,
+) {
   await tx.auditLog.create({
     data: {
-      actorUserId: actor.id,
-      actorEmail: actor.email ?? "unknown",
+      actorUserId: actor?.id ?? null,
+      actorEmail: actor ? (actor.email ?? "unknown") : PUBLIC_ACTOR,
       action: entry.action,
       entityType: entry.entityType,
       entityId: entry.entityId,
