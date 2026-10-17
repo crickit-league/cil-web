@@ -1,10 +1,16 @@
-import Link from "next/link";
-import type { FixtureStatus, MatchResult, ScheduleMatch } from "@/lib/services/schedule";
+import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatMatchTime } from "@/lib/time";
+import { formatCardStamp } from "@/lib/time";
 import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
+import { UmpireEntryPanel, UmpireEntryToggle } from "./umpire-entry";
 
-const smallLabel = "font-data text-chalk-faint block text-[0.62rem] tracking-[0.1em] uppercase";
+// "Scoreboard rows" fixture card (design A, chosen 2026-10-16): a header strip
+// with date/time and status, one row per team with its score, the result and
+// ground, and a dashed footer for umpiring. On the fixtures list the footer's
+// "Enter umpires →" expands the card in place (umpire-entry.tsx); the fixture
+// page (/league/fixtures/[matchId]) reuses the card as its header.
+
+const footLabel = "font-data text-chalk-faint text-[0.62rem] tracking-[0.12em] uppercase";
 
 export function teamLabel(team: { name: string } | null, source: string | null) {
   return team?.name ?? (source ? `TBD (${source})` : "TBD");
@@ -22,31 +28,65 @@ export function StatusBadge({ status }: { status: FixtureStatus }) {
   );
 }
 
-/** "Sharks won by 5 wickets" with the winner emphasised, or a one-line outcome. */
-export function ResultLine({ result, className = "" }: { result: MatchResult; className?: string }) {
-  if (!result) return null;
+/** "11.5" — legal balls in the usual overs.balls notation. */
+function formatOvers(legalBalls: number) {
+  const balls = legalBalls % 6;
+  return balls === 0 ? String(legalBalls / 6) : `${(legalBalls - balls) / 6}.${balls}`;
+}
+
+function Icon({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  // Tabler-style outline icons, inline so there's no icon dependency.
   return (
-    <p className={`text-sm ${className}`}>
-      {result.kind === "win" ? (
-        <>
-          <strong className="text-gold font-semibold">{result.winner.name}</strong>{" "}
-          <span className="text-chalk">{result.text}</span>
-        </>
-      ) : (
-        <span className="text-chalk">{result.text}</span>
-      )}
-    </p>
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`shrink-0 ${className}`}
+    >
+      {children}
+    </svg>
   );
 }
 
-/** Umpire 1 / backup names, or a prompt to fill them in. */
-export function UmpireNames({ m }: { m: ScheduleMatch }) {
-  if (!m.umpires.one && !m.umpires.two) {
-    return <span className="text-chalk-faint">Not nominated yet</span>;
-  }
+const TrophyIcon = () => (
+  <Icon className="text-gold">
+    <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
+    <path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 5M17 6h2.5a2.5 2.5 0 0 1-2.5 5" />
+  </Icon>
+);
+
+const PinIcon = () => (
+  <Icon className="text-chalk-faint">
+    <circle cx="12" cy="11" r="3" />
+    <path d="M17.66 16.66 13.41 20.9a2 2 0 0 1-2.83 0l-4.24-4.24a8 8 0 1 1 11.32 0z" />
+  </Icon>
+);
+
+type Side = { id: string | null; label: string; score: MatchScore | null };
+
+/** Batting order once scores are in, the listed order before. */
+function sides(m: ScheduleMatch): Side[] {
+  const listed: Side[] = [
+    { id: m.teamOne?.id ?? null, label: teamLabel(m.teamOne, m.teamOneSource), score: null },
+    { id: m.teamTwo?.id ?? null, label: teamLabel(m.teamTwo, m.teamTwoSource), score: null },
+  ];
+  for (const side of listed) side.score = m.scores.find((s) => s.team.id === side.id) ?? null;
+  if (m.scores.length > 0 && m.scores[0].team.id === listed[1].id) listed.reverse();
+  return listed;
+}
+
+function UmpireNames({ m }: { m: ScheduleMatch }) {
+  if (!m.umpires.one && !m.umpires.two) return <span className="text-chalk-faint">Not nominated yet</span>;
   return (
-    <span className="flex flex-col">
-      {m.umpires.one ? <span>{m.umpires.one}</span> : null}
+    <span>
+      {m.umpires.one}
+      {m.umpires.one && m.umpires.two ? ", " : null}
       {m.umpires.two ? <span className="text-chalk-dim">{m.umpires.two} (backup)</span> : null}
     </span>
   );
@@ -56,67 +96,140 @@ export function FixtureCard({
   m,
   highlight,
   entryOpen,
+  standalone = false,
 }: {
   m: ScheduleMatch;
+  /** Team picked in the team filter; its name is underlined in gold. */
   highlight: string | null;
+  /** Public umpire entry is open for the series. */
   entryOpen: boolean;
+  /** The fixture page's header: a <div>, and no inline entry (the page has its own form). */
+  standalone?: boolean;
 }) {
-  const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
-  const name = (team: { id: string; name: string } | null, source: string | null) => {
-    const text = teamLabel(team, source);
-    if (team && team.id === highlight) return <strong className="text-gold font-semibold">{text}</strong>;
-    // On a decided match the losing side is dimmed so the winner stands out.
-    if (winnerId && team && team.id !== winnerId) return <span className="text-chalk-dim">{text}</span>;
-    return text;
-  };
-  const umpiringHighlighted = m.umpiringTeam && m.umpiringTeam.id === highlight;
-  const nominated = Boolean(m.umpires.one || m.umpires.two);
   const completed = m.fixtureStatus === "COMPLETED";
+  const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
+  const nominated = Boolean(m.umpires.one || m.umpires.two);
+  // The public form only takes umpires for matches still to be played
+  // (enforced in saveUmpireNomination), so played ones get no entry.
+  const canEnter = entryOpen && !completed && !standalone;
+  const Tag = standalone ? "div" : "li";
 
   return (
-    <li
-      className={`bg-dugout grid grid-cols-1 gap-3 border p-4 sm:grid-cols-[6rem_1fr_16rem] sm:gap-6 sm:px-5 ${
-        completed ? "border-line border-l-gold/70 border-l-4" : "border-line"
-      }`}
-    >
-      <div className="font-data text-chalk-dim flex flex-wrap items-center gap-3 text-[0.72rem] tracking-[0.06em] uppercase sm:flex-col sm:items-start sm:gap-1.5">
-        <span className="text-chalk">{formatMatchTime(m.startsAt)}</span>
-        {m.stage !== "LEAGUE" ? <span className="text-clay-bright">{STAGE_LABEL[m.stage]}</span> : null}
-        <StatusBadge status={m.fixtureStatus} />
+    <Tag className="bg-dugout border-line flex scroll-mt-36 flex-col border">
+      {/* Header strip */}
+      <div className="border-line flex items-center justify-between gap-3 border-b px-4 py-2.5">
+        <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] whitespace-nowrap uppercase">
+          {formatCardStamp(m.startsAt)}
+        </span>
+        <span className="flex items-center gap-2">
+          {m.stage !== "LEAGUE" ? (
+            <span className="font-data text-clay-bright text-[0.6rem] tracking-[0.12em] uppercase">
+              {STAGE_LABEL[m.stage]}
+            </span>
+          ) : null}
+          <StatusBadge status={m.fixtureStatus} />
+        </span>
       </div>
 
-      <div className="min-w-0">
-        <div className="font-display text-lg leading-tight font-bold uppercase">
-          {name(m.teamOne, m.teamOneSource)} <span className="text-chalk-faint font-normal">v</span>{" "}
-          {name(m.teamTwo, m.teamTwoSource)}
-        </div>
-        <ResultLine result={m.result} className="mt-1.5" />
-        <div className="text-chalk-dim mt-1 text-sm">{m.ground ?? "Ground to be confirmed"}</div>
-      </div>
+      {/* Body: one scoreboard row per team */}
+      <div className="flex flex-col gap-3 px-4 py-3">
+        <ul className="flex flex-col gap-1">
+          {sides(m).map((side, i) => {
+            const won = winnerId !== null && side.id === winnerId;
+            const lost = winnerId !== null && !won;
+            const highlighted = side.id !== null && side.id === highlight;
+            return (
+              <li
+                key={side.id ?? `slot-${i}`}
+                className={`-ml-4 flex items-baseline justify-between gap-3 border-l-[3px] pl-[13px] ${
+                  won ? "border-gold" : "border-transparent"
+                }`}
+              >
+                <span
+                  className={`font-display flex min-w-0 items-center gap-1.5 text-xl leading-tight font-bold uppercase ${
+                    won ? "text-gold" : lost ? "text-chalk-dim" : "text-chalk"
+                  }`}
+                >
+                  <span
+                    className={
+                      highlighted ? "decoration-gold underline decoration-2 underline-offset-4" : undefined
+                    }
+                  >
+                    {side.label}
+                  </span>
+                  {won ? (
+                    <>
+                      <TrophyIcon />
+                      <span className="sr-only">(winner)</span>
+                    </>
+                  ) : null}
+                </span>
+                <span className="font-data shrink-0 text-right whitespace-nowrap">
+                  {side.score ? (
+                    <>
+                      <span className={`text-lg ${lost ? "text-chalk-dim" : "text-chalk"}`}>
+                        {side.score.runs}/{side.score.wickets}
+                      </span>{" "}
+                      <span className="text-chalk-faint text-xs">({formatOvers(side.score.legalBalls)})</span>
+                    </>
+                  ) : completed ? null : (
+                    <span className="text-chalk-faint text-lg">—</span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
 
-      <div className="border-line flex flex-col gap-3 border-t pt-3 text-sm sm:border-0 sm:pt-0">
-        <div>
-          <span className={smallLabel}>Umpiring team</span>
-          <span className={umpiringHighlighted ? "text-gold font-semibold" : "text-chalk"}>
-            {m.umpiringTeam?.name ?? "To be assigned"}
-          </span>
-        </div>
-        <div>
-          <span className={smallLabel}>Umpires</span>
-          <UmpireNames m={m} />
-        </div>
-        {m.umpires.hasPhones && !completed ? <RevealPhonesButton matchId={m.id} /> : null}
-        {/* The public form only takes umpires for matches still to be played
-            (enforced in saveUmpireNomination), so played ones get no link. */}
-        {entryOpen && !completed ? (
-          <Link
-            href={`/league/fixtures/${m.id}`}
-            className="font-data text-clay-bright self-start text-[0.68rem] tracking-[0.08em] uppercase underline-offset-2 hover:underline"
-          >
-            {nominated ? "Change umpires →" : "Enter umpires →"}
-          </Link>
+        {m.result ? (
+          <p className={`text-sm ${m.result.kind === "win" ? "text-gold font-semibold" : "text-chalk-dim"}`}>
+            {m.result.kind === "win" ? `${m.result.winner.name} ${m.result.text}` : m.result.text}
+          </p>
         ) : null}
+        <p className="text-chalk-dim flex items-center gap-1.5 text-sm">
+          <PinIcon />
+          {m.ground ?? "Ground to be confirmed"}
+        </p>
       </div>
-    </li>
+
+      {/* Footer strip: umpiring */}
+      {completed ? (
+        nominated ? (
+          <div className="border-line border-t border-dashed px-4 py-2.5 text-sm">
+            <span className={footLabel}>Umps </span>
+            <UmpireNames m={m} />
+          </div>
+        ) : null
+      ) : (
+        <div className="border-line border-t border-dashed px-4 py-3 text-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <span>
+                <span className={footLabel}>Umpiring </span>
+                <span
+                  className={
+                    m.umpiringTeam && m.umpiringTeam.id === highlight
+                      ? "text-gold font-semibold"
+                      : "text-chalk"
+                  }
+                >
+                  {m.umpiringTeam?.name ?? "To be assigned"}
+                </span>
+              </span>
+              <UmpireNames m={m} />
+            </div>
+            {canEnter ? <UmpireEntryToggle matchId={m.id} nominated={nominated} /> : null}
+          </div>
+          {m.umpires.hasPhones ? (
+            <div className="mt-2">
+              <RevealPhonesButton matchId={m.id} />
+            </div>
+          ) : null}
+          {canEnter ? (
+            <UmpireEntryPanel matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />
+          ) : null}
+        </div>
+      )}
+    </Tag>
   );
 }
