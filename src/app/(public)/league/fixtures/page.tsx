@@ -3,6 +3,7 @@ import { getPublicFixtures, type ScheduleMatch } from "@/lib/services/schedule";
 import { formatMatchDay, matchDayKey } from "@/lib/time";
 import { FixtureCard } from "./fixture-card";
 import { TeamFilter } from "./team-filter";
+import { FixtureExpansionProvider } from "./umpire-entry";
 
 // Re-imports and umpire changes must show up immediately.
 export const dynamic = "force-dynamic";
@@ -48,20 +49,22 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
             : "Fixtures will appear here once the committee publishes the schedule."}
         </p>
       ) : (
-        <div className="flex flex-col gap-10">
-          {[...days.entries()].map(([key, dayMatches]) => (
-            <section key={key} className="flex flex-col gap-3">
-              <h2 className="font-display border-line border-b pb-2 text-[1.4rem] font-extrabold uppercase">
-                {formatMatchDay(dayMatches[0].startsAt)}
-              </h2>
-              <ul className="flex flex-col gap-3">
-                {dayMatches.map((m) => (
-                  <FixtureCard key={m.id} m={m} highlight={selectedTeamId ?? null} entryOpen={entryOpen} />
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <FixtureExpansionProvider>
+          <div className="flex flex-col gap-10">
+            {[...days.entries()].map(([key, dayMatches]) => (
+              <section key={key} className="flex flex-col gap-3">
+                <h2 className="font-display border-line border-b pb-2 text-[1.4rem] font-extrabold uppercase">
+                  {formatMatchDay(dayMatches[0].startsAt)}
+                </h2>
+                <ul className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+                  {dayMatches.map((m) => (
+                    <FixtureCard key={m.id} m={m} highlight={selectedTeamId ?? null} entryOpen={entryOpen} />
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </FixtureExpansionProvider>
       )}
     </div>
   );
