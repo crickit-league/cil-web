@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicFixture } from "@/lib/services/schedule";
-import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatMatchDay, formatMatchTime } from "@/lib/time";
-import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
 import { UmpireForm } from "@/components/umpires/umpire-form";
-import { ResultLine, StatusBadge, teamLabel, UmpireNames } from "../fixture-card";
+import { FixtureCard } from "../fixture-card";
 
 export const dynamic = "force-dynamic";
 
@@ -31,39 +28,8 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
         ← All fixtures
       </Link>
 
-      <div className="border-line bg-dugout flex flex-col gap-4 border p-5">
-        <div className="font-data text-chalk-dim flex flex-wrap items-center gap-x-3 gap-y-2 text-[0.72rem] tracking-[0.06em] uppercase">
-          <span>
-            {formatMatchDay(m.startsAt)} · {formatMatchTime(m.startsAt)}
-            {m.stage !== "LEAGUE" ? ` · ${STAGE_LABEL[m.stage]}` : ""}
-          </span>
-          <StatusBadge status={m.fixtureStatus} />
-        </div>
-        <h2 className="font-display text-2xl leading-tight font-extrabold uppercase">
-          {teamLabel(m.teamOne, m.teamOneSource)} <span className="text-chalk-faint font-normal">v</span>{" "}
-          {teamLabel(m.teamTwo, m.teamTwoSource)}
-        </h2>
-        <ResultLine result={m.result} className="text-base" />
-        <div className="text-chalk-dim text-sm">{m.ground ?? "Ground to be confirmed"}</div>
-        <div className="grid gap-4 text-sm sm:grid-cols-2">
-          <div>
-            <span className="font-data text-chalk-faint block text-[0.62rem] tracking-[0.1em] uppercase">
-              Umpiring team
-            </span>
-            {m.umpiringTeam?.name ?? "To be assigned"}
-          </div>
-          <div>
-            <span className="font-data text-chalk-faint block text-[0.62rem] tracking-[0.1em] uppercase">
-              Umpires
-            </span>
-            <UmpireNames m={m} />
-          </div>
-        </div>
-        {/* Played matches show umpire names only; the service refuses their numbers too. */}
-        {m.umpires.hasPhones && m.fixtureStatus === "SCHEDULED" ? (
-          <RevealPhonesButton matchId={m.id} />
-        ) : null}
-      </div>
+      {/* Same card as the fixtures list; entry happens in the form below instead of inline. */}
+      <FixtureCard m={m} highlight={null} entryOpen={false} standalone />
 
       {canEditUmpires ? (
         <section className="flex flex-col gap-4">
@@ -71,7 +37,7 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
             <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Enter umpires</h2>
             <p className="text-chalk-dim mt-1 text-sm">
               For {m.umpiringTeam ? `${m.umpiringTeam.name}, the umpiring team` : "the umpiring team"}: name
-              two umpires — the second is the backup — with a phone number for each.
+              Umpire 1 and Umpire 2, with a phone number for each.
             </p>
           </div>
           <UmpireForm matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />

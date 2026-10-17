@@ -13,6 +13,7 @@ import {
   planScheduleImport,
   type ExistingMatch,
   type PlanTeam,
+  type PlannedInnings,
   type PlannedMatch,
 } from "@/lib/import/schedule-plan";
 
@@ -120,6 +121,18 @@ async function loadPlanInputs(db: Prisma.TransactionClient, seriesId: string) {
       umpiringTeamSource: true,
       field: { select: { label: true, ground: { select: { name: true } } } },
       umpires: { select: { rawName: true }, orderBy: { slot: "asc" } },
+      innings: {
+        where: { isSuperOver: false },
+        select: {
+          number: true,
+          battingEntryId: true,
+          runs: true,
+          wickets: true,
+          legalBalls: true,
+          allOut: true,
+        },
+        orderBy: { number: "asc" },
+      },
     },
   });
   const existing: ExistingMatch[] = matches.map((m) => ({
@@ -134,9 +147,18 @@ async function loadPlanInputs(db: Prisma.TransactionClient, seriesId: string) {
     umpiringTeamId: m.umpiringTeamId,
     umpiringTeamSource: m.umpiringTeamSource,
     umpireNames: m.umpires.map((u) => u.rawName),
+    innings: m.innings,
   }));
 
   return { teams, existing, entries };
+}
+
+function planRules(series: { groupCount: number; playersPerSide: number; maxOvers: number }) {
+  return {
+    groupCount: series.groupCount,
+    playersPerSide: series.playersPerSide,
+    maxOvers: series.maxOvers,
+  };
 }
 
 /** The preview: what committing this import would do, computed against current data. */
@@ -145,7 +167,7 @@ export async function getScheduleImportPreview(user: SessionUser, runId: string)
   const run = await loadStagedRun(runId);
   const { teams, existing } = await loadPlanInputs(prisma, run.series.id);
   const records = run.rows.map((r) => r.raw as RawMatchRecord);
-  const plan = planScheduleImport({ records, teams, existing, groupCount: run.series.groupCount });
+  const plan = planScheduleImport({ records, teams, existing, ...planRules(run.series) });
 
   const teamName = (id: string | null) => teams.find((t) => t.id === id)?.displayName ?? "—";
   const describe = (m: PlannedMatch) => ({
@@ -173,6 +195,7 @@ export async function getScheduleImportPreview(user: SessionUser, runId: string)
       unmatchedTeams: plan.unmatchedTeams,
       unmatchedUmpiringTeams: plan.unmatchedUmpiringTeams,
       warnings: plan.warnings,
+      scoreProblems: plan.scoreProblems,
       creates: plan.creates.map(describe),
       updates: plan.updates
         .filter((u) => u.changes.length > 0)
@@ -296,6 +319,25 @@ async function replaceUmpireNames(tx: Prisma.TransactionClient, matchId: string,
   }
 }
 
+/**
+ * Makes the match's innings totals match the file: upserts by innings number
+ * (so a re-import updates in place) and removes regular innings the file no
+ * longer has. Null means the file's scores couldn't be read — leave them be.
+ */
+async function syncInnings(tx: Prisma.TransactionClient, matchId: string, innings: PlannedInnings[] | null) {
+  if (innings === null) return;
+  await tx.innings.deleteMany({
+    where: { matchId, isSuperOver: false, number: { notIn: innings.map((i) => i.number) } },
+  });
+  for (const { number, ...totals } of innings) {
+    await tx.innings.upsert({
+      where: { matchId_number: { matchId, number } },
+      update: { ...totals, isSuperOver: false },
+      create: { matchId, number, ...totals },
+    });
+  }
+}
+
 export type CommitSummary = {
   created: number;
   updated: number;
@@ -318,7 +360,7 @@ export async function commitScheduleImport(user: SessionUser, runId: string): Pr
   return prisma.$transaction(
     async (tx) => {
       const { teams, existing } = await loadPlanInputs(tx, run.series.id);
-      const plan = planScheduleImport({ records, teams, existing, groupCount: run.series.groupCount });
+      const plan = planScheduleImport({ records, teams, existing, ...planRules(run.series) });
 
       if (plan.problems.length > 0 || plan.unmatchedTeams.length > 0) {
         throw new ImportBlockedError("Fix the problems listed in the preview before importing.");
@@ -331,6 +373,7 @@ export async function commitScheduleImport(user: SessionUser, runId: string): Pr
           data: { seriesId: run.series.id, ...matchData(m, await resolveFieldId(tx, m.ground, fieldCache)) },
         });
         await replaceUmpireNames(tx, created.id, m.umpireNames);
+        await syncInnings(tx, created.id, m.innings);
       }
       for (const u of plan.updates) {
         await tx.match.update({
@@ -338,6 +381,7 @@ export async function commitScheduleImport(user: SessionUser, runId: string): Pr
           data: matchData(u.planned, await resolveFieldId(tx, u.planned.ground, fieldCache)),
         });
         await replaceUmpireNames(tx, u.matchId, u.planned.umpireNames);
+        await syncInnings(tx, u.matchId, u.planned.innings);
       }
       if (plan.cancels.length > 0) {
         await tx.match.updateMany({

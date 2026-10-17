@@ -148,6 +148,26 @@ export default async function ImportPreviewPage({ params }: { params: Promise<{ 
             </ul>
           ) : null}
 
+          {plan.scoreProblems.length > 0 ? (
+            <div className="border-gold/40 border p-4">
+              <h2 className="font-display text-lg font-extrabold uppercase">
+                Scores that can&apos;t be read
+              </h2>
+              <p className="text-chalk-dim mt-1 text-sm">
+                The result still imports, but these matches are left out of net run rate (any scores already
+                saved are kept) until a file with readable scores is imported. Fix them in CricClubs and
+                export again.
+              </p>
+              <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm">
+                {plan.scoreProblems.map((p) => (
+                  <li key={p.rowNumber}>
+                    Row {p.rowNumber}, {p.label}: {p.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {nothingToDo ? (
             <p className="text-chalk-dim">
               This file matches the saved schedule — there&apos;s nothing to import.

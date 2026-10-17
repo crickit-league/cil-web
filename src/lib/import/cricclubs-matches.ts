@@ -141,6 +141,55 @@ export function parseResult(text: string): ParsedResult {
   return { ...none, status: "COMPLETED", resultType: null, text: t };
 }
 
+export type ParsedInningsTotal = {
+  /** Team name as CricClubs wrote it; resolved to a team entry by the planner. */
+  teamName: string;
+  runs: number;
+  wickets: number;
+  legalBalls: number;
+};
+
+// One "Team: runs/wickets(overs)" entry. Overs are CricClubs' "overs.balls"
+// form, so 11.5 is 11 overs and 5 balls.
+const SCORE_ENTRY = /(\S.*?):\s*(\d+)\/(\d+)\s*\((\d+)(?:\.(\d+))?\)/g;
+
+/**
+ * Parses CricClubs' "Score Summary" cell — "Atlanta BlackCaps: 42/9(14)
+ * Spades: 43/7(11.5)" — into innings totals in batting order. A blank cell is
+ * no innings. CricClubs writes "Team: 0/0(0)" for a match that never started
+ * (abandoned or forfeited); those entries are dropped, not stored as innings.
+ * Returns an error message for anything it can't read in full, so the
+ * preview can show it instead of storing half a scorecard.
+ */
+export function parseScoreSummary(text: string): { innings: ParsedInningsTotal[] } | { error: string } {
+  const t = text.trim();
+  if (!t) return { innings: [] };
+
+  const innings: ParsedInningsTotal[] = [];
+  let consumed = "";
+  for (const m of t.matchAll(SCORE_ENTRY)) {
+    consumed += m[0];
+    const balls = m[5] === undefined ? 0 : Number(m[5]);
+    if (m[5] !== undefined && (m[5].length > 1 || balls > 5)) {
+      return { error: `"${m[0].trim()}" has ${m[4]}.${m[5]} overs, which isn't a valid overs count.` };
+    }
+    const entry = {
+      teamName: m[1].trim(),
+      runs: Number(m[2]),
+      wickets: Number(m[3]),
+      legalBalls: Number(m[4]) * 6 + balls,
+    };
+    if (entry.runs === 0 && entry.wickets === 0 && entry.legalBalls === 0) continue;
+    innings.push(entry);
+  }
+  // Every non-space character must belong to an entry, or part of the cell
+  // was silently skipped.
+  if (consumed.replace(/\s/g, "") !== t.replace(/\s/g, "")) {
+    return { error: `Couldn't read the score summary "${t}".` };
+  }
+  return { innings };
+}
+
 export type NormalizedMatchRow = {
   rowNumber: number;
   stage: MatchStage;
@@ -154,6 +203,8 @@ export type NormalizedMatchRow = {
   /** The "Umpire One" cell — where the committee puts the umpiring team's name. */
   umpireOne: string;
   result: ParsedResult;
+  /** The "Score Summary" cell, verbatim. Parsed by parseScoreSummary. */
+  scoreSummary: string;
 };
 
 export type RowProblem = { rowNumber: number; message: string };
@@ -197,6 +248,7 @@ export function normalizeMatchRow(
       umpireValues: UMPIRE_HEADERS.map((h) => (record[h] ?? "").trim()).filter(Boolean),
       umpireOne: (record["Umpire One"] ?? "").trim(),
       result: parseResult(record["Result"] ?? ""),
+      scoreSummary: (record["Score Summary"] ?? "").trim(),
     },
   };
 }

@@ -7,7 +7,7 @@ import { normalizeName } from "@/lib/import/cricclubs-matches";
 import { umpireEntryLockSchema, umpireNominationSchema } from "@/lib/validation/umpires";
 
 // Umpire nominations: each fixture's umpiring team names two people (umpire 1
-// and a backup) with phone numbers. The committee wants this open to anyone,
+// and Umpire 2) with phone numbers. The committee wants this open to anyone,
 // no sign-in — in practice a rep of the umpiring team fills it in — with a
 // series-wide admin lock. Names are public. Phone numbers are never returned
 // by a page query: only revealUmpirePhones reads them, behind a button, which
@@ -96,7 +96,7 @@ export async function saveUmpireNomination(actor: SessionUser | null, matchId: s
     phone: saved?.umpireTwoPhone ?? null,
   });
   if (!one.name && two.name) {
-    throw new InvalidUmpireNominationError("Fill in Umpire 1 before the backup umpire.");
+    throw new InvalidUmpireNominationError("Fill in Umpire 1 before Umpire 2.");
   }
 
   const next = {

@@ -40,6 +40,11 @@ const scheduleSelect = {
   umpireNomination: {
     select: { umpireOneName: true, umpireOnePhone: true, umpireTwoName: true, umpireTwoPhone: true },
   },
+  innings: {
+    where: { isSuperOver: false },
+    select: { battingEntryId: true, runs: true, wickets: true, legalBalls: true },
+    orderBy: { number: "asc" },
+  },
 } as const;
 
 /**
@@ -52,6 +57,14 @@ export type MatchResult =
   | { kind: "other"; text: string }
   | null;
 
+/** One side's total on a played match, from the imported score summary. */
+export type MatchScore = {
+  team: { id: string; name: string };
+  runs: number;
+  wickets: number;
+  legalBalls: number;
+};
+
 /** Scheduled or completed, for the fixture badge. Abandoned matches are completed (no result). */
 export type FixtureStatus = "SCHEDULED" | "COMPLETED";
 
@@ -62,6 +75,8 @@ export type ScheduleMatch = {
   status: MatchStatus;
   fixtureStatus: FixtureStatus;
   result: MatchResult;
+  /** Innings totals in batting order; empty until scores are imported (or when no ball was bowled). */
+  scores: MatchScore[];
   resultText: string | null;
   teamOne: { id: string; name: string } | null;
   teamTwo: { id: string; name: string } | null;
@@ -96,6 +111,7 @@ type ScheduleRow = {
     umpireTwoName: string | null;
     umpireTwoPhone: string | null;
   } | null;
+  innings: { battingEntryId: string; runs: number; wickets: number; legalBalls: number }[];
 };
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -139,6 +155,10 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
     status: m.status,
     fixtureStatus: m.status === "SCHEDULED" ? "SCHEDULED" : "COMPLETED",
     result: describeResult(m),
+    scores: m.innings.flatMap(({ battingEntryId, ...totals }) => {
+      const batting = [m.teamOne, m.teamTwo].find((t) => t?.id === battingEntryId);
+      return batting ? [{ team: { id: batting.id, name: batting.displayName }, ...totals }] : [];
+    }),
     resultText: m.resultText,
     teamOne: team(m.teamOne),
     teamTwo: team(m.teamTwo),
