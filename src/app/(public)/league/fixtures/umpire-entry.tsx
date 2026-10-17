@@ -54,7 +54,7 @@ export function UmpireEntryToggle({ matchId, nominated }: { matchId: string; nom
   const isOpen = openId === matchId;
 
   return (
-    <div className="flex shrink-0 flex-col items-end gap-1">
+    <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
       <button
         type="button"
         aria-expanded={isOpen}

@@ -56,7 +56,7 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
                 <h2 className="font-display border-line border-b pb-2 text-[1.4rem] font-extrabold uppercase">
                   {formatMatchDay(dayMatches[0].startsAt)}
                 </h2>
-                <ul className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {dayMatches.map((m) => (
                     <FixtureCard key={m.id} m={m} highlight={selectedTeamId ?? null} entryOpen={entryOpen} />
                   ))}

@@ -33,8 +33,14 @@ function AdminUmpires({ match }: { match: AdminMatch }) {
     <div className="flex flex-col gap-2 text-sm">
       {one || two ? (
         <div>
-          {one ? <div>{one}</div> : null}
-          {two ? <div className="text-chalk-dim">{two} (backup)</div> : null}
+          <div>
+            <span className="text-chalk-dim">Umpire 1: </span>
+            {one ?? "—"}
+          </div>
+          <div>
+            <span className="text-chalk-dim">Umpire 2: </span>
+            {two ?? "—"}
+          </div>
         </div>
       ) : (
         <div className="text-chalk-faint">No umpires yet</div>

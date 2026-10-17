@@ -4,21 +4,53 @@ import { useState, useTransition } from "react";
 import { formatPhone } from "@/lib/phone";
 import { revealUmpirePhonesAction, type RevealResult } from "./actions";
 
-type Revealed = Extract<RevealResult, { ok: true }>;
+export type RevealedPhones = Extract<RevealResult, { ok: true }>;
+
+/**
+ * Numbers are fetched only on request, so they're never in the page HTML
+ * (anti-scraping, not access control). `toggle` shows both umpires' numbers;
+ * hiding drops them from state (and so the DOM), and showing again refetches
+ * so a just-changed number is current.
+ */
+export function useUmpirePhones(matchId: string) {
+  const [pending, startTransition] = useTransition();
+  const [revealed, setRevealed] = useState<RevealedPhones | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const toggle = () => {
+    setError(null);
+    if (revealed) {
+      setRevealed(null);
+      return;
+    }
+    startTransition(async () => {
+      const result = await revealUmpirePhonesAction(matchId);
+      if (result.ok) setRevealed(result);
+      else setError(result.message);
+    });
+  };
+
+  return { pending, revealed, error, toggle };
+}
+
+/** A tappable "(404) 555-0123" that dials the number. */
+export function PhoneLink({ phone }: { phone: string }) {
+  return (
+    <a
+      href={`tel:+1${phone.replace(/\D/g, "")}`}
+      className="font-data text-clay-bright whitespace-nowrap underline-offset-2 hover:underline"
+    >
+      {formatPhone(phone)}
+    </a>
+  );
+}
 
 const buttonClass =
   "font-data border-line text-chalk hover:border-clay self-start border px-3 py-2 text-[0.68rem] tracking-[0.08em] uppercase transition-colors disabled:opacity-60";
 
-/**
- * Numbers are fetched only when pressed, so they're never in the page HTML
- * (anti-scraping, not access control). One press shows both umpires; "Hide"
- * drops them from state (and so the DOM), and showing again refetches so a
- * just-changed number is current.
- */
+/** The standalone button + list, used on the admin fixtures page. */
 export function RevealPhonesButton({ matchId }: { matchId: string }) {
-  const [pending, startTransition] = useTransition();
-  const [revealed, setRevealed] = useState<Revealed | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { pending, revealed, error, toggle } = useUmpirePhones(matchId);
 
   const rows = revealed
     ? [
@@ -33,18 +65,7 @@ export function RevealPhonesButton({ matchId }: { matchId: string }) {
         type="button"
         disabled={pending}
         aria-expanded={revealed !== null}
-        onClick={() => {
-          setError(null);
-          if (revealed) {
-            setRevealed(null);
-            return;
-          }
-          startTransition(async () => {
-            const result = await revealUmpirePhonesAction(matchId);
-            if (result.ok) setRevealed(result);
-            else setError(result.message);
-          });
-        }}
+        onClick={toggle}
         className={buttonClass}
       >
         {pending ? "Loading…" : revealed ? "Hide umpire numbers" : "Show umpire numbers"}
@@ -57,13 +78,7 @@ export function RevealPhonesButton({ matchId }: { matchId: string }) {
             {rows.map(({ label, slot }) => (
               <li key={label}>
                 <span className="text-chalk-dim">{label}: </span>
-                {slot!.name}{" "}
-                <a
-                  href={`tel:+1${slot!.phone.replace(/\D/g, "")}`}
-                  className="font-data text-clay-bright whitespace-nowrap underline-offset-2 hover:underline"
-                >
-                  {formatPhone(slot!.phone)}
-                </a>
+                {slot!.name} <PhoneLink phone={slot!.phone} />
               </li>
             ))}
           </ul>

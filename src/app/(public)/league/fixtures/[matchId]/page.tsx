@@ -37,7 +37,7 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
             <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Enter umpires</h2>
             <p className="text-chalk-dim mt-1 text-sm">
               For {m.umpiringTeam ? `${m.umpiringTeam.name}, the umpiring team` : "the umpiring team"}: name
-              two umpires — the second is the backup — with a phone number for each.
+              Umpire 1 and Umpire 2, with a phone number for each.
             </p>
           </div>
           <UmpireForm matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />

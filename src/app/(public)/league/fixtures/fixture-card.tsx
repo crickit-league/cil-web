@@ -1,16 +1,13 @@
 import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatCardStamp } from "@/lib/time";
-import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
-import { UmpireEntryPanel, UmpireEntryToggle } from "./umpire-entry";
+import { FixtureFooter } from "./fixture-footer";
 
 // "Scoreboard rows" fixture card (design A, chosen 2026-10-16): a header strip
 // with date/time and status, one row per team with its score, the result and
-// ground, and a dashed footer for umpiring. On the fixtures list the footer's
+// ground, and a dashed footer for umpiring (fixture-footer.tsx). On the fixtures list the footer's
 // "Enter umpires →" expands the card in place (umpire-entry.tsx); the fixture
 // page (/league/fixtures/[matchId]) reuses the card as its header.
-
-const footLabel = "font-data text-chalk-faint text-[0.62rem] tracking-[0.12em] uppercase";
 
 export function teamLabel(team: { name: string } | null, source: string | null) {
   return team?.name ?? (source ? `TBD (${source})` : "TBD");
@@ -81,17 +78,6 @@ function sides(m: ScheduleMatch): Side[] {
   return listed;
 }
 
-function UmpireNames({ m }: { m: ScheduleMatch }) {
-  if (!m.umpires.one && !m.umpires.two) return <span className="text-chalk-faint">Not nominated yet</span>;
-  return (
-    <span>
-      {m.umpires.one}
-      {m.umpires.one && m.umpires.two ? ", " : null}
-      {m.umpires.two ? <span className="text-chalk-dim">{m.umpires.two} (backup)</span> : null}
-    </span>
-  );
-}
-
 export function FixtureCard({
   m,
   highlight,
@@ -108,14 +94,14 @@ export function FixtureCard({
 }) {
   const completed = m.fixtureStatus === "COMPLETED";
   const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
-  const nominated = Boolean(m.umpires.one || m.umpires.two);
   // The public form only takes umpires for matches still to be played
   // (enforced in saveUmpireNomination), so played ones get no entry.
   const canEnter = entryOpen && !completed && !standalone;
   const Tag = standalone ? "div" : "li";
 
   return (
-    <Tag className="bg-dugout border-line flex scroll-mt-36 flex-col border">
+    // h-full + the body's flex-1 + the footer's mt-auto: cards in a grid row match heights.
+    <Tag className="bg-dugout border-line flex h-full scroll-mt-36 flex-col border">
       {/* Header strip */}
       <div className="border-line flex items-center justify-between gap-3 border-b px-4 py-2.5">
         <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] whitespace-nowrap uppercase">
@@ -132,7 +118,7 @@ export function FixtureCard({
       </div>
 
       {/* Body: one scoreboard row per team */}
-      <div className="flex flex-col gap-3 px-4 py-3">
+      <div className="flex flex-1 flex-col gap-3 px-4 py-3">
         <ul className="flex flex-col gap-1">
           {sides(m).map((side, i) => {
             const won = winnerId !== null && side.id === winnerId;
@@ -192,44 +178,14 @@ export function FixtureCard({
         </p>
       </div>
 
-      {/* Footer strip: umpiring */}
-      {completed ? (
-        nominated ? (
-          <div className="border-line border-t border-dashed px-4 py-2.5 text-sm">
-            <span className={footLabel}>Umps </span>
-            <UmpireNames m={m} />
-          </div>
-        ) : null
-      ) : (
-        <div className="border-line border-t border-dashed px-4 py-3 text-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-col gap-1">
-              <span>
-                <span className={footLabel}>Umpiring </span>
-                <span
-                  className={
-                    m.umpiringTeam && m.umpiringTeam.id === highlight
-                      ? "text-gold font-semibold"
-                      : "text-chalk"
-                  }
-                >
-                  {m.umpiringTeam?.name ?? "To be assigned"}
-                </span>
-              </span>
-              <UmpireNames m={m} />
-            </div>
-            {canEnter ? <UmpireEntryToggle matchId={m.id} nominated={nominated} /> : null}
-          </div>
-          {m.umpires.hasPhones ? (
-            <div className="mt-2">
-              <RevealPhonesButton matchId={m.id} />
-            </div>
-          ) : null}
-          {canEnter ? (
-            <UmpireEntryPanel matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />
-          ) : null}
-        </div>
-      )}
+      <FixtureFooter
+        matchId={m.id}
+        completed={completed}
+        umpiringTeam={m.umpiringTeam?.name ?? null}
+        umpiringHighlighted={Boolean(m.umpiringTeam && m.umpiringTeam.id === highlight)}
+        umpires={m.umpires}
+        canEnter={canEnter}
+      />
     </Tag>
   );
 }

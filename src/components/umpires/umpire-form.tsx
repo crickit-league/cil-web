@@ -54,7 +54,7 @@ function Slot({
 }
 
 /**
- * Umpire 1 + backup umpire for one match. Shows saved names (public) but
+ * Umpire 1 + Umpire 2 for one match. Shows saved names (public) but
  * never saved numbers; a blank phone keeps the saved one for the same name.
  */
 export function UmpireForm({
@@ -98,7 +98,7 @@ export function UmpireForm({
         />
         <Slot
           n="Two"
-          title="Umpire 2 (backup)"
+          title="Umpire 2"
           name={typed?.umpireTwoName ?? umpireTwoName ?? ""}
           phone={typed?.umpireTwoPhone ?? ""}
           hasSavedName={Boolean(umpireTwoName)}
