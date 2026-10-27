@@ -2,15 +2,11 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getScheduleImportPreview, ImportRunNotFoundError } from "@/lib/services/schedule-import";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatMatchDay, formatMatchTime } from "@/lib/time";
+import { formatMatchWhen } from "@/lib/time";
 import { CommitBar, TeamMapper, UmpiringTeamMapper } from "./preview-controls";
 
 type Preview = Awaited<ReturnType<typeof getScheduleImportPreview>>;
 type PreviewMatch = Preview["plan"]["creates"][number];
-
-function when(m: PreviewMatch) {
-  return `${formatMatchDay(m.startsAt)}, ${formatMatchTime(m.startsAt)}`;
-}
 
 function MatchLine({ m, extra }: { m: PreviewMatch; extra?: string }) {
   return (
@@ -22,7 +18,7 @@ function MatchLine({ m, extra }: { m: PreviewMatch; extra?: string }) {
         ) : null}
       </span>
       <span className="text-chalk-dim text-sm">
-        {when(m)} · {m.ground || "Ground TBD"} · umpiring: {m.umpiringTeam ?? "—"}
+        {formatMatchWhen(m)} · {m.ground || "Ground TBD"} · umpiring: {m.umpiringTeam ?? "—"}
       </span>
       {extra ? <span className="text-gold text-sm">{extra}</span> : null}
     </li>

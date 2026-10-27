@@ -193,8 +193,10 @@ export function parseScoreSummary(text: string): { innings: ParsedInningsTotal[]
 export type NormalizedMatchRow = {
   rowNumber: number;
   stage: MatchStage;
-  date: string; // YYYY-MM-DD, Atlanta calendar date
-  time: string; // HH:MM, Atlanta wall-clock time
+  /** YYYY-MM-DD, Atlanta calendar date. Null while the match isn't scheduled yet. */
+  date: string | null;
+  /** HH:MM, Atlanta wall-clock time. Null when it isn't fixed yet (always null without a date). */
+  time: string | null;
   teamOne: string;
   teamTwo: string;
   ground: string;
@@ -209,6 +211,12 @@ export type NormalizedMatchRow = {
 
 export type RowProblem = { rowNumber: number; message: string };
 
+/** A cell's trimmed text, with "TBD"/"TBA" treated as blank. */
+function blankIfTbd(value: string | undefined): string {
+  const t = (value ?? "").trim();
+  return /^(tbd|tba)$/i.test(t) ? "" : t;
+}
+
 /**
  * Validates one raw record. rowNumber is 1-based among data rows, matching
  * what an admin sees counting down the spreadsheet under the header.
@@ -222,14 +230,22 @@ export function normalizeMatchRow(
   const stage = STAGES[(record["Match Type"] ?? "").trim().toLowerCase()];
   if (!stage) return fail(`Unknown match type "${record["Match Type"]}".`);
 
-  const date = (record["Date"] ?? "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail(`Date "${record["Date"]}" isn't in YYYY-MM-DD form.`);
+  // The committee sometimes publishes fixtures before they're scheduled, with
+  // Date and/or Time left blank (or "TBD"). No date means the match isn't
+  // scheduled yet — a time on its own is meaningless then. A date without a
+  // time is kept, time TBD. Anything else that isn't a date or time is an error.
+  const dateRaw = blankIfTbd(record["Date"]);
+  if (dateRaw && !/^\d{4}-\d{2}-\d{2}$/.test(dateRaw)) {
+    return fail(`Date "${record["Date"]}" isn't in YYYY-MM-DD form.`);
+  }
 
   // CricClubs labels this column "Time (IST)", but the values are Atlanta
   // local times (an 08:30 start would be 11pm the night before in Atlanta).
-  const timeRaw = (record["Time (IST)"] ?? record["Time"] ?? "").trim();
+  const timeRaw = blankIfTbd(record["Time (IST)"] ?? record["Time"]);
   const time = timeRaw.match(/^(\d{1,2}):(\d{2})/);
-  if (!time) return fail(`Time "${timeRaw}" isn't a time of day.`);
+  if (timeRaw && (!time || Number(time[1]) > 23 || Number(time[2]) > 59)) {
+    return fail(`Time "${timeRaw}" isn't a time of day.`);
+  }
 
   const teamOne = (record["Team One"] ?? "").trim();
   const teamTwo = (record["Team two"] ?? record["Team Two"] ?? "").trim();
@@ -240,8 +256,8 @@ export function normalizeMatchRow(
     row: {
       rowNumber,
       stage,
-      date,
-      time: `${time[1].padStart(2, "0")}:${time[2]}`,
+      date: dateRaw || null,
+      time: dateRaw && time ? `${time[1].padStart(2, "0")}:${time[2]}` : null,
       teamOne,
       teamTwo,
       ground: (record["Ground"] ?? "").trim(),

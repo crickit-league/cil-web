@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getAdminSchedule, resultSummary } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatMatchDay, formatMatchTime, matchDayKey } from "@/lib/time";
+import { formatFixtureDay, formatMatchTimeOrTbd, groupByMatchDay } from "@/lib/time";
 import { UploadForm } from "./upload-form";
 import { UmpiringSelect } from "./umpiring-select";
 import { UmpireEntryLock } from "./umpire-entry-lock";
@@ -82,12 +82,7 @@ export default async function ScheduleAdminPage({
     );
   }
 
-  const days = new Map<string, AdminMatch[]>();
-  for (const m of matches) {
-    const key = matchDayKey(m.startsAt);
-    if (!days.has(key)) days.set(key, []);
-    days.get(key)!.push(m);
-  }
+  const days = groupByMatchDay(matches);
   const optionsFor = (m: AdminMatch) => teams.filter((t) => t.id !== m.teamOne?.id && t.id !== m.teamTwo?.id);
   const missingUmpires = matches.filter((m) => !m.umpiringTeam).length;
 
@@ -136,7 +131,7 @@ export default async function ScheduleAdminPage({
         [...days.entries()].map(([key, dayMatches]) => (
           <section key={key} className="flex flex-col gap-3">
             <h2 className="font-display text-xl font-extrabold tracking-wide uppercase">
-              {formatMatchDay(dayMatches[0].startsAt)}
+              {formatFixtureDay(dayMatches[0].startsAt)}
             </h2>
 
             {/* Cards below `lg` — five columns next to the admin sidebar don't fit a tablet. */}
@@ -145,7 +140,7 @@ export default async function ScheduleAdminPage({
                 <div key={m.id} className="border-line bg-dugout flex flex-col gap-3 border p-4">
                   <div>
                     <div className="font-data text-chalk-dim text-[0.68rem] tracking-[0.08em] uppercase">
-                      {formatMatchTime(m.startsAt)} · {m.ground ?? "Ground TBD"}
+                      {formatMatchTimeOrTbd(m)} · {m.ground ?? "Ground TBD"}
                       {m.stage !== "LEAGUE" ? ` · ${STAGE_LABEL[m.stage]}` : ""}
                     </div>
                     <div className="mt-1 font-medium">{matchTitle(m)}</div>
@@ -186,7 +181,7 @@ export default async function ScheduleAdminPage({
                   {dayMatches.map((m) => (
                     <tr key={m.id} className="border-line border-b align-top last:border-0">
                       <td className="text-chalk-dim px-4 py-3 whitespace-nowrap">
-                        {formatMatchTime(m.startsAt)}
+                        {formatMatchTimeOrTbd(m)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium">{matchTitle(m)}</div>

@@ -1,6 +1,6 @@
 import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatCardStamp } from "@/lib/time";
+import { formatCardStampOrTbd } from "@/lib/time";
 import { FixtureFooter } from "./fixture-footer";
 
 // "Scoreboard rows" fixture card (design A, chosen 2026-10-16): a header strip
@@ -105,7 +105,7 @@ export function FixtureCard({
       {/* Header strip */}
       <div className="border-line flex items-center justify-between gap-3 border-b px-4 py-2.5">
         <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] whitespace-nowrap uppercase">
-          {formatCardStamp(m.startsAt)}
+          {formatCardStampOrTbd(m)}
         </span>
         <span className="flex items-center gap-2">
           {m.stage !== "LEAGUE" ? (

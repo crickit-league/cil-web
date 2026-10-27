@@ -92,6 +92,7 @@ describe("schedule import innings", () => {
       teamOneId: "t1",
       teamTwoId: "t2",
       startsAt: plan("", "").creates[0].startsAt,
+      timeTbd: false,
       groundName: "Nickajack Park 1",
       status: "COMPLETED",
       umpiringTeamId: null,

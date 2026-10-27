@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { getPublicFixtures, type ScheduleMatch } from "@/lib/services/schedule";
-import { formatMatchDay, matchDayKey } from "@/lib/time";
+import { getPublicFixtures } from "@/lib/services/schedule";
+import { formatFixtureDay, groupByMatchDay } from "@/lib/time";
 import { FixtureCard } from "./fixture-card";
 import { TeamFilter } from "./team-filter";
 import { FixtureExpansionProvider } from "./umpire-entry";
@@ -19,12 +19,8 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
   const { series, teams, matches, selectedTeamId } = await getPublicFixtures({ teamEntryId: team });
   const entryOpen = series ? !series.umpireEntryLocked : false;
 
-  const days = new Map<string, ScheduleMatch[]>();
-  for (const m of matches) {
-    const key = matchDayKey(m.startsAt);
-    if (!days.has(key)) days.set(key, []);
-    days.get(key)!.push(m);
-  }
+  // Matches come sorted, so the "Date TBD" group (not scheduled yet) is last.
+  const days = groupByMatchDay(matches);
 
   return (
     <div className="flex flex-col gap-8">
@@ -54,7 +50,7 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
             {[...days.entries()].map(([key, dayMatches]) => (
               <section key={key} className="flex flex-col gap-3">
                 <h2 className="font-display border-line border-b pb-2 text-[1.4rem] font-extrabold uppercase">
-                  {formatMatchDay(dayMatches[0].startsAt)}
+                  {formatFixtureDay(dayMatches[0].startsAt)}
                 </h2>
                 <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {dayMatches.map((m) => (

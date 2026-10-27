@@ -49,6 +49,12 @@ Living doc. Update this whenever you finish a session's work so the next person 
   - **Points Table rows link to teams**: `PointsTableRow.teamEntryId` (migration `20261028120000_points_table_row_team_entry`, nullable — a table published before this stays unlinked and shows the file's names until re-uploaded). Upload matches each name like the fixtures import; unknown names and two spellings of one team block publishing, and an unknown name can be mapped to a team there (saved as an alias). Last season's file is expected to fail matching — the preview says so. The public table shows each team's current name.
   - Admin → Fixtures showed CricClubs' verbatim result text ("X won by …", old name included); it now uses the same `describeResult` line as the public cards, and forfeits read "<team> won by forfeit". Audit-log summaries keep the name used at the time — they're history.
 
+- **Fixtures without a date/time yet** (2026-10-27, branch `claude/fixtures-date-tbd-d9fc93`). The committee publishes some fixtures before they're scheduled, with blank Date/Time cells in the CricClubs export; the import used to reject them.
+  - `Match.startsAt` is nullable (null = date TBD) and `Match.timeTbd` marks a known date with no start time (`startsAt` is then Atlanta midnight on that date) — migration `20261029120000_match_date_tbd`. Helpers in `lib/time.ts` (`MatchWhen`, `formatMatchWhen`, `formatCardStampOrTbd`, `compareMatchWhen`, `groupByMatchDay`).
+  - Parser: blank (or "TBD"/"TBA") date → unscheduled, even if a time is given; date with blank time → time TBD; a malformed non-blank date or time is still a blocking row problem.
+  - Re-import: a later file that fills in the date/time updates the same match (preview: "date/time Date TBD → Sat, Oct 24, 9:00 AM"). A file that knows _less_ than what's saved (blank date, or blank time on the same date) keeps the saved value and lists a warning in the preview; a blank time on a _different_ date is a move and is applied. So an import can't un-schedule a match — there's no admin date edit yet if that's ever needed.
+  - Fixtures (public + admin): "Date TBD" group after every dated day; time-TBD matches last within their day; card header "DATE TBD" / "SAT 24 OCT · TIME TBD". They're Scheduled, take umpire entry, and show under the team filter. Tests in `lib/import/schedule-dates.test.ts`.
+
 ## Blocking
 
 - Nothing currently. (Cloudflare Turnstile is still not set up, but with the public registration form removed it no longer blocks anything — it's needed again before registration reopens next season.)
