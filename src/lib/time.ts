@@ -80,3 +80,58 @@ export function formatCardStamp(instant: Date): string {
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
   return `${get("weekday")} ${get("day")} ${get("month")} · ${get("hour")}:${get("minute")}`.toUpperCase();
 }
+
+/**
+ * When a match is, as far as the committee has fixed it. startsAt null means
+ * the date isn't set yet; timeTbd means only the date is (startsAt is then
+ * midnight Atlanta time on that date). See Match in prisma/schema.prisma.
+ */
+export type MatchWhen = { startsAt: Date | null; timeTbd: boolean };
+
+/** "Sat, Oct 25, 8:30 AM", "Sat, Oct 25, time TBD" or "Date TBD". */
+export function formatMatchWhen({ startsAt, timeTbd }: MatchWhen): string {
+  if (!startsAt) return "Date TBD";
+  return `${formatMatchDay(startsAt)}, ${timeTbd ? "time TBD" : formatMatchTime(startsAt)}`;
+}
+
+/** A fixtures-list day heading: "Sat, Oct 25", or "Date TBD" for matches not scheduled yet. */
+export function formatFixtureDay(startsAt: Date | null): string {
+  return startsAt ? formatMatchDay(startsAt) : "Date TBD";
+}
+
+/** Groups matches by day key ("tbd" for no date), keeping their order. */
+export function groupByMatchDay<T extends MatchWhen>(matches: T[]): Map<string, T[]> {
+  const days = new Map<string, T[]>();
+  for (const m of matches) {
+    const key = m.startsAt ? matchDayKey(m.startsAt) : "tbd";
+    if (!days.has(key)) days.set(key, []);
+    days.get(key)!.push(m);
+  }
+  return days;
+}
+
+/** Just the time part: "8:30 AM", "Time TBD" or "Date TBD". */
+export function formatMatchTimeOrTbd({ startsAt, timeTbd }: MatchWhen): string {
+  if (!startsAt) return "Date TBD";
+  return timeTbd ? "Time TBD" : formatMatchTime(startsAt);
+}
+
+/** "SAT 24 OCT · 09:00", "SAT 24 OCT · TIME TBD" or "DATE TBD" — the fixture card's header strip. */
+export function formatCardStampOrTbd({ startsAt, timeTbd }: MatchWhen): string {
+  if (!startsAt) return "DATE TBD";
+  const stamp = formatCardStamp(startsAt);
+  return timeTbd ? `${stamp.split(" · ")[0]} · TIME TBD` : stamp;
+}
+
+/**
+ * Fixture order: by day, a day's timed matches before its time-TBD ones, and
+ * matches with no date yet after everything dated.
+ */
+export function compareMatchWhen(a: MatchWhen, b: MatchWhen): number {
+  if (!a.startsAt || !b.startsAt) return (a.startsAt ? 0 : 1) - (b.startsAt ? 0 : 1);
+  const dayA = matchDayKey(a.startsAt);
+  const dayB = matchDayKey(b.startsAt);
+  if (dayA !== dayB) return dayA < dayB ? -1 : 1;
+  if (a.timeTbd !== b.timeTbd) return a.timeTbd ? 1 : -1;
+  return a.startsAt.getTime() - b.startsAt.getTime();
+}

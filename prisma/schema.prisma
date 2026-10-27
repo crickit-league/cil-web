@@ -473,7 +473,13 @@ model Match {
   // weeks at a time.
   isPublished Boolean @default(false)
 
-  startsAt DateTime // UTC; rendered in America/New_York
+  // UTC; rendered in America/New_York. Null while the committee hasn't
+  // scheduled the match yet (CricClubs' Date cell is blank) — shown as
+  // "Date TBD". With timeTbd the date is known but the start time isn't:
+  // startsAt is then midnight Atlanta time on that date, and only the date
+  // part means anything.
+  startsAt DateTime?
+  timeTbd  Boolean   @default(false)
   fieldId  String?
   field    Field?   @relation(fields: [fieldId], references: [id])
 

@@ -1,5 +1,5 @@
 import type { AssignmentSource, MatchStage, MatchStatus } from "@/generated/prisma";
-import { leagueWallTimeToUtc } from "@/lib/time";
+import { formatMatchWhen, leagueWallTimeToUtc, matchDayKey, type MatchWhen } from "@/lib/time";
 import { indexTeamNames } from "@/lib/teams/names";
 import {
   normalizeMatchRow,
@@ -20,6 +20,12 @@ import {
 // true for all 110 league games of 2025-26 — so a match that moves to another
 // day or ground is recognised as the same match, and anything hanging off it
 // (umpire nominations) survives the move.
+//
+// Unscheduled matches. A blank Date (or Time) in the file means the committee
+// hasn't fixed it yet — see MatchWhen. When a later file fills it in, the same
+// match is updated. A file that knows less than what's saved (a blank date, or
+// a blank time on the saved date) never wipes it: the saved date/time is kept
+// and the preview says so.
 
 export type PlanTeam = {
   id: string; // TeamEntry id
@@ -34,7 +40,8 @@ export type ExistingMatch = {
   stage: MatchStage;
   teamOneId: string | null;
   teamTwoId: string | null;
-  startsAt: Date;
+  startsAt: Date | null;
+  timeTbd: boolean;
   groundName: string | null;
   status: MatchStatus;
   umpiringTeamId: string | null;
@@ -59,7 +66,9 @@ export type PlannedMatch = {
   key: string;
   rowNumber: number;
   stage: MatchStage;
-  startsAt: Date;
+  /** Null: date TBD. See MatchWhen. */
+  startsAt: Date | null;
+  timeTbd: boolean;
   teamOneId: string;
   teamTwoId: string;
   ground: string;
@@ -118,6 +127,24 @@ export const STAGE_LABEL: Record<MatchStage, string> = {
 
 function matchKey(stage: MatchStage, a: string, b: string) {
   return `${stage}|${[a, b].sort().join("|")}`;
+}
+
+function sameWhen(a: MatchWhen, b: MatchWhen) {
+  return a.timeTbd === b.timeTbd && (a.startsAt?.getTime() ?? null) === (b.startsAt?.getTime() ?? null);
+}
+
+/**
+ * "date" or "time" when the file leaves out something the saved match
+ * already has: a date, or the start time on the same date. Null otherwise —
+ * including a move to another date with the time not yet set, which is news.
+ */
+function knowsLessThanSaved(saved: MatchWhen, file: MatchWhen): "date" | "time" | null {
+  if (!saved.startsAt) return null;
+  if (!file.startsAt) return "date";
+  if (file.timeTbd && !saved.timeTbd && matchDayKey(file.startsAt) === matchDayKey(saved.startsAt)) {
+    return "time";
+  }
+  return null;
 }
 
 function sameNames(a: string[], b: string[]) {
@@ -291,7 +318,9 @@ export function planScheduleImport(input: {
       key,
       rowNumber: row.rowNumber,
       stage: row.stage,
-      startsAt: leagueWallTimeToUtc(row.date, row.time),
+      // Date only: midnight Atlanta time on that date, flagged time TBD.
+      startsAt: row.date ? leagueWallTimeToUtc(row.date, row.time ?? "00:00") : null,
+      timeTbd: row.date !== null && row.time === null,
       teamOneId: teamOne.id,
       teamTwoId: teamTwo.id,
       ground: row.ground,
@@ -341,9 +370,20 @@ export function planScheduleImport(input: {
       next.umpiringTeamSource = "ADMIN";
     }
 
+    const lessKnown = knowsLessThanSaved(current, next);
+    if (lessKnown) {
+      plan.warnings.push(
+        `Row ${next.rowNumber}: ${label(next.stage, next.teamOneId, next.teamTwoId)} has no ${lessKnown} in the file — kept the saved ${formatMatchWhen(current)}.`,
+      );
+      next.startsAt = current.startsAt;
+      next.timeTbd = current.timeTbd;
+    }
+
     const changes: string[] = [];
     if (current.status === "CANCELLED") changes.push("back on the schedule");
-    if (current.startsAt.getTime() !== next.startsAt.getTime()) changes.push("date/time changed");
+    if (!sameWhen(current, next)) {
+      changes.push(`date/time ${formatMatchWhen(current)} → ${formatMatchWhen(next)}`);
+    }
     if (normalizeName(current.groundName ?? "") !== normalizeName(next.ground)) {
       changes.push(`ground ${current.groundName ?? "—"} → ${next.ground || "—"}`);
     }

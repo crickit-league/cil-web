@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
+import { compareMatchWhen } from "@/lib/time";
 
 export class MatchNotFoundError extends Error {
   constructor() {
@@ -23,6 +24,7 @@ const scheduleSelect = {
   id: true,
   stage: true,
   startsAt: true,
+  timeTbd: true,
   status: true,
   resultType: true,
   resultText: true,
@@ -71,7 +73,9 @@ export type FixtureStatus = "SCHEDULED" | "COMPLETED";
 export type ScheduleMatch = {
   id: string;
   stage: MatchStage;
-  startsAt: Date;
+  /** Null while the date is TBD; see MatchWhen in lib/time.ts. */
+  startsAt: Date | null;
+  timeTbd: boolean;
   status: MatchStatus;
   fixtureStatus: FixtureStatus;
   result: MatchResult;
@@ -92,7 +96,9 @@ export type ScheduleMatch = {
 type ScheduleRow = {
   id: string;
   stage: MatchStage;
-  startsAt: Date;
+  /** Null while the date is TBD; see MatchWhen in lib/time.ts. */
+  startsAt: Date | null;
+  timeTbd: boolean;
   status: MatchStatus;
   resultType: ResultType | null;
   resultText: string | null;
@@ -160,6 +166,7 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
     id: m.id,
     stage: m.stage,
     startsAt: m.startsAt,
+    timeTbd: m.timeTbd,
     status: m.status,
     fixtureStatus: m.status === "SCHEDULED" ? "SCHEDULED" : "COMPLETED",
     result: describeResult(m),
@@ -187,7 +194,8 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
 }
 
 /**
- * The Fixtures tab: every match of the series, played or not, oldest first —
+ * The Fixtures tab: every match of the series, played or not, oldest first
+ * (time-TBD matches last on their day, date-TBD ones after every dated match) —
  * played ones carry their result — optionally for one team, playing or
  * umpiring. Cancelled matches (dropped from a later CricClubs file) are left out. Umpire names are
  * public; phone numbers are not in here (see revealUmpirePhones).
@@ -220,7 +228,7 @@ export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
     series: { name: series.name, umpireEntryLocked: series.umpireEntryLocked },
     teams: teams.map((t) => ({ id: t.id, name: t.displayName })),
     selectedTeamId: teamFilter ?? null,
-    matches: matches.map(toScheduleMatch),
+    matches: matches.map(toScheduleMatch).sort(compareMatchWhen),
   };
 }
 
@@ -267,7 +275,9 @@ export async function getAdminSchedule(user: SessionUser) {
   return {
     series: { id: series.id, name: series.name, umpireEntryLocked: series.umpireEntryLocked },
     teams: teams.map((t) => ({ id: t.id, name: t.displayName })),
-    matches: matches.map((m) => ({ ...toScheduleMatch(m), umpiringTeamSource: m.umpiringTeamSource })),
+    matches: matches
+      .map((m) => ({ ...toScheduleMatch(m), umpiringTeamSource: m.umpiringTeamSource }))
+      .sort(compareMatchWhen),
     lastImport,
   };
 }
