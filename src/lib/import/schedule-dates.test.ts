@@ -143,17 +143,37 @@ describe("schedule import dates", () => {
 });
 
 describe("fixture ordering and stamps", () => {
-  it("puts a day's time-TBD matches after its timed ones, and undated matches last", () => {
-    const undated = { startsAt: null, timeTbd: false };
-    const tbdTime = { startsAt: midnight, timeTbd: true };
-    const timed = { startsAt: nineAm, timeTbd: false };
-    const nextDay = { startsAt: leagueWallTimeToUtc("2026-10-25", "08:00"), timeTbd: false };
-    expect([undated, nextDay, tbdTime, timed].sort(compareMatchWhen)).toEqual([
-      timed,
-      tbdTime,
-      nextDay,
+  const undated = { startsAt: null, timeTbd: false };
+  const sat9 = { startsAt: nineAm, timeTbd: false };
+  const sat1445 = { startsAt: leagueWallTimeToUtc("2026-10-24", "14:45"), timeTbd: false };
+  const satTbd = { startsAt: midnight, timeTbd: true };
+  const sun8 = { startsAt: leagueWallTimeToUtc("2026-10-25", "08:00"), timeTbd: false };
+  const nextSat = { startsAt: leagueWallTimeToUtc("2026-10-31", "11:45"), timeTbd: false };
+  const order = (...ms: { startsAt: Date | null; timeTbd: boolean }[]) => [...ms].sort(compareMatchWhen);
+
+  it("puts undated matches first, then days newest first", () => {
+    expect(order(sat9, nextSat, undated, sun8)).toEqual([undated, nextSat, sun8, sat9]);
+  });
+
+  it("keeps a day's start times earliest first, with its time-TBD matches last", () => {
+    expect(order(satTbd, sat1445, sat9)).toEqual([sat9, sat1445, satTbd]);
+  });
+
+  it("orders a full mix", () => {
+    expect(order(sat9, satTbd, undated, sun8, sat1445, nextSat)).toEqual([
       undated,
+      nextSat,
+      sun8,
+      sat9,
+      sat1445,
+      satTbd,
     ]);
+  });
+
+  it("orders across the November DST change by Atlanta calendar day", () => {
+    const beforeDst = { startsAt: leagueWallTimeToUtc("2026-10-31", "23:00"), timeTbd: false };
+    const afterDst = { startsAt: leagueWallTimeToUtc("2026-11-01", "08:00"), timeTbd: false };
+    expect(order(beforeDst, afterDst)).toEqual([afterDst, beforeDst]);
   });
 
   it("stamps the card header", () => {

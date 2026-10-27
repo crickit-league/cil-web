@@ -194,8 +194,9 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
 }
 
 /**
- * The Fixtures tab: every match of the series, played or not, oldest first
- * (time-TBD matches last on their day, date-TBD ones after every dated match) —
+ * The Fixtures tab: every match of the series, played or not, in fixture
+ * order (compareMatchWhen: date-TBD first, newest day first, times
+ * earliest first within a day) —
  * played ones carry their result — optionally for one team, playing or
  * umpiring. Cancelled matches (dropped from a later CricClubs file) are left out. Umpire names are
  * public; phone numbers are not in here (see revealUmpirePhones).
