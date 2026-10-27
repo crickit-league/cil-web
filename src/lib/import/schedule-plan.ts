@@ -3,6 +3,7 @@ import { leagueWallTimeToUtc } from "@/lib/time";
 import {
   normalizeMatchRow,
   normalizeName,
+  parseScoreSummary,
   type NormalizedMatchRow,
   type ParsedResult,
   type RawMatchRecord,
@@ -39,6 +40,18 @@ export type ExistingMatch = {
   umpiringTeamSource: AssignmentSource | null;
   resultText: string | null;
   umpireNames: string[];
+  /** Saved innings totals (not super overs), in batting order. */
+  innings: PlannedInnings[];
+};
+
+/** One team's innings total, ready to store as an Innings row. */
+export type PlannedInnings = {
+  number: number;
+  battingEntryId: string;
+  runs: number;
+  wickets: number;
+  legalBalls: number;
+  allOut: boolean;
 };
 
 export type PlannedMatch = {
@@ -52,6 +65,12 @@ export type PlannedMatch = {
   /** People named in CricClubs' umpire slots (not teams). Admin-only. */
   umpireNames: string[];
   result: ParsedResult & { winnerId: string | null };
+  /**
+   * Innings totals from the "Score Summary" column. Null means the cell
+   * couldn't be read (see SchedulePlan.scoreProblems): the saved innings are
+   * left as they are.
+   */
+  innings: PlannedInnings[] | null;
   /** What the match's umpiring team should be after the import. */
   umpiringTeamId: string | null;
   umpiringTeamSource: AssignmentSource | null;
@@ -72,6 +91,12 @@ export type SchedulePlan = {
    */
   unmatchedUmpiringTeams: { name: string; rowNumbers: number[] }[];
   warnings: string[];
+  /**
+   * "Score Summary" cells that couldn't be turned into innings totals. Not
+   * blocking — the result still imports — but the match is left out of net
+   * run rate until a later file has readable scores.
+   */
+  scoreProblems: { rowNumber: number; label: string; message: string }[];
   creates: PlannedMatch[];
   updates: PlannedUpdate[];
   unchangedCount: number;
@@ -98,13 +123,73 @@ function sameNames(a: string[], b: string[]) {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
+function sameInnings(a: PlannedInnings[], b: PlannedInnings[]) {
+  const key = (i: PlannedInnings) =>
+    `${i.number}|${i.battingEntryId}|${i.runs}|${i.wickets}|${i.legalBalls}|${i.allOut}`;
+  return a.length === b.length && a.every((v, i) => key(v) === key(b[i]));
+}
+
+// Results whose margin is computed from both innings, so both must be there.
+const NEEDS_TWO_INNINGS = new Set(["RUNS", "WICKETS", "TIE"]);
+
+/**
+ * Turns a row's score summary into innings for the match, or explains why it
+ * can't. All out is the last wicket of the side's playing XI (9 wickets with
+ * CIL's 10 players a side) — CricClubs' summary doesn't say so explicitly.
+ */
+function planInnings(
+  row: NormalizedMatchRow,
+  teamOne: PlanTeam,
+  teamTwo: PlanTeam,
+  byName: Map<string, PlanTeam>,
+  rules: { playersPerSide: number; maxOvers: number },
+): { innings: PlannedInnings[] } | { error: string } {
+  const parsed = parseScoreSummary(row.scoreSummary);
+  if ("error" in parsed) return parsed;
+
+  const innings: PlannedInnings[] = [];
+  for (const [i, entry] of parsed.innings.entries()) {
+    const team = byName.get(normalizeName(entry.teamName));
+    if (!team || (team.id !== teamOne.id && team.id !== teamTwo.id)) {
+      return { error: `the score summary names "${entry.teamName}", which isn't either team in the match.` };
+    }
+    if (innings.some((x) => x.battingEntryId === team.id)) {
+      return { error: `the score summary lists ${team.displayName} batting twice.` };
+    }
+    if (entry.wickets > rules.playersPerSide - 1) {
+      return {
+        error: `${team.displayName} lost ${entry.wickets} wickets with ${rules.playersPerSide} players a side.`,
+      };
+    }
+    if (entry.legalBalls > rules.maxOvers * 6) {
+      return { error: `${team.displayName} batted more than the ${rules.maxOvers}-over quota.` };
+    }
+    innings.push({
+      number: i + 1,
+      battingEntryId: team.id,
+      runs: entry.runs,
+      wickets: entry.wickets,
+      legalBalls: entry.legalBalls,
+      allOut: entry.wickets === rules.playersPerSide - 1,
+    });
+  }
+  if (innings.length > 2) return { error: "the score summary has more than two innings." };
+  if (row.result.resultType && NEEDS_TWO_INNINGS.has(row.result.resultType) && innings.length < 2) {
+    return { error: "the result needs both teams' scores, and the score summary doesn't have them." };
+  }
+  return { innings };
+}
+
 export function planScheduleImport(input: {
   records: RawMatchRecord[];
   teams: PlanTeam[];
   existing: ExistingMatch[];
   groupCount: number;
+  playersPerSide: number;
+  maxOvers: number;
 }): SchedulePlan {
   const { records, teams, existing, groupCount } = input;
+  const rules = { playersPerSide: input.playersPerSide, maxOvers: input.maxOvers };
 
   const byName = new Map<string, PlanTeam>();
   for (const team of teams) {
@@ -119,6 +204,7 @@ export function planScheduleImport(input: {
     unmatchedTeams: [],
     unmatchedUmpiringTeams: [],
     warnings: [],
+    scoreProblems: [],
     creates: [],
     updates: [],
     unchangedCount: 0,
@@ -194,6 +280,15 @@ export function planScheduleImport(input: {
       }
     }
 
+    const scores = planInnings(row, teamOne, teamTwo, byName, rules);
+    if ("error" in scores) {
+      plan.scoreProblems.push({
+        rowNumber: row.rowNumber,
+        label: `${teamOne.displayName} v ${teamTwo.displayName}`,
+        message: scores.error,
+      });
+    }
+
     planned.set(key, {
       key,
       rowNumber: row.rowNumber,
@@ -204,6 +299,7 @@ export function planScheduleImport(input: {
       ground: row.ground,
       umpireNames,
       result: { ...row.result, winnerId },
+      innings: "error" in scores ? null : scores.innings,
       umpiringTeamId,
       umpiringTeamSource: umpiringTeamId ? "IMPORT" : null,
     });
@@ -260,8 +356,14 @@ export function planScheduleImport(input: {
       changes.push(next.result.text ? `result: ${next.result.text}` : "result cleared");
     }
 
+    // Scores normally arrive with the result; only call them out on their own.
+    const inningsChanged = next.innings !== null && !sameInnings(current.innings, next.innings);
+    if (inningsChanged && changes.length === 0) changes.push("scores updated");
+
     const silentChange =
-      current.teamOneId !== next.teamOneId || !sameNames(current.umpireNames, next.umpireNames);
+      current.teamOneId !== next.teamOneId ||
+      !sameNames(current.umpireNames, next.umpireNames) ||
+      inningsChanged;
 
     if (changes.length > 0 || silentChange) {
       plan.updates.push({ matchId: current.id, planned: next, changes });

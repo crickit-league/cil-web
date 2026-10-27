@@ -65,3 +65,18 @@ export function formatMatchTime(instant: Date): string {
 export function matchDayKey(instant: Date): string {
   return instant.toLocaleDateString("en-CA", { timeZone: LEAGUE_TIME_ZONE });
 }
+
+/** "SAT 24 OCT · 09:00" in the league zone — the fixture card's header strip. */
+export function formatCardStamp(instant: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: LEAGUE_TIME_ZONE,
+  }).formatToParts(instant);
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("weekday")} ${get("day")} ${get("month")} · ${get("hour")}:${get("minute")}`.toUpperCase();
+}

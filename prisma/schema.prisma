@@ -64,6 +64,7 @@ model User {
   person               Person?
   standingsAdjustments StandingsAdjustment[]
   importRuns           ImportRun[]
+  pointsTables         PointsTable[]
   auditLogs            AuditLog[]
 
   createdAt DateTime @default(now())
@@ -248,6 +249,7 @@ model Series {
   matches       Match[]
   sponsors      SeriesSponsor[]
   importRuns    ImportRun[]
+  pointsTable   PointsTable?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -679,6 +681,49 @@ model BowlingLine {
 // a committee penalty such as awarding a match or deducting 20 runs. Applied
 // on top of computed standings, never written back into Match/Innings, so a
 // re-import can't erase it.
+// The series' points table as last uploaded from CricClubs, which does the
+// calculation (points, NRR, tie-breaks). This site never computes standings;
+// each upload replaces the previous one. Values are stored as CricClubs gave
+// them — team names are not matched to TeamEntry.
+model PointsTable {
+  id           String   @id @default(cuid())
+  seriesId     String   @unique
+  series       Series   @relation(fields: [seriesId], references: [id])
+  fileName     String
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  rows PointsTableRow[]
+
+  @@map("points_tables")
+}
+
+model PointsTableRow {
+  id            String      @id @default(cuid())
+  pointsTableId String
+  pointsTable   PointsTable @relation(fields: [pointsTableId], references: [id], onDelete: Cascade)
+  groupName     String // "Group A", as CricClubs titles the block
+  groupOrder    Int // block order in the file
+  position      Int // CricClubs' SNO
+  teamName      String
+  played        Int
+  won           Int
+  lost          Int
+  noResult      Int
+  tied          Int
+  points        Decimal     @db.Decimal(6, 1)
+  winPercent    Decimal?    @db.Decimal(5, 2)
+  netRunRate    Decimal     @db.Decimal(8, 4)
+  runsFor       String? // "519/104.4" — runs/overs, as given
+  runsAgainst   String?
+
+  @@unique([pointsTableId, groupOrder, position])
+  @@map("points_table_rows")
+}
+
+// Not read by anything since the points table became a CricClubs upload
+// (2026-10-15); kept so a committee penalty could be modelled again later.
 model StandingsAdjustment {
   id          String    @id @default(cuid())
   teamEntryId String
@@ -739,6 +784,7 @@ enum ImportKind {
   CRICCLUBS_TEAMS // per-series team list export
   CRICCLUBS_MEMBERS // league-wide member list export
   CSV_SCORECARD
+  CRICCLUBS_POINTS_TABLE // per-series points table export (.csv)
 }
 
 enum ImportStatus {

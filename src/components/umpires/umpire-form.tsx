@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { saveUmpiresAction, type UmpireFormState } from "./actions";
 import { PhoneInput } from "./phone-input";
 
@@ -32,6 +32,8 @@ function Slot({
           name={`umpire${n}Name`}
           defaultValue={name}
           autoComplete="off"
+          autoCapitalize="words"
+          enterKeyHint="next"
           maxLength={80}
           className={inputClass}
         />
@@ -43,7 +45,7 @@ function Slot({
         <PhoneInput
           name={`umpire${n}Phone`}
           defaultValue={phone}
-          placeholder={hasSavedName ? "Leave blank to keep the saved number" : "(404) 555-0123"}
+          placeholder={hasSavedName ? "Blank keeps the saved number" : "(404) 555-0123"}
           className={inputClass}
         />
       </label>
@@ -52,19 +54,32 @@ function Slot({
 }
 
 /**
- * Umpire 1 + backup umpire for one match. Shows saved names (public) but
+ * Umpire 1 + Umpire 2 for one match. Shows saved names (public) but
  * never saved numbers; a blank phone keeps the saved one for the same name.
  */
 export function UmpireForm({
   matchId,
   umpireOneName,
   umpireTwoName,
+  onSaved,
+  onCancel,
 }: {
   matchId: string;
   umpireOneName: string | null;
   umpireTwoName: string | null;
+  /** Called once per successful save — the fixtures list uses it to collapse the card. */
+  onSaved?: () => void;
+  /** Shows a Cancel button that calls this (inline entry on the fixtures list). */
+  onCancel?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(saveUmpiresAction.bind(null, matchId), initialState);
+  const reportedAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (state.status === "saved" && reportedAt.current !== state.at) {
+      reportedAt.current = state.at;
+      onSaved?.();
+    }
+  }, [state, onSaved]);
   // React resets a form after its action runs; after an error, remount the
   // fields with what was typed so nothing is lost.
   const typed = state.status === "error" ? state.values : null;
@@ -83,7 +98,7 @@ export function UmpireForm({
         />
         <Slot
           n="Two"
-          title="Umpire 2 (backup)"
+          title="Umpire 2"
           name={typed?.umpireTwoName ?? umpireTwoName ?? ""}
           phone={typed?.umpireTwoPhone ?? ""}
           hasSavedName={Boolean(umpireTwoName)}
@@ -98,18 +113,30 @@ export function UmpireForm({
           {state.message}
         </p>
       ) : null}
-      {state.status === "saved" ? (
+      {state.status === "saved" && !onSaved ? (
         <p role="status" className="text-gold text-sm">
           Saved.
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright self-start border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {pending ? "Saving…" : "Save umpires"}
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {pending ? "Saving…" : "Save umpires"}
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={onCancel}
+            className="font-data border-line text-chalk-dim hover:border-clay hover:text-chalk border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
