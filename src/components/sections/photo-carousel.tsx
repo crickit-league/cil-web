@@ -8,7 +8,16 @@ import ClassNames from "embla-carousel-class-names";
 import type { EmblaCarouselType } from "embla-carousel";
 import type { PublicPhoto } from "@/lib/services/photos";
 
-const AUTOPLAY_MS = 5000;
+/** How long each photo stays before autoplay advances, ms. */
+const AUTOPLAY_MS = 3500;
+/** Embla slide animation length (its unit is roughly frames; lower is snappier). */
+const SLIDE_DURATION = 20;
+/**
+ * Embla can only loop when there are enough slides to fill the viewport on both
+ * sides of the active one; with fewer it silently stops looping, and the last→first
+ * move becomes a rewind. Below this many slides, the list is repeated to reach it.
+ */
+const MIN_LOOP_SLIDES = 4;
 
 // Subscribes React to an Embla event set, so selected-slide / play-state are
 // read through useSyncExternalStore rather than mirrored into state by effects.
@@ -68,7 +77,12 @@ const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
-  const multiple = photos.length > 1;
+  const count = photos.length;
+  const multiple = count > 1;
+  const slides = useMemo(() => {
+    const copies = multiple ? Math.ceil(MIN_LOOP_SLIDES / count) : 1;
+    return Array.from({ length: copies }, (_, copy) => photos.map((photo) => ({ photo, copy }))).flat();
+  }, [photos, count, multiple]);
 
   // The Autoplay plugin is only a timer here: it never starts or stops itself
   // (playOnInit and every stopOn* option are off). Whether it runs is decided in
@@ -97,11 +111,12 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
   );
 
   const [viewportRef, api] = useEmblaCarousel(
-    { loop: multiple, align: "center", skipSnaps: false, duration: 28, watchDrag: multiple },
+    { loop: multiple, align: "center", skipSnaps: false, duration: SLIDE_DURATION, watchDrag: multiple },
     plugins,
   );
 
-  const selected = useEmblaValue(api, ["select", "reInit"], () => api?.selectedScrollSnap() ?? 0, 0);
+  const selectedSlide = useEmblaValue(api, ["select", "reInit"], () => api?.selectedScrollSnap() ?? 0, 0);
+  const selected = selectedSlide % count;
 
   // Starts paused for people who've asked the OS for reduced motion; they can
   // still press Play, since that's an explicit choice.
@@ -109,6 +124,30 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
   const [hovering, setHovering] = useState(false);
   const hasAutoplay = Boolean(api?.plugins().autoplay);
   const running = wantsAutoplay && !hovering;
+
+  // Time-left indicator, driven by the plugin's own timer so it can't drift (declared before the effect that starts the timer, so the first arming isn't missed): each
+  // time it (re)arms, `timeUntilNext()` is the time this photo has left; when it
+  // stops (paused, hovered, dragged) the bar resets.
+  const [timer, setTimer] = useState<{ id: number; ms: number } | null>(null);
+  useEffect(() => {
+    if (!api) return;
+    const armed = () => {
+      const ms = api.plugins().autoplay?.timeUntilNext();
+      if (ms != null) setTimer((prev) => ({ id: (prev?.id ?? 0) + 1, ms }));
+    };
+    const cleared = () => setTimer(null);
+    // The plugin's custom events aren't in Embla's event-name union.
+    const events = api as unknown as {
+      on(event: string, cb: () => void): void;
+      off(event: string, cb: () => void): void;
+    };
+    events.on("autoplay:timerset", armed);
+    events.on("autoplay:timerstopped", cleared);
+    return () => {
+      events.off("autoplay:timerset", armed);
+      events.off("autoplay:timerstopped", cleared);
+    };
+  }, [api]);
 
   useEffect(() => {
     const autoplay = api?.plugins().autoplay;
@@ -158,47 +197,50 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
           className="photo-viewport overflow-hidden"
         >
           <div className="flex touch-pan-y">
-            {photos.map((photo, index) => (
-              <div
-                key={photo.id}
-                role="group"
-                aria-roledescription="slide"
-                aria-label={`${index + 1} of ${photos.length}`}
-                aria-hidden={index === selected ? undefined : true}
-                className="photo-slide min-w-0 flex-[0_0_88%] px-2 sm:flex-[0_0_72%] sm:px-4 lg:flex-[0_0_62%]"
-              >
-                <figure className="border-line bg-pitch-deep relative aspect-[4/3] overflow-hidden border sm:aspect-[16/10]">
-                  {/* Blurred copy of the photo fills the frame so portrait shots
+            {slides.map(({ photo, copy }, slideIndex) => {
+              const index = slideIndex % count;
+              return (
+                <div
+                  key={`${photo.id}-${copy}`}
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`${index + 1} of ${count}`}
+                  aria-hidden={slideIndex === selectedSlide ? undefined : true}
+                  className="photo-slide min-w-0 flex-[0_0_88%] px-2 sm:flex-[0_0_72%] sm:px-4 lg:flex-[0_0_62%]"
+                >
+                  <figure className="photo-slide-inner border-line bg-pitch-deep relative aspect-[4/3] overflow-hidden border sm:aspect-[16/10]">
+                    {/* Blurred copy of the photo fills the frame so portrait shots
                       aren't letterboxed against a flat colour. */}
-                  <Image
-                    src={photo.url}
-                    alt=""
-                    fill
-                    sizes="48px"
-                    quality={30}
-                    className="scale-125 object-cover opacity-60 blur-2xl"
-                    aria-hidden="true"
-                  />
-                  <Image
-                    src={photo.url}
-                    alt={photo.caption ?? "CIL Winter League match photo"}
-                    fill
-                    sizes="(min-width: 1024px) 730px, (min-width: 640px) 72vw, 88vw"
-                    priority={index === 0}
-                    quality={78}
-                    draggable={false}
-                    className="object-contain"
-                  />
-                  {photo.caption ? (
-                    <figcaption className="from-pitch-deep/95 via-pitch-deep/60 absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent px-4 pt-14 pb-4 sm:px-6 sm:pb-5">
-                      <p className="font-display max-w-[40ch] text-xl leading-tight font-bold text-balance sm:text-2xl">
-                        {photo.caption}
-                      </p>
-                    </figcaption>
-                  ) : null}
-                </figure>
-              </div>
-            ))}
+                    <Image
+                      src={photo.url}
+                      alt=""
+                      fill
+                      sizes="48px"
+                      quality={30}
+                      className="scale-125 object-cover opacity-60 blur-2xl"
+                      aria-hidden="true"
+                    />
+                    <Image
+                      src={photo.url}
+                      alt={photo.caption ?? "CIL Winter League match photo"}
+                      fill
+                      sizes="(min-width: 1024px) 730px, (min-width: 640px) 72vw, 88vw"
+                      priority={slideIndex === 0}
+                      quality={78}
+                      draggable={false}
+                      className="object-contain"
+                    />
+                    {photo.caption ? (
+                      <figcaption className="from-pitch-deep/95 via-pitch-deep/60 absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent px-4 pt-14 pb-4 sm:px-6 sm:pb-5">
+                        <p className="font-display max-w-[40ch] text-xl leading-tight font-bold text-balance sm:text-2xl">
+                          {photo.caption}
+                        </p>
+                      </figcaption>
+                    ) : null}
+                  </figure>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -232,10 +274,20 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
                 className="group flex h-8 items-center px-1 focus-visible:outline-2 focus-visible:outline-(--clay)"
               >
                 <span
-                  className={`block h-[3px] transition-all duration-300 motion-reduce:transition-none ${
-                    index === selected ? "bg-clay w-9" : "bg-line group-hover:bg-chalk-dim w-5"
+                  className={`relative block h-[3px] overflow-hidden transition-all duration-300 motion-reduce:transition-none ${
+                    index === selected
+                      ? `w-12 ${timer ? "bg-clay/30" : "bg-clay"}`
+                      : "bg-line group-hover:bg-chalk-dim w-5"
                   }`}
-                />
+                >
+                  {index === selected && timer ? (
+                    <span
+                      key={timer.id}
+                      className="photo-dash-fill bg-clay absolute inset-0"
+                      style={{ "--photo-dash-ms": `${timer.ms}ms` } as React.CSSProperties}
+                    />
+                  ) : null}
+                </span>
               </button>
             ))}
           </div>
