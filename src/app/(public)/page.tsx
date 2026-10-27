@@ -1,6 +1,7 @@
 import { SeamDivider } from "@/components/seam-divider";
 import { Hero } from "@/components/sections/hero";
 import { Format } from "@/components/sections/format";
+import { Sponsors } from "@/components/sections/sponsors";
 import { Contact } from "@/components/sections/contact";
 import { Photos } from "@/components/sections/photos";
 
@@ -17,6 +18,7 @@ export default function HomePage() {
       <Photos />
       <Format />
       <SeamDivider />
+      <Sponsors />
       <Contact />
     </>
   );
