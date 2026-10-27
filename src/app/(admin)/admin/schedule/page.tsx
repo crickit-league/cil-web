@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getAdminSchedule } from "@/lib/services/schedule";
+import { getAdminSchedule, resultSummary } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatMatchDay, formatMatchTime, matchDayKey } from "@/lib/time";
 import { UploadForm } from "./upload-form";
@@ -149,7 +149,9 @@ export default async function ScheduleAdminPage({
                       {m.stage !== "LEAGUE" ? ` · ${STAGE_LABEL[m.stage]}` : ""}
                     </div>
                     <div className="mt-1 font-medium">{matchTitle(m)}</div>
-                    {m.resultText ? <div className="text-chalk-dim mt-1 text-sm">{m.resultText}</div> : null}
+                    {m.result ? (
+                      <div className="text-chalk-dim mt-1 text-sm">{resultSummary(m.result)}</div>
+                    ) : null}
                   </div>
                   <UmpiringSelect
                     matchId={m.id}
@@ -190,8 +192,8 @@ export default async function ScheduleAdminPage({
                         <div className="font-medium">{matchTitle(m)}</div>
                         <div className="text-chalk-dim mt-0.5 text-xs">
                           {m.stage !== "LEAGUE" ? STAGE_LABEL[m.stage] : ""}
-                          {m.stage !== "LEAGUE" && m.resultText ? " · " : ""}
-                          {m.resultText ?? ""}
+                          {m.stage !== "LEAGUE" && m.result ? " · " : ""}
+                          {resultSummary(m.result) ?? ""}
                         </div>
                       </td>
                       <td className="text-chalk-dim px-4 py-3">{m.ground ?? "—"}</td>

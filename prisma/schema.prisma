@@ -304,6 +304,7 @@ model TeamEntry {
   umpiringAssignments Match[]               @relation("MatchUmpiringTeam")
   appearances         MatchAppearance[]
   adjustments         StandingsAdjustment[]
+  pointsTableRows     PointsTableRow[]
   championOf          Series?               @relation("SeriesChampion")
   runnerUpOf          Series?               @relation("SeriesRunnerUp")
 
@@ -707,7 +708,11 @@ model PointsTableRow {
   groupName     String // "Group A", as CricClubs titles the block
   groupOrder    Int // block order in the file
   position      Int // CricClubs' SNO
-  teamName      String
+  teamName      String // as spelt in the uploaded file; pages show teamEntry.displayName
+  // Matched at upload like the schedule import (display/canonical/alias
+  // names). Null only on tables published before rows were linked.
+  teamEntryId   String?
+  teamEntry     TeamEntry?  @relation(fields: [teamEntryId], references: [id], onDelete: SetNull)
   played        Int
   won           Int
   lost          Int
@@ -720,6 +725,7 @@ model PointsTableRow {
   runsAgainst   String?
 
   @@unique([pointsTableId, groupOrder, position])
+  @@index([teamEntryId])
   @@map("points_table_rows")
 }
 

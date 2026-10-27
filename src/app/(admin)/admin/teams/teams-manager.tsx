@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { AddTeamsResult } from "@/lib/services/series";
-import { addRegistrationsAction, setPoolAction } from "./actions";
+import { addRegistrationsAction, renameTeamAction, setPoolAction } from "./actions";
 
 export type AdminTeamRow = {
   id: string;
@@ -16,6 +16,8 @@ const POOL_OPTIONS = ["A", "B"];
 
 const fieldClass =
   "border-line bg-pitch text-chalk focus:border-clay w-full min-w-0 border px-2 py-1.5 text-sm outline-none disabled:opacity-60";
+const smallButton =
+  "font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex shrink-0 items-center justify-center border px-3 py-1.5 text-[0.68rem] tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 const primaryButton =
   "font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -46,6 +48,81 @@ function PoolSelect({ team, onError }: { team: AdminTeamRow; onError: (message: 
   );
 }
 
+/**
+ * The team's name with a Rename button; renaming goes through renameTeam,
+ * which updates the name everywhere and keeps the old one for imports.
+ */
+function TeamName({ team }: { team: AdminTeamRow }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(team.name);
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  if (!editing) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <span className="min-w-0 font-medium break-words">{team.name}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setName(team.name);
+            setError(null);
+            setEditing(true);
+          }}
+          className={smallButton}
+        >
+          Rename
+        </button>
+      </div>
+    );
+  }
+
+  const save = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await renameTeamAction(team.id, name);
+      if (result.ok) setEditing(false);
+      else setError(result.message);
+    });
+  };
+
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
+      <input
+        aria-label={`New name for ${team.name}`}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        disabled={pending}
+        maxLength={80}
+        autoFocus
+        className={fieldClass}
+      />
+      <div className="flex gap-2">
+        <button type="submit" disabled={pending || !name.trim()} className={smallButton}>
+          {pending ? "Saving…" : "Save"}
+        </button>
+        <button type="button" disabled={pending} onClick={() => setEditing(false)} className={smallButton}>
+          Cancel
+        </button>
+      </div>
+      <p className="text-chalk-faint text-xs">
+        Shows everywhere on the site. Also rename it in CricClubs; files with the old name still match.
+      </p>
+      {error ? (
+        <p role="alert" className="text-clay-bright text-sm">
+          {error}
+        </p>
+      ) : null}
+    </form>
+  );
+}
+
 function TeamGroup({
   title,
   teams,
@@ -68,7 +145,7 @@ function TeamGroup({
         {teams.map((team) => (
           <div key={team.id} className="border-line bg-dugout flex flex-col gap-3 border p-4">
             <div>
-              <div className="font-medium">{team.name}</div>
+              <TeamName team={team} />
               <div className="text-chalk-dim mt-1 text-sm">
                 C: {team.captain ?? "—"}
                 {team.viceCaptain ? ` · VC: ${team.viceCaptain}` : ""}
@@ -93,7 +170,9 @@ function TeamGroup({
           <tbody>
             {teams.map((team) => (
               <tr key={team.id} className="border-line border-b last:border-0">
-                <td className="px-4 py-3 font-medium">{team.name}</td>
+                <td className="px-4 py-3">
+                  <TeamName team={team} />
+                </td>
                 <td className="px-4 py-3">{team.captain ?? "—"}</td>
                 <td className="text-chalk-dim px-4 py-3">{team.viceCaptain ?? "—"}</td>
                 <td className="px-4 py-2">

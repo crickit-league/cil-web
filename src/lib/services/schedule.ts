@@ -139,10 +139,18 @@ function describeResult(m: ScheduleRow): MatchResult {
     case "NO_RESULT":
       return { kind: "other", text: "No result" };
     case "FORFEIT":
-      // CricClubs' own wording, e.g. "Forfeited. Winner: Sharks".
+      // Not CricClubs' own wording ("Forfeited. Winner: Sharks"): that has the
+      // name as it was then, and a renamed team must show its current name.
+      if (winner) return { kind: "win", winner, text: "won by forfeit" };
       break;
   }
   return { kind: "other", text: m.resultText ?? "Result to be confirmed" };
+}
+
+/** The result as one line of text, with the winner's current name. */
+export function resultSummary(result: MatchResult): string | null {
+  if (!result) return null;
+  return result.kind === "win" ? `${result.winner.name} ${result.text}` : result.text;
 }
 
 function toScheduleMatch(m: ScheduleRow): ScheduleMatch {

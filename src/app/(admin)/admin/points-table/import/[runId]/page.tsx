@@ -8,6 +8,7 @@ import {
 import { formatMatchDay, formatMatchTime } from "@/lib/time";
 import { PointsTableGroup } from "@/components/points-table/points-table-group";
 import { CommitBar } from "./commit-bar";
+import { TeamMapper } from "./team-mapper";
 
 type Preview = Awaited<ReturnType<typeof getPointsTableImportPreview>>;
 
@@ -36,7 +37,8 @@ export default async function PointsTablePreviewPage({ params }: { params: Promi
     throw error;
   }
 
-  const { run, current, groups, problems, canCommit } = preview;
+  const { run, series, current, groups, problems, unmatchedTeams, collisions, teamOptions, canCommit } =
+    preview;
   const teamCount = groups.reduce((n, g) => n + g.rows.length, 0);
 
   return (
@@ -70,6 +72,46 @@ export default async function PointsTablePreviewPage({ params }: { params: Promi
               <li key={`${p.lineNumber}-${p.message}`}>
                 {p.lineNumber > 0 ? `Line ${p.lineNumber}: ` : ""}
                 {p.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {unmatchedTeams.length > 0 ? (
+        <div className="border-clay flex flex-col gap-3 border p-4">
+          <div>
+            <h2 className="font-display text-lg font-extrabold uppercase">Teams to match up</h2>
+            <p className="text-chalk-dim mt-1 text-sm">
+              {unmatchedTeams.length === 1 ? "This name doesn't" : "These names don't"} match any team in{" "}
+              {series.name}, so nothing can be published yet.
+            </p>
+            <ul className="text-chalk-dim mt-2 flex list-disc flex-col gap-1 pl-5 text-sm">
+              <li>
+                If every name is unfamiliar, this is probably an older season&apos;s file — download this
+                season&apos;s Points Table export from CricClubs and upload that instead.
+              </li>
+              <li>
+                If a team was renamed here or in CricClubs, pick which team the name is. It&apos;s remembered,
+                so later uploads and fixture imports match it too.
+              </li>
+            </ul>
+          </div>
+          <TeamMapper runId={run.id} unmatched={unmatchedTeams} teamOptions={teamOptions} />
+        </div>
+      ) : null}
+
+      {collisions.length > 0 ? (
+        <div className="border-clay border p-4">
+          <h2 className="font-display text-lg font-extrabold uppercase">One team, two rows</h2>
+          <p className="text-chalk-dim mt-1 text-sm">
+            These names in the file are all the same team here, so the table can&apos;t be published. Check
+            the file, or the names the team is known by.
+          </p>
+          <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm">
+            {collisions.map((c) => (
+              <li key={c.team}>
+                {c.team}: {c.names.map((n) => `"${n}"`).join(", ")}
               </li>
             ))}
           </ul>

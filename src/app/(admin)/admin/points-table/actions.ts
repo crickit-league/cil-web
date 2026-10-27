@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import {
   commitPointsTableImport,
   discardPointsTableImport,
+  mapPointsTableTeamName,
   stagePointsTableImport,
 } from "@/lib/services/points-table";
 
@@ -60,4 +61,21 @@ export async function discardPointsTableAction(runId: string): Promise<ActionRes
     return { ok: false, message: errorMessage(error) };
   }
   redirect("/admin/points-table");
+}
+
+export async function mapPointsTableTeamAction(
+  runId: string,
+  rawName: string,
+  teamEntryId: string,
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, message: "You must be signed in." };
+  try {
+    await mapPointsTableTeamName(session.user, runId, rawName, teamEntryId);
+  } catch (error) {
+    return { ok: false, message: errorMessage(error) };
+  }
+  revalidatePath(`/admin/points-table/import/${runId}`);
+  revalidatePath("/admin/activity");
+  return { ok: true };
 }
