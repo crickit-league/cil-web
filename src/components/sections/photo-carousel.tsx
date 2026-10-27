@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import ClassNames from "embla-carousel-class-names";
@@ -64,29 +64,37 @@ function Arrow({
   );
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
   const multiple = photos.length > 1;
 
-  const plugins = useMemo(() => {
-    const reduced =
-      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    return [
+  // The Autoplay plugin is only a timer here: it never starts or stops itself
+  // (playOnInit and every stopOn* option are off). Whether it runs is decided in
+  // one place, the effect below, from two pieces of React state:
+  //   wantsAutoplay — the viewer's intent, shown by the Play/Pause button.
+  //   hovering      — a mouse is over the slides (temporary pause, not intent).
+  // The plugin's own play/stop events fire before its internal flag flips, so
+  // reading isPlaying() from them left the button label stale; and its
+  // stopOnInteraction/stopOnMouseEnter can't tell a hover pause from an explicit one.
+  const plugins = useMemo(
+    () => [
       ClassNames(),
-      // Pauses on hover and keyboard focus (stopOnMouseEnter/FocusIn) and on
-      // touch/drag (stopOnInteraction) — resumed only by the play button.
-      // Skipped entirely for people who've asked the OS for reduced motion.
-      ...(multiple && !reduced
+      ...(multiple
         ? [
             Autoplay({
               delay: AUTOPLAY_MS,
-              stopOnInteraction: true,
-              stopOnMouseEnter: true,
-              stopOnFocusIn: true,
+              playOnInit: false,
+              stopOnInteraction: false,
+              stopOnMouseEnter: false,
+              stopOnFocusIn: false,
             }),
           ]
         : []),
-    ];
-  }, [multiple]);
+    ],
+    [multiple],
+  );
 
   const [viewportRef, api] = useEmblaCarousel(
     { loop: multiple, align: "center", skipSnaps: false, duration: 28, watchDrag: multiple },
@@ -94,21 +102,31 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
   );
 
   const selected = useEmblaValue(api, ["select", "reInit"], () => api?.selectedScrollSnap() ?? 0, 0);
-  const hasAutoplay = Boolean(api?.plugins().autoplay);
-  const playing = useEmblaValue(
-    api,
-    ["autoplay:play", "autoplay:stop", "reInit"],
-    () => api?.plugins().autoplay?.isPlaying() ?? false,
-    false,
-  );
-  const [focused, setFocused] = useState(false);
 
-  const toggleAutoplay = () => {
+  // Starts paused for people who've asked the OS for reduced motion; they can
+  // still press Play, since that's an explicit choice.
+  const [wantsAutoplay, setWantsAutoplay] = useState(() => !prefersReducedMotion());
+  const [hovering, setHovering] = useState(false);
+  const hasAutoplay = Boolean(api?.plugins().autoplay);
+  const running = wantsAutoplay && !hovering;
+
+  useEffect(() => {
     const autoplay = api?.plugins().autoplay;
     if (!autoplay) return;
-    if (autoplay.isPlaying()) autoplay.stop();
-    else autoplay.play();
-  };
+    if (running) autoplay.play();
+    else autoplay.stop();
+    return () => autoplay.stop();
+  }, [api, running]);
+
+  // Grabbing the slides (touch or mouse) switches autoplay off until Play is pressed.
+  useEffect(() => {
+    if (!api) return;
+    const stop = () => setWantsAutoplay(false);
+    api.on("pointerDown", stop);
+    return () => {
+      api.off("pointerDown", stop);
+    };
+  }, [api]);
 
   const current = photos[selected];
 
@@ -122,8 +140,6 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();
       }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
     >
       <div className="photo-stage pointer-events-none absolute inset-0" aria-hidden="true" />
 
@@ -135,7 +151,12 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
       </div>
 
       <div className="relative mt-8 sm:mt-10">
-        <div ref={viewportRef} className="photo-viewport overflow-hidden">
+        <div
+          ref={viewportRef}
+          onPointerEnter={(event) => event.pointerType === "mouse" && setHovering(true)}
+          onPointerLeave={() => setHovering(false)}
+          className="photo-viewport overflow-hidden"
+        >
           <div className="flex touch-pan-y">
             {photos.map((photo, index) => (
               <div
@@ -226,12 +247,12 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
             {hasAutoplay ? (
               <button
                 type="button"
-                onClick={toggleAutoplay}
-                aria-pressed={playing}
-                aria-label={playing ? "Pause slideshow" : "Play slideshow"}
+                onClick={() => setWantsAutoplay((value) => !value)}
+                aria-pressed={wantsAutoplay}
+                aria-label={wantsAutoplay ? "Pause slideshow" : "Play slideshow"}
                 className="font-data border-line text-chalk-dim hover:border-clay hover:text-chalk border px-3 py-2 text-[0.68rem] tracking-[0.1em] uppercase transition-colors"
               >
-                {playing ? "Pause" : "Play"}
+                {wantsAutoplay ? "Pause" : "Play"}
               </button>
             ) : null}
             <div className="order-first mr-auto flex gap-2 sm:hidden">
@@ -244,7 +265,7 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
 
       {/* Announce the slide change to screen readers, but only while the
           carousel isn't auto-advancing (polite spam otherwise). */}
-      <p className="sr-only" aria-live={playing && !focused ? "off" : "polite"}>
+      <p className="sr-only" aria-live={api && running ? "off" : "polite"}>
         {current?.caption ?? `Photo ${selected + 1} of ${photos.length}`}
       </p>
     </section>
