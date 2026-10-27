@@ -41,6 +41,23 @@
   --font-data: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
+/* Anchor jumps (rule index, "Open full rule") glide, and land below the sticky header. */
+html {
+  scroll-padding-top: 7rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* One clear keyboard focus ring everywhere, in the gold accent. */
+:focus-visible {
+  outline: 2px solid var(--clay-bright);
+  outline-offset: 2px;
+}
+
 body {
   background: var(--pitch);
   color: var(--chalk);

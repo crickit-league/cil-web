@@ -12,6 +12,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/league/fixtures", label: "Fixtures" },
   { href: "/league/points-table", label: "Points Table" },
+  { href: "/rules", label: "Rules" },
   { href: "#contact", label: "Contact" },
 ];
 
