@@ -84,8 +84,11 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
     return Array.from({ length: copies }, (_, copy) => photos.map((photo) => ({ photo, copy }))).flat();
   }, [photos, count, multiple]);
 
-  // The Autoplay plugin is only a timer here: it never starts or stops itself
-  // (playOnInit and every stopOn* option are off). Whether it runs is decided in
+  // The Autoplay plugin is only a timer here: it never starts itself (playOnInit
+  // off) and can't restart itself. stopOnInteraction MUST stay true: with it off
+  // the plugin registers a pointerUp handler that calls play() after every drag,
+  // restarting the timer behind our state's back (paused + swipe = running, with
+  // the label still saying Play). With it on, a drag only stops the timer. Whether it runs is decided in
   // one place, the effect below, from two pieces of React state:
   //   wantsAutoplay — the viewer's intent, shown by the Play/Pause button.
   //   hovering      — a mouse is over the slides (temporary pause, not intent).
@@ -100,7 +103,7 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
             Autoplay({
               delay: AUTOPLAY_MS,
               playOnInit: false,
-              stopOnInteraction: false,
+              stopOnInteraction: true,
               stopOnMouseEnter: false,
               stopOnFocusIn: false,
             }),
@@ -152,9 +155,15 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
   useEffect(() => {
     const autoplay = api?.plugins().autoplay;
     if (!autoplay) return;
-    if (running) autoplay.play();
-    else autoplay.stop();
-    return () => autoplay.stop();
+    const sync = () => (running ? autoplay.play() : autoplay.stop());
+    sync();
+    // Embla re-initialises plugins on resize (e.g. a phone's URL bar collapsing),
+    // which leaves Autoplay stopped; re-assert our state afterwards.
+    api?.on("reInit", sync);
+    return () => {
+      api?.off("reInit", sync);
+      autoplay.stop();
+    };
   }, [api, running]);
 
   // Grabbing the slides (touch or mouse) switches autoplay off until Play is pressed.
