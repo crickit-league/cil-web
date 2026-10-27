@@ -9,6 +9,7 @@ import {
   setTeamPool,
   type AddTeamsResult,
 } from "@/lib/services/series";
+import { renameTeam } from "@/lib/services/teams";
 
 export type ActionResult = { ok: true } | { ok: false; message: string };
 export type CreateSeriesState = { status: "idle" } | { status: "error"; message: string };
@@ -25,6 +26,8 @@ function revalidateLeague() {
   revalidatePath("/admin/registrations");
   revalidatePath("/admin/activity");
   revalidatePath("/league", "layout");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/points-table");
 }
 
 export async function createSeriesAction(
@@ -74,6 +77,22 @@ export async function setPoolAction(teamEntryId: string, pool: string): Promise<
 
   try {
     await setTeamPool(session.user, teamEntryId, { pool });
+  } catch (error) {
+    return { ok: false, message: errorMessage(error) };
+  }
+
+  revalidateLeague();
+  return { ok: true };
+}
+
+export async function renameTeamAction(teamEntryId: string, name: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user) {
+    return { ok: false, message: "You must be signed in." };
+  }
+
+  try {
+    await renameTeam(session.user, teamEntryId, { name });
   } catch (error) {
     return { ok: false, message: errorMessage(error) };
   }

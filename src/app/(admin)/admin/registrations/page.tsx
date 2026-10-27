@@ -34,7 +34,8 @@ export default async function RegistrationsPage() {
         <RegistrationsTable
           rows={registrations.map((r) => ({
             id: r.id,
-            teamName: r.teamName,
+            teamName: r.currentTeamName,
+            inSeries: r.teamEntry !== null,
             captainName: r.captainName,
             captainEmail: r.captainEmail,
             captainMobile: r.captainMobile,

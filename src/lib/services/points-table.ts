@@ -3,11 +3,14 @@ import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
+import { loadSeriesTeams, saveTeamNameAlias } from "@/lib/services/teams";
+import { resolveTeamNames } from "@/lib/teams/names";
 import {
   parsePointsTable,
   PointsTableFileError,
   readCsvLines,
   type CsvLine,
+  type ParsedPointsTable,
 } from "@/lib/import/cricclubs-points-table";
 
 // The points table is CricClubs' — it does the calculation (points, NRR,
@@ -87,7 +90,24 @@ async function loadStagedRun(runId: string) {
   return { run, series: run.series, parsed: parsePointsTable(lines) };
 }
 
-/** The preview: the groups and rows the upload would publish, and anything that can't be read. */
+/**
+ * Links each row to a team in the series by the same name matching the
+ * schedule import uses (display name, canonical name, aliases). Unknown names
+ * and two spellings of one team block publishing.
+ */
+async function matchTeams(db: Prisma.TransactionClient, seriesId: string, parsed: ParsedPointsTable) {
+  const teams = await loadSeriesTeams(db, seriesId);
+  const names = parsed.groups.flatMap((g) => g.rows.map((r) => r.teamName));
+  const resolution = resolveTeamNames(names, teams);
+  return {
+    teams,
+    matched: resolution.matched,
+    unmatchedTeams: resolution.unmatched,
+    collisions: resolution.collisions.map((c) => ({ team: c.team.displayName, names: c.names })),
+  };
+}
+
+/** The preview: the groups and rows the upload would publish, and anything that blocks it. */
 export async function getPointsTableImportPreview(user: SessionUser, runId: string) {
   requireLeagueAdmin(user);
   const { run, series, parsed } = await loadStagedRun(runId);
@@ -95,14 +115,49 @@ export async function getPointsTableImportPreview(user: SessionUser, runId: stri
     where: { seriesId: series.id },
     select: { fileName: true, uploadedAt: true },
   });
+  const { teams, matched, unmatchedTeams, collisions } = await matchTeams(prisma, series.id, parsed);
   return {
     run: { id: run.id, fileName: run.fileName, createdAt: run.createdAt },
     series: { name: series.name },
     current,
-    groups: parsed.groups,
+    // Matched rows show the team's current name, as the published table will.
+    groups: parsed.groups.map((g) => ({
+      ...g,
+      rows: g.rows.map((r) => ({ ...r, teamName: matched.get(r.teamName)?.displayName ?? r.teamName })),
+    })),
     problems: parsed.problems,
-    canCommit: parsed.problems.length === 0 && parsed.groups.length > 0,
+    unmatchedTeams,
+    collisions,
+    teamOptions: teams.map((t) => ({ id: t.id, name: t.displayName })),
+    canCommit:
+      parsed.problems.length === 0 &&
+      parsed.groups.length > 0 &&
+      unmatchedTeams.length === 0 &&
+      collisions.length === 0,
   };
+}
+
+/**
+ * Maps a team name in the uploaded file to a team in the series, saved as a
+ * NameAlias so later uploads and schedule imports recognise it too.
+ */
+export async function mapPointsTableTeamName(
+  user: SessionUser,
+  runId: string,
+  rawName: string,
+  teamEntryId: string,
+) {
+  requireLeagueAdmin(user);
+  const { series } = await loadStagedRun(runId);
+  if (!rawName.trim()) throw new PointsTableFileError("No team name given.");
+  await prisma.$transaction(async (tx) => {
+    const entry = await tx.teamEntry.findFirst({
+      where: { id: teamEntryId, seriesId: series.id },
+      select: { teamId: true, displayName: true },
+    });
+    if (!entry) throw new PointsTableFileError("That team isn't in this series.");
+    await saveTeamNameAlias(tx, user, entry, rawName, "points table");
+  });
 }
 
 /** Publishes the upload: replaces the series' points table in one transaction. */
@@ -115,6 +170,11 @@ export async function commitPointsTableImport(user: SessionUser, runId: string) 
   const teamCount = parsed.groups.reduce((n, g) => n + g.rows.length, 0);
 
   await prisma.$transaction(async (tx) => {
+    // Matched again inside the transaction, against the same data the rows will link to.
+    const { matched, unmatchedTeams, collisions } = await matchTeams(tx, series.id, parsed);
+    if (unmatchedTeams.length > 0 || collisions.length > 0) {
+      throw new PointsTableFileError("Match every team in the file to a team before publishing.");
+    }
     await tx.pointsTable.deleteMany({ where: { seriesId: series.id } });
     const table = await tx.pointsTable.create({
       data: {
@@ -128,6 +188,7 @@ export async function commitPointsTableImport(user: SessionUser, runId: string) 
               groupOrder,
               position: row.position,
               teamName: row.teamName,
+              teamEntryId: matched.get(row.teamName)!.id,
               played: row.played,
               won: row.won,
               lost: row.lost,
@@ -192,7 +253,10 @@ export async function getPublishedPointsTable() {
     select: {
       fileName: true,
       uploadedAt: true,
-      rows: { orderBy: [{ groupOrder: "asc" }, { position: "asc" }] },
+      rows: {
+        orderBy: [{ groupOrder: "asc" }, { position: "asc" }],
+        include: { teamEntry: { select: { displayName: true } } },
+      },
     },
   });
   if (!table) return null;
@@ -206,7 +270,8 @@ export async function getPublishedPointsTable() {
     }
     group.rows.push({
       position: row.position,
-      teamName: row.teamName,
+      // The team's current name; the file's spelling only for tables published before rows were linked.
+      teamName: row.teamEntry?.displayName ?? row.teamName,
       played: row.played,
       won: row.won,
       lost: row.lost,

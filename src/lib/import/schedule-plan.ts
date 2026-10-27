@@ -1,5 +1,6 @@
 import type { AssignmentSource, MatchStage, MatchStatus } from "@/generated/prisma";
 import { leagueWallTimeToUtc } from "@/lib/time";
+import { indexTeamNames } from "@/lib/teams/names";
 import {
   normalizeMatchRow,
   normalizeName,
@@ -191,10 +192,7 @@ export function planScheduleImport(input: {
   const { records, teams, existing, groupCount } = input;
   const rules = { playersPerSide: input.playersPerSide, maxOvers: input.maxOvers };
 
-  const byName = new Map<string, PlanTeam>();
-  for (const team of teams) {
-    for (const name of team.names) byName.set(normalizeName(name), team);
-  }
+  const byName = indexTeamNames(teams);
   const nameOf = (id: string | null) => (id ? (teams.find((t) => t.id === id)?.displayName ?? "?") : "—");
   const label = (stage: MatchStage, a: string | null, b: string | null) =>
     `${nameOf(a)} v ${nameOf(b)} (${STAGE_LABEL[stage]})`;

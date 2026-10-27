@@ -27,5 +27,9 @@ export async function updateRegistrationAction(
 
   revalidatePath("/admin/registrations");
   revalidatePath("/admin/activity");
+  // A linked registration's team name is the team's name everywhere.
+  revalidatePath("/admin/teams");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/league", "layout");
   return { ok: true };
 }

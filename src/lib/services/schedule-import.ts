@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
+import { loadSeriesTeams, saveTeamNameAlias } from "@/lib/services/teams";
 import { findCurrentSeries } from "@/lib/services/series";
 import {
   MatchesFileError,
@@ -89,22 +90,12 @@ function fieldLabel(field: { label: string; ground: { name: string } } | null) {
 
 /** Current state the planner compares against. Works with a transaction client too. */
 async function loadPlanInputs(db: Prisma.TransactionClient, seriesId: string) {
-  const entries = await db.teamEntry.findMany({
-    where: { seriesId },
-    select: {
-      id: true,
-      displayName: true,
-      pool: true,
-      teamId: true,
-      team: { select: { name: true, aliases: { select: { rawName: true } } } },
-    },
-    orderBy: { displayName: "asc" },
-  });
+  const entries = await loadSeriesTeams(db, seriesId);
   const teams: PlanTeam[] = entries.map((e) => ({
     id: e.id,
     displayName: e.displayName,
     pool: e.pool,
-    names: [e.displayName, e.team.name, ...e.team.aliases.map((a) => a.rawName)],
+    names: e.names,
   }));
 
   const matches = await db.match.findMany({
@@ -242,17 +233,7 @@ export async function mapImportTeamName(user: SessionUser, runId: string, rawNam
     });
     if (!entry) throw new ImportBlockedError("That team isn't in this series.");
 
-    const alias = await tx.nameAlias.upsert({
-      where: { rawName: normalizeName(name) },
-      update: { teamId: entry.teamId, personId: null, fieldId: null },
-      create: { rawName: normalizeName(name), teamId: entry.teamId },
-    });
-    await recordAudit(tx, user, {
-      action: "nameAlias.map",
-      entityType: "NameAlias",
-      entityId: alias.id,
-      summary: `mapped CricClubs team name "${name}" to "${entry.displayName}"`,
-    });
+    await saveTeamNameAlias(tx, user, entry, name, "CricClubs");
   });
 }
 

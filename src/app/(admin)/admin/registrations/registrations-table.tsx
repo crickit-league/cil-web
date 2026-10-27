@@ -9,7 +9,10 @@ type FeeStatusValue = "UNPAID" | "PAID" | "WAIVED";
 
 export type RegistrationRow = {
   id: string;
+  /** The team's current name — its series entry's name once added to a series. */
   teamName: string;
+  /** Added to a series: editing the name renames the team everywhere. */
+  inSeries: boolean;
   captainName: string;
   captainEmail: string;
   captainMobile: string;
@@ -135,7 +138,16 @@ export function RegistrationsTable({ rows }: { rows: RegistrationRow[] }) {
         getDraft: toDraft,
         onSave: (row, draft) => updateRegistrationAction(row.id, draft),
         editors: {
-          teamName: textEditor("teamName"),
+          teamName: (ctx) => (
+            <div className="flex flex-col gap-1">
+              {textEditor("teamName")(ctx)}
+              {ctx.row.inSeries ? (
+                <span className="text-chalk-faint font-body text-xs font-normal tracking-normal normal-case">
+                  Renames the team everywhere. Also rename it in CricClubs.
+                </span>
+              ) : null}
+            </div>
+          ),
           captainName: textEditor("captainName"),
           captainEmail: textEditor("captainEmail", "email"),
           captainMobile: textEditor("captainMobile", "tel"),

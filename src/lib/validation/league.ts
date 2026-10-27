@@ -10,6 +10,11 @@ export const createSeriesSchema = z.object({
 });
 export type CreateSeriesInput = z.infer<typeof createSeriesSchema>;
 
+// Same length rules as the registration form's team name.
+export const renameTeamSchema = z.object({
+  name: z.string().trim().min(2, "Enter the team's new name.").max(80, "Keep the name under 80 characters."),
+});
+
 export const setPoolSchema = z.object({
   // Empty string from the "unassigned" option of a <select>.
   pool: z.enum(["", ...POOLS]).transform((value) => (value === "" ? null : value)),
