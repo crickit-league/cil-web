@@ -124,14 +124,15 @@ export function formatCardStampOrTbd({ startsAt, timeTbd }: MatchWhen): string {
 }
 
 /**
- * Fixture order: by day, a day's timed matches before its time-TBD ones, and
- * matches with no date yet after everything dated.
+ * Fixture order (user's call, 2026-10-27): matches with no date yet first,
+ * then days newest first. Within a day, start times still run earliest first
+ * (reversed they'd read oddly), with the day's time-TBD matches last.
  */
 export function compareMatchWhen(a: MatchWhen, b: MatchWhen): number {
-  if (!a.startsAt || !b.startsAt) return (a.startsAt ? 0 : 1) - (b.startsAt ? 0 : 1);
+  if (!a.startsAt || !b.startsAt) return (a.startsAt ? 1 : 0) - (b.startsAt ? 1 : 0);
   const dayA = matchDayKey(a.startsAt);
   const dayB = matchDayKey(b.startsAt);
-  if (dayA !== dayB) return dayA < dayB ? -1 : 1;
+  if (dayA !== dayB) return dayA < dayB ? 1 : -1;
   if (a.timeTbd !== b.timeTbd) return a.timeTbd ? 1 : -1;
   return a.startsAt.getTime() - b.startsAt.getTime();
 }

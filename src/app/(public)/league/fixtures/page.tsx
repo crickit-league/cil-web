@@ -19,7 +19,8 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
   const { series, teams, matches, selectedTeamId } = await getPublicFixtures({ teamEntryId: team });
   const entryOpen = series ? !series.umpireEntryLocked : false;
 
-  // Matches come sorted, so the "Date TBD" group (not scheduled yet) is last.
+  // Matches come sorted (compareMatchWhen), so the "Date TBD" group (not
+  // scheduled yet) is first, then days newest first.
   const days = groupByMatchDay(matches);
 
   return (
