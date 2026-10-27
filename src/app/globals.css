@@ -134,3 +134,61 @@ body {
   opacity: 0.05;
   z-index: 0;
 }
+
+/* Photo carousel: floodlit-stage glow behind the slides, and the active-slide
+   treatment (embla-carousel-class-names adds .is-snapped to the centred slide). */
+.photo-stage {
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 55%, rgb(214 165 68 / 14%), transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgb(46 68 104 / 45%), transparent 70%);
+}
+
+.photo-viewport.is-draggable {
+  cursor: grab;
+}
+
+.photo-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+/* The dim/scale treatment lives on an inner element, never on .photo-slide
+   itself: Embla's loop repositions slides with an inline transform on the slide,
+   and a CSS transition on that same property would animate the repositioning,
+   making the wrap from the last photo to the first visibly slide across. */
+.photo-slide-inner {
+  opacity: 0.4;
+  transform: scale(0.92);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.photo-slide.is-snapped .photo-slide-inner {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Time-left indicator: fills the active pagination dash over the autoplay delay. */
+@keyframes photo-dash-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.photo-dash-fill {
+  transform-origin: left;
+  animation: photo-dash-fill var(--photo-dash-ms) linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-slide-inner {
+    transition: none;
+  }
+
+  .photo-dash-fill {
+    animation: none;
+  }
+}

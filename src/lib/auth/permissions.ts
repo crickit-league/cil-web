@@ -12,7 +12,7 @@ export class ForbiddenError extends Error {
 // Actions grow as new services need permission checks — see
 // docs/architecture.md §7 for the full role/action table. Only the
 // admin-console slice exists so far.
-export type Action = "access-admin-console" | "manage-admins" | "manage-league";
+export type Action = "access-admin-console" | "manage-admins" | "manage-league" | "manage-photos";
 
 /**
  * Explicit permission check, per CLAUDE.md: never rely on a hidden UI
@@ -24,6 +24,7 @@ export function can(user: SessionUser | null | undefined, action: Action): boole
 
   switch (action) {
     case "access-admin-console":
+    case "manage-photos":
       return user.roles.includes("ADMIN") || user.roles.includes("SUPER_ADMIN");
     // Managing who has admin access is a super-admin-only capability, per
     // the role table in docs/architecture.md §7 — a plain admin is scoped

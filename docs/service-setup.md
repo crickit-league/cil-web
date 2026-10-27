@@ -189,6 +189,37 @@ Not wired into the code yet — Phase 1b's admin console is what actually uses t
 
 ---
 
+## 8. Cloudflare R2 (file storage — match photos)
+
+Stores the photos admins upload for the homepage carousel (Admin → Photos). Free tier is 10 GB storage and no egress fees, far more than this needs. The site works without it — the carousel simply hides and uploads are disabled until these variables are set.
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com) → **R2 Object Storage**. First time only: you may be asked to add a payment method to enable R2; the free tier still applies.
+2. **Create bucket** → name it `cil-photos` → location **Automatic** → **Create**.
+3. Make it publicly readable — pick one:
+   - **Quick start:** bucket → **Settings** → **Public Development URL** → **Enable** (type `allow`). You get `https://pub-<hash>.r2.dev`. Rate-limited and not meant for production traffic, but fine to start.
+   - **Recommended:** bucket → **Settings** → **Custom Domains** → **Connect Domain** → `photos.crickitinterleague.org`. The domain is already on Cloudflare, so DNS is created for you. This also gives you Cloudflare's CDN caching.
+4. Note your **Account ID**: R2 overview page, right-hand sidebar (or the `<account-id>` in the S3 API URL).
+5. **R2 → Manage API Tokens** → **Create API token**:
+   - Permissions: **Object Read & Write**
+   - Specify bucket: **only** `cil-photos`
+   - Create, then copy the **Access Key ID** and **Secret Access Key** — the secret is shown once.
+6. Set the variables in local `.env` and in **Vercel → Project Settings → Environment Variables** (Production, Preview and Development):
+
+   | Variable               | Value                                                                           |
+   | ---------------------- | ------------------------------------------------------------------------------- |
+   | `R2_ACCOUNT_ID`        | Account ID from step 4                                                          |
+   | `R2_ACCESS_KEY_ID`     | Access Key ID from step 5                                                       |
+   | `R2_SECRET_ACCESS_KEY` | Secret Access Key from step 5                                                   |
+   | `R2_BUCKET`            | `cil-photos`                                                                    |
+   | `R2_PUBLIC_BASE_URL`   | `https://photos.crickitinterleague.org` or the `r2.dev` URL — no trailing slash |
+
+7. **Redeploy** — `R2_PUBLIC_BASE_URL` is read by `next.config.ts` at build time to allow the host for `next/image`, so changing it needs a new build, not just a restart.
+8. Sign in as an admin → **Admin → Photos** → upload.
+
+Preview deployments can share the production bucket, but note that anything uploaded from a preview lands in the same public bucket (the database rows stay in the preview's own Neon branch). Use a second bucket, e.g. `cil-photos-dev`, if you'd rather keep them apart.
+
+---
+
 ## Summary: what ends up in `.env`
 
 | Variable                         | Source               | Needed for              |
@@ -200,5 +231,10 @@ Not wired into the code yet — Phase 1b's admin console is what actually uses t
 | `TURNSTILE_SECRET_KEY`           | Cloudflare Turnstile | Bot protection (server) |
 | `AUTH_SECRET`                    | Generated locally    | Session signing         |
 | `SENTRY_DSN`                     | Sentry               | Error tracking          |
+| `R2_ACCOUNT_ID`                  | Cloudflare R2        | Photo storage           |
+| `R2_ACCESS_KEY_ID`               | Cloudflare R2        | Photo storage           |
+| `R2_SECRET_ACCESS_KEY`           | Cloudflare R2        | Photo storage           |
+| `R2_BUCKET`                      | Cloudflare R2        | Photo storage           |
+| `R2_PUBLIC_BASE_URL`             | Cloudflare R2        | Photo URLs / next/image |
 
 Everything above also needs to be added to **Vercel → Project Settings → Environment Variables** separately — your local `.env` and Vercel's copy are independent.

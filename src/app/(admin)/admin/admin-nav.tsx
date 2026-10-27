@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export type AdminNavIcon =
-  "registration" | "teams" | "schedule" | "points-table" | "activity" | "super-admin";
+  "registration" | "teams" | "schedule" | "points-table" | "photos" | "activity" | "super-admin";
 export type AdminNavItem = { href: string; label: string; icon: AdminNavIcon };
 
 const STORAGE_KEY = "cil-admin-nav-collapsed";
@@ -39,6 +39,14 @@ const ICON_PATHS: Record<AdminNavIcon, React.ReactNode> = {
     <>
       <rect x="4" y="5" width="16" height="14" rx="1.5" />
       <path d="M4 9.5h16M4 14h16M9.5 9.5V19" />
+    </>
+  ),
+  // Picture frame with a mountain
+  photos: (
+    <>
+      <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="M4 17l5-4 4 3 3-2 4 3" />
     </>
   ),
   // Clock
