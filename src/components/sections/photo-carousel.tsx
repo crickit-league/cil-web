@@ -76,9 +76,20 @@ function Arrow({
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
+export function PhotoCarousel({
+  photos,
+  roomBelow = false,
+}: {
+  photos: PublicPhoto[];
+  /** Extra space under the controls for content that overlaps the carousel's bottom edge (the home page's score strip). */
+  roomBelow?: boolean;
+}) {
   const count = photos.length;
   const multiple = count > 1;
+  // Every slide shares one frame so the carousel's height never jumps. Portrait
+  // photos are shown whole (object-contain over a blurred copy, below); when
+  // there are any, phones get a square frame so they aren't tiny in a 4:3 one.
+  const hasPortrait = photos.some((photo) => photo.height > photo.width);
   const slides = useMemo(() => {
     const copies = multiple ? Math.ceil(MIN_LOOP_SLIDES / count) : 1;
     return Array.from({ length: copies }, (_, copy) => photos.map((photo) => ({ photo, copy }))).flat();
@@ -183,7 +194,7 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
       id="photos"
       aria-roledescription="carousel"
       aria-label="Match photos"
-      className="relative overflow-hidden py-14 sm:py-20"
+      className={`relative overflow-hidden pt-14 sm:pt-20 ${roomBelow ? "pb-28 sm:pb-32" : "pb-14 sm:pb-20"}`}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();
@@ -217,7 +228,11 @@ export function PhotoCarousel({ photos }: { photos: PublicPhoto[] }) {
                   aria-hidden={slideIndex === selectedSlide ? undefined : true}
                   className="photo-slide min-w-0 flex-[0_0_88%] px-2 sm:flex-[0_0_72%] sm:px-4 lg:flex-[0_0_62%]"
                 >
-                  <figure className="photo-slide-inner border-line bg-pitch-deep relative aspect-[4/3] overflow-hidden border sm:aspect-[16/10]">
+                  <figure
+                    className={`photo-slide-inner border-line bg-pitch-deep relative overflow-hidden border sm:aspect-[16/10] ${
+                      hasPortrait ? "aspect-square" : "aspect-[4/3]"
+                    }`}
+                  >
                     {/* Blurred copy of the photo fills the frame so portrait shots
                       aren't letterboxed against a flat colour. */}
                     <Image

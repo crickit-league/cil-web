@@ -292,6 +292,24 @@ export async function getPublishedPointsTable() {
   };
 }
 
+/**
+ * The top of each group for the home page, or null when nothing is published.
+ * Never throws, like the rest of the home page's data: a failure is logged.
+ */
+export async function getPointsTableSnapshot(rowsPerGroup: number) {
+  try {
+    const table = await getPublishedPointsTable();
+    if (!table) return null;
+    return {
+      uploadedAt: table.uploadedAt,
+      groups: table.groups.map((g) => ({ name: g.name, rows: g.rows.slice(0, rowsPerGroup) })),
+    };
+  } catch (error) {
+    console.error("Failed to load the points table snapshot:", error);
+    return null;
+  }
+}
+
 /** What the admin page shows about the published table: when, from which file, by whom. */
 export async function getPointsTableAdminSummary(user: SessionUser) {
   requireLeagueAdmin(user);

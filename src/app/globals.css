@@ -47,57 +47,6 @@ body {
   color: var(--chalk);
 }
 
-/* Hero decoration: diagonal cross-hatch lattice, masked to the top-right, drifting with a light sweep */
-.hero-texture::before {
-  content: "";
-  position: absolute;
-  inset: -26px;
-  z-index: 0;
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgb(238 244 252 / 5%) 0,
-      rgb(238 244 252 / 5%) 1px,
-      transparent 1px,
-      transparent 26px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgb(238 244 252 / 5%) 0,
-      rgb(238 244 252 / 5%) 1px,
-      transparent 1px,
-      transparent 26px
-    ),
-    linear-gradient(115deg, transparent 42%, rgb(238 244 252 / 22%) 50%, transparent 58%);
-  background-size:
-    auto,
-    auto,
-    280% 280%;
-  mask-image: radial-gradient(ellipse 70% 60% at 70% 20%, black, transparent 75%);
-  animation: lattice-drift 12s linear infinite;
-}
-
-@keyframes lattice-drift {
-  from {
-    background-position:
-      0 0,
-      0 0,
-      -90% 0%;
-  }
-  to {
-    background-position:
-      52px 0,
-      -52px 0,
-      90% 0%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-texture::before {
-    animation: none;
-  }
-}
-
 @keyframes success-pop {
   from {
     opacity: 0;
@@ -117,22 +66,6 @@ body {
   .animate-success-pop {
     animation: none;
   }
-}
-
-/* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */
-.hero-crest-watermark::after {
-  content: "";
-  position: absolute;
-  top: -14%;
-  right: -8%;
-  width: 640px;
-  height: 640px;
-  background-image: url("/img/logo2.jpeg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  filter: invert(1) brightness(0.9);
-  opacity: 0.05;
-  z-index: 0;
 }
 
 /* Photo carousel: floodlit-stage glow behind the slides, and the active-slide
