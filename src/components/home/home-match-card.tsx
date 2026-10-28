@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatMatchTimeOrTbd } from "@/lib/time";
-import { teamLabel } from "@/app/(public)/league/fixtures/fixture-card";
+import { teamLabel } from "@/lib/team-label";
+import { TeamBadge } from "@/components/team-badge";
 
 // The home page's compact match card: scores and the result for a played
 // match, time and ground for one to come. No umpire details. Those, and
@@ -28,7 +29,7 @@ function sides(m: ScheduleMatch): Side[] {
 }
 
 const cardClass =
-  "bg-dugout border-line hover:border-clay-bright flex h-full rounded-xl border px-4 py-3.5 transition-colors";
+  "lift bg-dugout shadow-sm border-line hover:border-clay-bright flex h-full rounded-lg border px-4 py-3.5";
 const metaClass = "font-data text-chalk-faint text-[0.66rem] tracking-[0.08em] uppercase";
 
 function ResultCard({ m }: { m: ScheduleMatch }) {
@@ -45,11 +46,14 @@ function ResultCard({ m }: { m: ScheduleMatch }) {
           const won = winnerId !== null && side.id === winnerId;
           const lost = winnerId !== null && !won;
           return (
-            <li key={side.id ?? `slot-${i}`} className="flex items-baseline justify-between gap-3">
-              <span
-                className={`min-w-0 truncate ${won ? "text-chalk font-bold" : lost ? "text-chalk-dim" : "text-chalk"}`}
-              >
-                {side.label}
+            <li key={side.id ?? `slot-${i}`} className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-2.5">
+                <TeamBadge name={side.label} size={26} />
+                <span
+                  className={`min-w-0 truncate ${won ? "text-chalk font-bold" : lost ? "text-chalk-dim" : "text-chalk"}`}
+                >
+                  {side.label}
+                </span>
               </span>
               {side.score ? (
                 <span className="font-data shrink-0 whitespace-nowrap">
@@ -85,10 +89,13 @@ function FixtureCard({ m }: { m: ScheduleMatch }) {
         <span className="font-display text-2xl leading-none font-extrabold">{time}</span>
         {meridiem ? <span className="font-data text-chalk-faint mt-1 text-[0.62rem]">{meridiem}</span> : null}
       </span>
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="truncate font-semibold">{one.label}</span>
-        <span className="font-data text-chalk-faint text-[0.62rem]">VS</span>
-        <span className="truncate font-semibold">{two.label}</span>
+      <span className="flex min-w-0 flex-col gap-1.5">
+        {[one, two].map((team, i) => (
+          <span key={team.id ?? `slot-${i}`} className="flex items-center gap-2.5">
+            <TeamBadge name={team.label} size={26} />
+            <span className="truncate font-semibold">{team.label}</span>
+          </span>
+        ))}
         <span className="text-chalk-dim mt-1 truncate text-sm">
           {m.stage !== "LEAGUE" ? `${STAGE_LABEL[m.stage]} · ` : ""}
           {m.ground ?? "Ground to be confirmed"}

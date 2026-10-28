@@ -3,24 +3,32 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { deletePhotoAction, updateCaptionAction, uploadPhotoAction } from "./actions";
+import { deletePhotoAction, updatePhotoDetailsAction, uploadPhotoAction } from "./actions";
 import { resizeImage } from "./resize-image";
 
 type AdminPhoto = {
   id: string;
   url: string | null;
   caption: string | null;
+  title: string | null;
+  body: string | null;
+  matchId: string | null;
   width: number;
   height: number;
   uploaded: string;
   uploadedBy: string | null;
 };
 
+type MatchOption = { id: string; label: string };
+
 type QueuedFile = {
   key: string;
   file: File;
   preview: string;
   caption: string;
+  title: string;
+  body: string;
+  matchId: string;
   status: "pending" | "uploading" | "error";
   error?: string;
 };
@@ -28,20 +36,79 @@ type QueuedFile = {
 const inputClass =
   "border-line text-chalk placeholder:text-chalk-faint focus:border-clay w-full border-0 border-b-[1.5px] bg-transparent px-0.5 py-2 text-sm focus:outline-none";
 const primaryButton =
-  "font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "font-data border-clay bg-clay text-on-accent hover:border-clay-bright hover:bg-clay-bright border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+
+const selectClass =
+  "border-line bg-dugout text-chalk focus:border-clay w-full border px-2 py-2 text-sm focus:outline-none";
+
+/** Title, text and linked match: what turns a photo into a carousel story (e.g. Man of the Match). */
+function DetailFields({
+  value,
+  matches,
+  disabled,
+  onChange,
+  label,
+}: {
+  value: { title: string; body: string; matchId: string };
+  matches: MatchOption[];
+  disabled: boolean;
+  onChange: (change: Partial<{ title: string; body: string; matchId: string }>) => void;
+  label: string;
+}) {
+  return (
+    <>
+      <input
+        type="text"
+        value={value.title}
+        maxLength={80}
+        disabled={disabled}
+        placeholder="Title, e.g. Man of the Match: A. Kumar"
+        aria-label={`Title for ${label}`}
+        onChange={(event) => onChange({ title: event.target.value })}
+        className={inputClass}
+      />
+      <textarea
+        value={value.body}
+        maxLength={500}
+        rows={2}
+        disabled={disabled}
+        placeholder="Text (optional), e.g. 3 wickets and 41 off 22"
+        aria-label={`Text for ${label}`}
+        onChange={(event) => onChange({ body: event.target.value })}
+        className={`${inputClass} resize-y`}
+      />
+      <select
+        value={value.matchId}
+        disabled={disabled}
+        aria-label={`Linked match for ${label}`}
+        onChange={(event) => onChange({ matchId: event.target.value })}
+        className={selectClass}
+      >
+        <option value="">No linked match</option>
+        {matches.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.label}
+          </option>
+        ))}
+      </select>
+    </>
+  );
+}
 
 export function PhotoManager({
   photos,
   carouselLimit,
   uploadsEnabled,
+  matches,
 }: {
   photos: AdminPhoto[];
   carouselLimit: number;
   uploadsEnabled: boolean;
+  matches: MatchOption[];
 }) {
   return (
     <>
-      <UploadPanel enabled={uploadsEnabled} />
+      <UploadPanel enabled={uploadsEnabled} matches={matches} />
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">
           Library <span className="text-chalk-dim text-lg">({photos.length})</span>
@@ -51,7 +118,7 @@ export function PhotoManager({
         ) : (
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {photos.map((photo, index) => (
-              <PhotoCard key={photo.id} photo={photo} inCarousel={index < carouselLimit} />
+              <PhotoCard key={photo.id} photo={photo} matches={matches} inCarousel={index < carouselLimit} />
             ))}
           </ul>
         )}
@@ -60,7 +127,7 @@ export function PhotoManager({
   );
 }
 
-function UploadPanel({ enabled }: { enabled: boolean }) {
+function UploadPanel({ enabled, matches }: { enabled: boolean; matches: MatchOption[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [queue, setQueue] = useState<QueuedFile[]>([]);
@@ -84,6 +151,9 @@ function UploadPanel({ enabled }: { enabled: boolean }) {
           file,
           preview,
           caption: "",
+          title: "",
+          body: "",
+          matchId: "",
           status: "pending" as const,
         };
       });
@@ -108,6 +178,9 @@ function UploadPanel({ enabled }: { enabled: boolean }) {
         body.set("width", String(width));
         body.set("height", String(height));
         body.set("caption", item.caption);
+        body.set("title", item.title);
+        body.set("body", item.body);
+        body.set("matchId", item.matchId);
         const result = await uploadPhotoAction(body);
         if (result.ok) {
           setQueue((prev) => prev.filter((q) => q.key !== item.key));
@@ -157,6 +230,13 @@ function UploadPanel({ enabled }: { enabled: boolean }) {
                     onChange={(event) => patch(item.key, { caption: event.target.value })}
                     className={inputClass}
                   />
+                  <DetailFields
+                    value={item}
+                    matches={matches}
+                    disabled={busy}
+                    label={item.file.name}
+                    onChange={(change) => patch(item.key, change)}
+                  />
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-data text-chalk-faint truncate text-[0.66rem] tracking-[0.05em]">
                       {item.status === "uploading" ? "Uploading…" : item.file.name}
@@ -193,12 +273,29 @@ function UploadPanel({ enabled }: { enabled: boolean }) {
   );
 }
 
-function PhotoCard({ photo, inCarousel }: { photo: AdminPhoto; inCarousel: boolean }) {
+function PhotoCard({
+  photo,
+  matches,
+  inCarousel,
+}: {
+  photo: AdminPhoto;
+  matches: MatchOption[];
+  inCarousel: boolean;
+}) {
   const router = useRouter();
   const [caption, setCaption] = useState(photo.caption ?? "");
+  const [details, setDetails] = useState({
+    title: photo.title ?? "",
+    body: photo.body ?? "",
+    matchId: photo.matchId ?? "",
+  });
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const dirty = caption.trim() !== (photo.caption ?? "");
+  const dirty =
+    caption.trim() !== (photo.caption ?? "") ||
+    details.title.trim() !== (photo.title ?? "") ||
+    details.body.trim() !== (photo.body ?? "") ||
+    details.matchId !== (photo.matchId ?? "");
 
   const run = async (work: () => Promise<{ ok: boolean; message?: string }>, success?: string) => {
     setPending(true);
@@ -223,7 +320,7 @@ function PhotoCard({ photo, inCarousel }: { photo: AdminPhoto; inCarousel: boole
         ) : null}
         <span
           className={`font-data absolute top-2 left-2 px-2 py-1 text-[0.62rem] tracking-[0.1em] uppercase ${
-            inCarousel ? "bg-clay text-pitch-deep" : "bg-pitch-deep/80 text-chalk-dim"
+            inCarousel ? "bg-clay text-on-accent" : "bg-pitch-deep/80 text-chalk-dim"
           }`}
         >
           {inCarousel ? "On homepage" : "Archived"}
@@ -240,6 +337,13 @@ function PhotoCard({ photo, inCarousel }: { photo: AdminPhoto; inCarousel: boole
           onChange={(event) => setCaption(event.target.value)}
           className={inputClass}
         />
+        <DetailFields
+          value={details}
+          matches={matches}
+          disabled={pending}
+          label="this photo"
+          onChange={(change) => setDetails((prev) => ({ ...prev, ...change }))}
+        />
         <div className="flex items-center justify-between gap-3">
           <span className="font-data text-chalk-faint text-[0.66rem] tracking-[0.05em] uppercase">
             {photo.uploaded}
@@ -250,7 +354,9 @@ function PhotoCard({ photo, inCarousel }: { photo: AdminPhoto; inCarousel: boole
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => run(() => updateCaptionAction(photo.id, caption), "Saved.")}
+                onClick={() =>
+                  run(() => updatePhotoDetailsAction(photo.id, { caption, ...details }), "Saved.")
+                }
                 className="font-data text-clay hover:text-clay-bright text-xs tracking-[0.08em] uppercase"
               >
                 Save

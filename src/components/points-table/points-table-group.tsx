@@ -1,3 +1,4 @@
+import { TeamBadge } from "@/components/team-badge";
 import type { PublishedPointsGroup, PublishedPointsRow } from "@/lib/services/points-table";
 
 // One group of CricClubs' points table, as published (public page) or as an
@@ -50,14 +51,17 @@ export function PointsTableGroup({
         {group.rows.map((row) => (
           <li
             key={row.position}
-            className={`border-line bg-dugout flex gap-3 border-x border-t px-3 py-3 last:border-b ${
+            className={`border-line bg-dugout even:bg-dugout-2 flex gap-3 border-x border-t px-3 py-3 last:border-b ${
               qualifies(row) ? "border-l-gold border-l-2" : ""
             } ${cutLine(row) ? "border-b-clay border-b-2" : ""}`}
           >
             <span className="font-data text-chalk-dim w-5 shrink-0 pt-0.5 text-sm">{row.position}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="font-display min-w-0 leading-tight font-bold uppercase">{row.teamName}</span>
+                <span className="font-display flex min-w-0 items-center gap-2 leading-tight font-bold uppercase">
+                  <TeamBadge name={row.teamName} size={26} />
+                  <span className="min-w-0">{row.teamName}</span>
+                </span>
                 <span className="font-data shrink-0 text-sm">
                   <strong className="text-chalk font-semibold">{formatPoints(row.points)}</strong>
                   <span className="text-chalk-dim"> pts</span>
@@ -116,7 +120,7 @@ export function PointsTableGroup({
             {group.rows.map((row) => (
               <tr
                 key={row.position}
-                className={`border-line border-b ${cutLine(row) ? "border-b-clay border-b-2" : ""}`}
+                className={`border-line odd:bg-dugout even:bg-dugout-2/50 border-b ${cutLine(row) ? "border-b-clay border-b-2" : ""}`}
               >
                 <td
                   className={`font-data text-chalk-dim py-2.5 pr-2 pl-2 ${
@@ -126,7 +130,10 @@ export function PointsTableGroup({
                   {row.position}
                 </td>
                 <th scope="row" className="font-display py-2.5 pr-4 text-left text-base font-bold uppercase">
-                  {row.teamName}
+                  <span className="flex items-center gap-2.5">
+                    <TeamBadge name={row.teamName} size={28} />
+                    {row.teamName}
+                  </span>
                 </th>
                 {STAT_COLUMNS.map((c) => (
                   <td key={c.key} className="font-data text-chalk-dim py-2.5 text-right">

@@ -1,4 +1,6 @@
 import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
+import { teamLabel } from "@/lib/team-label";
+import { TeamBadge } from "@/components/team-badge";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatCardStampOrTbd } from "@/lib/time";
 import { FixtureFooter } from "./fixture-footer";
@@ -9,9 +11,7 @@ import { FixtureFooter } from "./fixture-footer";
 // "Enter umpires →" expands the card in place (umpire-entry.tsx); the fixture
 // page (/league/fixtures/[matchId]) reuses the card as its header.
 
-export function teamLabel(team: { name: string } | null, source: string | null) {
-  return team?.name ?? (source ? `TBD (${source})` : "TBD");
-}
+export { teamLabel } from "@/lib/team-label";
 
 export function StatusBadge({ status }: { status: FixtureStatus }) {
   return (
@@ -127,15 +127,16 @@ export function FixtureCard({
             return (
               <li
                 key={side.id ?? `slot-${i}`}
-                className={`-ml-4 flex items-baseline justify-between gap-3 border-l-[3px] pl-[13px] ${
+                className={`-ml-4 flex items-center justify-between gap-3 border-l-[3px] pl-[13px] ${
                   won ? "border-gold" : "border-transparent"
                 }`}
               >
                 <span
-                  className={`font-display flex min-w-0 items-center gap-1.5 text-xl leading-tight font-bold uppercase ${
+                  className={`font-display flex min-w-0 items-center gap-2 text-xl leading-tight font-bold uppercase ${
                     won ? "text-gold" : lost ? "text-chalk-dim" : "text-chalk"
                   }`}
                 >
+                  <TeamBadge name={side.label} size={28} />
                   <span
                     className={
                       highlighted ? "decoration-gold underline decoration-2 underline-offset-4" : undefined

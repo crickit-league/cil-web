@@ -1,6 +1,6 @@
 # Crick-It Inter League
 
-Metro Atlanta's weekend cricket league. Registration, fixtures, scorecards, and a multi-season
+Atlanta's weekend cricket league. Registration, fixtures, scorecards, and a multi-season
 archive going back to 2013.
 
 - Read [`CLAUDE.md`](./CLAUDE.md) first for working conventions and confirmed league facts.
