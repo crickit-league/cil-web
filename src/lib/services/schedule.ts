@@ -5,6 +5,7 @@ import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
 import { compareMatchWhen } from "@/lib/time";
+import { pickMatchday, type Matchday } from "@/lib/matchday";
 
 export class MatchNotFoundError extends Error {
   constructor() {
@@ -231,6 +232,24 @@ export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
     selectedTeamId: teamFilter ?? null,
     matches: matches.map(toScheduleMatch).sort(compareMatchWhen),
   };
+}
+
+export type HomeMatchday = Matchday<ScheduleMatch> & { entryOpen: boolean };
+
+/**
+ * The home page's last-weekend results and this-weekend fixtures (see
+ * pickMatchday). Never throws: the home page must render even if the DB is
+ * unreachable, so a failure is logged and comes back as null.
+ */
+export async function getHomeMatchday(now = new Date()): Promise<HomeMatchday | null> {
+  try {
+    const { series, matches } = await getPublicFixtures();
+    if (!series) return null;
+    return { ...pickMatchday(matches, now), entryOpen: !series.umpireEntryLocked };
+  } catch (error) {
+    console.error("Failed to load the home page matchday:", error);
+    return null;
+  }
 }
 
 /** One fixture for its public page (the umpire form), or null. */
