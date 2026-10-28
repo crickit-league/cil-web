@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { CrestBadge } from "./crest-badge";
+import { signOut, useSession } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
-import { UserMenu } from "./user-menu";
 
 // Hash links scroll to a home-page section; plain paths are their own pages.
 // The league pages keep their /league/... URLs (the points-table work builds
@@ -19,8 +19,20 @@ const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
+// Sign in / Sign out sits at the end of the menu as an outlined pill, apart from the page links.
+const authPill =
+  "font-display border-line text-chalk hover:border-clay hover:text-clay rounded-full border px-4 py-2 text-lg leading-none font-bold tracking-wide whitespace-nowrap uppercase transition-colors";
+
 export function SiteHeader() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const signedIn = Boolean(session?.user);
+  const isAdmin = Boolean(
+    session?.user?.roles?.includes("ADMIN") || session?.user?.roles?.includes("SUPER_ADMIN"),
+  );
+  // Admins get a Control Panel option after the public pages; Sign in / Sign out is the last item.
+  const links = isAdmin ? [...NAV, { href: "/admin", label: "Control Panel" }] : NAV;
+  const who = session?.user?.name || session?.user?.email || "";
   const onHome = pathname === "/";
   // Phone menu. Remembering the page it was opened on makes it close by itself
   // when you navigate, with no effect needed.
@@ -65,7 +77,7 @@ export function SiteHeader() {
 
         {/* Desktop: inline nav, the current page as a filled pill. Phones use the menu below. */}
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
-          {NAV.map((item) => {
+          {links.map((item) => {
             const current = isCurrent(item.href);
             return (
               <Link
@@ -81,11 +93,28 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          {status === "loading" ? null : signedIn ? (
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              title={who ? `Signed in as ${who}` : undefined}
+              className={`${authPill} ml-2 cursor-pointer`}
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              aria-current={pathname.startsWith("/login") ? "page" : undefined}
+              className={`${authPill} ml-2`}
+            >
+              Sign in
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <UserMenu />
           <button
             type="button"
             onClick={() => setOpenOn(menuOpen ? null : pathname)}
@@ -106,7 +135,7 @@ export function SiteHeader() {
       {menuOpen ? (
         <nav id="mobile-nav" aria-label="Main" className="border-line border-t md:hidden">
           <ul className="mx-auto flex max-w-[1180px] flex-col px-5 py-2 sm:px-8">
-            {NAV.map((item) => (
+            {links.map((item) => (
               <li key={item.href}>
                 <Link
                   href={sectionHref(item.href)}
@@ -123,6 +152,34 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            {status === "loading" ? null : (
+              <li className="border-line mt-1 border-t pt-2">
+                {signedIn ? (
+                  <>
+                    {who ? (
+                      <p className="font-data text-chalk-faint truncate px-3 pb-1 text-[0.68rem] tracking-[0.08em] uppercase">
+                        Signed in as {who}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="font-display text-chalk hover:bg-pitch-deep my-1 block w-full cursor-pointer rounded-lg px-3 py-2.5 text-left text-xl font-bold tracking-wide uppercase transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setOpenOn(null)}
+                    className="font-display text-chalk hover:bg-pitch-deep my-1 block rounded-lg px-3 py-2.5 text-xl font-bold tracking-wide uppercase transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                )}
+              </li>
+            )}
           </ul>
         </nav>
       ) : null}
