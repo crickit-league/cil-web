@@ -1,16 +1,52 @@
 import Link from "next/link";
-import type { PublishedPointsGroup } from "@/lib/services/points-table";
+import type { SnapshotGroup } from "@/lib/services/points-table";
 import { formatNrr } from "@/components/points-table/points-table-group";
+import { FORM_LENGTH, type FormResult } from "@/lib/form";
 import { formatMatchDay } from "@/lib/time";
 
 // The top of each group of the uploaded CricClubs points table, as a short
-// list (rank, team and record, points and NRR) that fits a phone and the home
-// page's sidebar alike. The full table is on /league/points-table.
+// list (rank, team and form guide, points and NRR) that fits a phone and the
+// home page's sidebar alike. The full table is on /league/points-table.
+
+const FORM_STYLE: Record<FormResult, { className: string; label: string }> = {
+  W: { className: "bg-win text-pitch-deep", label: "Won" },
+  L: { className: "bg-loss text-pitch-deep", label: "Lost" },
+  T: { className: "bg-chalk-faint text-pitch-deep", label: "Tied" },
+  N: { className: "bg-chalk-faint text-pitch-deep", label: "No result" },
+};
+
+/** Last results, oldest first, padded with empty squares to a fixed width so every row lines up. */
+function FormGuide({ form }: { form: FormResult[] }) {
+  const empty = Math.max(0, FORM_LENGTH - form.length);
+  return (
+    <span
+      className="flex gap-[3px]"
+      aria-label={`Last ${form.length} results: ${form.map((r) => FORM_STYLE[r].label).join(", ") || "none yet"}`}
+    >
+      {form.map((r, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className={`font-data grid h-4 w-4 place-items-center rounded-[4px] text-[0.58rem] font-semibold ${FORM_STYLE[r].className}`}
+        >
+          {r === "N" ? "–" : r}
+        </span>
+      ))}
+      {Array.from({ length: empty }, (_, i) => (
+        <span
+          key={`empty-${i}`}
+          aria-hidden="true"
+          className="border-line h-4 w-4 rounded-[4px] border border-dashed"
+        />
+      ))}
+    </span>
+  );
+}
 
 export function PointsSnapshot({
   snapshot,
 }: {
-  snapshot: { uploadedAt: Date; groups: PublishedPointsGroup[] } | null;
+  snapshot: { uploadedAt: Date; groups: SnapshotGroup[] } | null;
 }) {
   return (
     <section aria-labelledby="home-points" className="flex flex-col gap-3">
@@ -29,21 +65,25 @@ export function PointsSnapshot({
       {snapshot ? (
         <>
           {snapshot.groups.map((group) => (
-            <div key={group.name} className="flex flex-col">
-              <h3 className="font-data text-chalk-dim border-line border-b pb-1.5 text-[0.68rem] tracking-[0.12em] uppercase">
+            <div
+              key={group.name}
+              className="bg-dugout border-line flex flex-col rounded-xl border px-3.5 pt-2.5 pb-1"
+            >
+              <h3 className="font-data text-chalk-dim border-line border-b pb-2 text-[0.68rem] tracking-[0.12em] uppercase">
                 {group.name}
               </h3>
               <ol>
                 {group.rows.map((row) => (
                   <li
                     key={row.position}
-                    className="border-line grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-3 border-b py-2"
+                    className="border-line grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-3 border-b py-2 last:border-b-0"
                   >
                     <span className="font-data text-chalk-faint text-right text-xs">{row.position}</span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold">{row.teamName}</span>
-                      <span className="font-data text-chalk-faint text-[0.68rem]">
-                        P{row.played} &middot; W{row.won} &middot; L{row.lost}
+                    <span className="flex min-w-0 flex-col gap-1">
+                      <span className="truncate font-semibold">{row.teamName}</span>
+                      <span className="flex items-center gap-2">
+                        <FormGuide form={row.form} />
+                        <span className="font-data text-chalk-faint text-[0.66rem]">P{row.played}</span>
                       </span>
                     </span>
                     <span className="text-right">
@@ -64,7 +104,7 @@ export function PointsSnapshot({
           </p>
         </>
       ) : (
-        <p className="border-line bg-dugout text-chalk-dim border p-4 text-sm">
+        <p className="border-line bg-dugout text-chalk-dim rounded-xl border p-4 text-sm">
           The committee posts the table from CricClubs once league matches are under way.
         </p>
       )}

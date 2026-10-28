@@ -5,6 +5,7 @@ import { recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
 import { loadSeriesTeams, saveTeamNameAlias } from "@/lib/services/teams";
 import { resolveTeamNames } from "@/lib/teams/names";
+import { formByTeam, type FormResult } from "@/lib/form";
 import {
   parsePointsTable,
   PointsTableFileError,
@@ -226,6 +227,8 @@ export async function discardPointsTableImport(user: SessionUser, runId: string)
 export type PublishedPointsRow = {
   position: number;
   teamName: string;
+  /** The linked team (published tables only; null on ones published before rows were linked). */
+  teamEntryId?: string | null;
   played: number;
   won: number;
   lost: number;
@@ -272,6 +275,7 @@ export async function getPublishedPointsTable() {
       position: row.position,
       // The team's current name; the file's spelling only for tables published before rows were linked.
       teamName: row.teamEntry?.displayName ?? row.teamName,
+      teamEntryId: row.teamEntryId,
       played: row.played,
       won: row.won,
       lost: row.lost,
@@ -292,17 +296,47 @@ export async function getPublishedPointsTable() {
   };
 }
 
+export type SnapshotGroup = { name: string; rows: (PublishedPointsRow & { form: FormResult[] })[] };
+
 /**
- * The top of each group for the home page, or null when nothing is published.
- * Never throws, like the rest of the home page's data: a failure is logged.
+ * The top of each group for the home page, each team with its form guide
+ * (last results, from the imported matches — CricClubs' table has no form
+ * column), or null when nothing is published. Never throws, like the rest of
+ * the home page's data: a failure is logged.
  */
-export async function getPointsTableSnapshot(rowsPerGroup: number) {
+export async function getPointsTableSnapshot(
+  rowsPerGroup: number,
+): Promise<{ uploadedAt: Date; groups: SnapshotGroup[] } | null> {
   try {
-    const table = await getPublishedPointsTable();
-    if (!table) return null;
+    const [table, { series }] = await Promise.all([getPublishedPointsTable(), findCurrentSeries()]);
+    if (!table || !series) return null;
+
+    const groups = table.groups.map((g) => ({ name: g.name, rows: g.rows.slice(0, rowsPerGroup) }));
+    const teamIds = groups.flatMap((g) => g.rows.flatMap((r) => (r.teamEntryId ? [r.teamEntryId] : [])));
+    const matches = await prisma.match.findMany({
+      where: {
+        seriesId: series.id,
+        stage: "LEAGUE",
+        status: { in: ["COMPLETED", "ABANDONED"] },
+        OR: [{ teamOneId: { in: teamIds } }, { teamTwoId: { in: teamIds } }],
+      },
+      select: {
+        startsAt: true,
+        status: true,
+        resultType: true,
+        teamOneId: true,
+        teamTwoId: true,
+        winnerId: true,
+      },
+    });
+    const form = formByTeam(matches, teamIds);
+
     return {
       uploadedAt: table.uploadedAt,
-      groups: table.groups.map((g) => ({ name: g.name, rows: g.rows.slice(0, rowsPerGroup) })),
+      groups: groups.map((g) => ({
+        name: g.name,
+        rows: g.rows.map((r) => ({ ...r, form: (r.teamEntryId && form.get(r.teamEntryId)) || [] })),
+      })),
     };
   } catch (error) {
     console.error("Failed to load the points table snapshot:", error);

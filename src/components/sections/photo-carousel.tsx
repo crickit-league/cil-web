@@ -54,7 +54,7 @@ function Arrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === "prev" ? "Previous photo" : "Next photo"}
-      className="border-line bg-pitch/70 text-chalk hover:border-clay hover:text-clay-bright flex h-12 w-12 items-center justify-center border backdrop-blur transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--clay) disabled:opacity-40"
+      className="border-line bg-pitch/70 text-chalk hover:border-clay hover:text-clay-bright flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--clay) disabled:opacity-40"
     >
       <svg
         viewBox="0 0 24 24"
@@ -194,7 +194,7 @@ export function PhotoCarousel({
       id="photos"
       aria-roledescription="carousel"
       aria-label="Match photos"
-      className={`relative overflow-hidden pt-14 sm:pt-20 ${roomBelow ? "pb-28 sm:pb-32" : "pb-14 sm:pb-20"}`}
+      className={`relative overflow-hidden pt-8 sm:pt-10 ${roomBelow ? "pb-24 sm:pb-28" : "pb-10 sm:pb-14"}`}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();
@@ -204,12 +204,12 @@ export function PhotoCarousel({
 
       <div className="relative mx-auto max-w-[1180px] px-5 sm:px-8">
         <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">This week</span>
-        <h2 className="font-display mt-2 text-4xl leading-[0.95] font-extrabold uppercase sm:text-6xl">
+        <h2 className="font-display mt-1.5 text-3xl leading-[0.95] font-extrabold uppercase sm:text-4xl">
           From the <span className="text-clay">boundary</span>
         </h2>
       </div>
 
-      <div className="relative mt-8 sm:mt-10">
+      <div className="relative mt-5 sm:mt-6">
         <div
           ref={viewportRef}
           onPointerEnter={(event) => event.pointerType === "mouse" && setHovering(true)}
@@ -226,10 +226,10 @@ export function PhotoCarousel({
                   aria-roledescription="slide"
                   aria-label={`${index + 1} of ${count}`}
                   aria-hidden={slideIndex === selectedSlide ? undefined : true}
-                  className="photo-slide min-w-0 flex-[0_0_88%] px-2 sm:flex-[0_0_72%] sm:px-4 lg:flex-[0_0_62%]"
+                  className="photo-slide min-w-0 flex-[0_0_86%] px-1.5 sm:flex-[0_0_min(62%,560px)] sm:px-2.5 lg:flex-[0_0_min(46%,640px)]"
                 >
                   <figure
-                    className={`photo-slide-inner border-line bg-pitch-deep relative overflow-hidden border sm:aspect-[16/10] ${
+                    className={`photo-slide-inner border-line bg-pitch-deep relative overflow-hidden rounded-2xl border sm:aspect-[16/10] ${
                       hasPortrait ? "aspect-square" : "aspect-[4/3]"
                     }`}
                   >
@@ -269,7 +269,8 @@ export function PhotoCarousel({
         </div>
 
         {multiple ? (
-          <div className="pointer-events-none absolute inset-y-0 right-0 left-0 hidden items-center justify-between px-4 sm:flex lg:px-[calc(50%-640px)]">
+          // Arrows sit on the active slide's edges, so they track its width at each breakpoint.
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-[min(62%,560px)] -translate-x-1/2 items-center justify-between px-1 sm:flex lg:w-[min(46%,640px)]">
             <span className="pointer-events-auto">
               <Arrow direction="prev" onClick={() => api?.scrollPrev()} disabled={!api} />
             </span>
@@ -281,7 +282,7 @@ export function PhotoCarousel({
       </div>
 
       {multiple ? (
-        <div className="relative mx-auto mt-6 flex max-w-[1180px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 sm:px-8">
+        <div className="relative mx-auto mt-4 flex max-w-[1180px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 sm:px-8">
           <div
             className="flex w-full flex-wrap items-center gap-0 sm:w-auto sm:gap-1"
             role="tablist"
@@ -326,7 +327,7 @@ export function PhotoCarousel({
                 onClick={() => setWantsAutoplay((value) => !value)}
                 aria-pressed={wantsAutoplay}
                 aria-label={wantsAutoplay ? "Pause slideshow" : "Play slideshow"}
-                className="font-data border-line text-chalk-dim hover:border-clay hover:text-chalk border px-3 py-2 text-[0.68rem] tracking-[0.1em] uppercase transition-colors"
+                className="font-data border-line text-chalk-dim hover:border-clay hover:text-chalk rounded-full border px-3.5 py-2 text-[0.68rem] tracking-[0.1em] uppercase transition-colors"
               >
                 {wantsAutoplay ? "Pause" : "Play"}
               </button>
