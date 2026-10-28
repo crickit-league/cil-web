@@ -234,7 +234,7 @@ export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
   };
 }
 
-export type HomeMatchday = Matchday<ScheduleMatch> & { entryOpen: boolean };
+export type HomeMatchday = Matchday<ScheduleMatch>;
 
 /**
  * The home page's last-weekend results and this-weekend fixtures (see
@@ -245,7 +245,7 @@ export async function getHomeMatchday(now = new Date()): Promise<HomeMatchday | 
   try {
     const { series, matches } = await getPublicFixtures();
     if (!series) return null;
-    return { ...pickMatchday(matches, now), entryOpen: !series.umpireEntryLocked };
+    return pickMatchday(matches, now);
   } catch (error) {
     console.error("Failed to load the home page matchday:", error);
     return null;

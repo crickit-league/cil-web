@@ -19,7 +19,7 @@ export function MatchdayTabs({ tabs, initial }: { tabs: MatchdayTab[]; initial: 
         <div
           role="tablist"
           aria-label="Results or fixtures"
-          className="border-line bg-pitch-deep flex w-full max-w-md border p-1"
+          className="border-line bg-pitch-deep flex w-full max-w-md rounded-full border p-1"
         >
           {tabs.map((tab) => (
             <button
@@ -30,7 +30,7 @@ export function MatchdayTabs({ tabs, initial }: { tabs: MatchdayTab[]; initial: 
               aria-selected={tab.key === active}
               aria-controls={`${baseId}-panel-${tab.key}`}
               onClick={() => setActive(tab.key)}
-              className={`font-data flex flex-1 flex-col items-center gap-0.5 px-3 py-2 text-[0.68rem] tracking-[0.08em] uppercase transition-colors ${
+              className={`font-data flex flex-1 flex-col items-center gap-0.5 rounded-full px-3 py-1.5 text-[0.68rem] tracking-[0.08em] uppercase transition-colors ${
                 tab.key === active ? "bg-chalk text-pitch" : "text-chalk-dim hover:text-chalk"
               }`}
             >

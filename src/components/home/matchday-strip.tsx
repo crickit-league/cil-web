@@ -19,7 +19,7 @@ function StripCard({ m }: { m: ScheduleMatch }) {
     <li className="w-[13.5rem] shrink-0 snap-start sm:w-60">
       <Link
         href={`/league/fixtures/${m.id}`}
-        className="bg-dugout border-line hover:border-clay-bright flex h-full flex-col gap-1 border px-3.5 py-3 shadow-[0_14px_30px_rgb(0_0_0/0.45)] transition-colors"
+        className="bg-dugout border-line hover:border-clay-bright flex h-full flex-col gap-1 rounded-xl border px-3.5 py-3 shadow-[0_14px_30px_rgb(0_0_0/0.45)] transition-colors"
       >
         <span className="font-data text-chalk-faint text-[0.62rem] tracking-[0.1em] uppercase">
           {formatCardStampOrTbd(m)}
@@ -73,7 +73,7 @@ export function MatchdayStrip({
         aria-label={kind === "results" ? "Last weekend's scores" : "This weekend's fixtures"}
         className="mx-auto flex max-w-[1180px] snap-x snap-proximity [scrollbar-width:none] gap-3 overflow-x-auto px-5 pb-2 sm:px-8 [&::-webkit-scrollbar]:hidden"
       >
-        <li className="bg-clay text-pitch-deep flex w-36 shrink-0 snap-start flex-col justify-center gap-1 px-3.5 py-3">
+        <li className="bg-clay text-pitch-deep flex w-36 shrink-0 snap-start flex-col justify-center gap-1 rounded-xl px-3.5 py-3">
           <span className="font-display text-2xl leading-none font-extrabold uppercase">
             {kind === "results" ? "Last weekend" : "This weekend"}
           </span>

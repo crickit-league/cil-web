@@ -16,6 +16,9 @@
   --clay: #d6a544;
   --clay-bright: #f0c66c;
   --gold: #f5cf62;
+  /* Form guide only (W / L squares on the points table). */
+  --win: #5cc48b;
+  --loss: #e3735f;
 }
 
 @theme inline {
@@ -30,6 +33,8 @@
   --color-clay: var(--clay);
   --color-clay-bright: var(--clay-bright);
   --color-gold: var(--gold);
+  --color-win: var(--win);
+  --color-loss: var(--loss);
 
   --font-display: var(--font-big-shoulders), "Arial Narrow", "Helvetica Neue", sans-serif;
   --font-body: var(--font-libre-franklin), -apple-system, "Segoe UI", Roboto, sans-serif;
