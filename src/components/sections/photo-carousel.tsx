@@ -1,23 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import ClassNames from "embla-carousel-class-names";
 import type { EmblaCarouselType } from "embla-carousel";
+import { SectionTitle } from "@/components/section-title";
 import type { PublicPhoto } from "@/lib/services/photos";
 
 /** How long each photo stays before autoplay advances, ms. */
 const AUTOPLAY_MS = 3500;
 /** Embla slide animation length (its unit is roughly frames; lower is snappier). */
 const SLIDE_DURATION = 20;
-/**
- * Embla can only loop when there are enough slides to fill the viewport on both
- * sides of the active one; with fewer it silently stops looping, and the last→first
- * move becomes a rewind. Below this many slides, the list is repeated to reach it.
- */
-const MIN_LOOP_SLIDES = 4;
 
 // Subscribes React to an Embla event set, so selected-slide / play-state are
 // read through useSyncExternalStore rather than mirrored into state by effects.
@@ -86,14 +81,13 @@ export function PhotoCarousel({
 }) {
   const count = photos.length;
   const multiple = count > 1;
-  // Every slide shares one frame so the carousel's height never jumps. Portrait
-  // photos are shown whole (object-contain over a blurred copy, below); when
-  // there are any, phones get a square frame so they aren't tiny in a 4:3 one.
-  const hasPortrait = photos.some((photo) => photo.height > photo.width);
-  const slides = useMemo(() => {
-    const copies = multiple ? Math.ceil(MIN_LOOP_SLIDES / count) : 1;
-    return Array.from({ length: copies }, (_, copy) => photos.map((photo) => ({ photo, copy }))).flat();
-  }, [photos, count, multiple]);
+  // Man of the Match photos are portrait, so each slide is a tall card. Wide screens show
+  // three (previous, current, next) lined up with the page; a phone shows the current one
+  // with its neighbours peeking. Every card shares one frame so the height never jumps.
+  // Embla loops by moving the same cards round, never by drawing a photo twice, but it
+  // needs a few more cards than are on screen to do that. With fewer, it is a still row.
+  const canLoop = count >= 4;
+  const slides = photos;
 
   // The Autoplay plugin is only a timer here: it never starts itself (playOnInit
   // off) and can't restart itself. stopOnInteraction MUST stay true: with it off
@@ -108,8 +102,7 @@ export function PhotoCarousel({
   // stopOnInteraction/stopOnMouseEnter can't tell a hover pause from an explicit one.
   const plugins = useMemo(
     () => [
-      ClassNames(),
-      ...(multiple
+      ...(canLoop
         ? [
             Autoplay({
               delay: AUTOPLAY_MS,
@@ -121,16 +114,27 @@ export function PhotoCarousel({
           ]
         : []),
     ],
-    [multiple],
+    [canLoop],
   );
 
   const [viewportRef, api] = useEmblaCarousel(
-    { loop: multiple, align: "center", skipSnaps: false, duration: SLIDE_DURATION, watchDrag: multiple },
+    {
+      loop: canLoop,
+      align: canLoop ? "center" : "start",
+      containScroll: canLoop ? false : "trimSnaps",
+      skipSnaps: false,
+      duration: SLIDE_DURATION,
+      watchDrag: multiple,
+    },
     plugins,
   );
 
   const selectedSlide = useEmblaValue(api, ["select", "reInit"], () => api?.selectedScrollSnap() ?? 0, 0);
-  const selected = selectedSlide % count;
+  const selected = selectedSlide;
+  // Several cards share a screen, so there are fewer stops than photos.
+  const snapCount = useEmblaValue(api, ["reInit"], () => api?.scrollSnapList().length ?? count, count);
+  const canPrev = useEmblaValue(api, ["select", "reInit"], () => api?.canScrollPrev() ?? false, false);
+  const canNext = useEmblaValue(api, ["select", "reInit"], () => api?.canScrollNext() ?? false, false);
 
   // Starts paused for people who've asked the OS for reduced motion; they can
   // still press Play, since that's an explicit choice.
@@ -187,14 +191,14 @@ export function PhotoCarousel({
     };
   }, [api]);
 
-  const current = photos[selected];
+  const current = photos[Math.min(selected, photos.length - 1)];
 
   return (
     <section
       id="photos"
       aria-roledescription="carousel"
       aria-label="Match photos"
-      className={`relative overflow-hidden pt-8 sm:pt-10 ${roomBelow ? "pb-24 sm:pb-28" : "pb-10 sm:pb-14"}`}
+      className={`relative overflow-hidden pt-8 sm:pt-12 ${roomBelow ? "pb-24 sm:pb-28" : "pb-8 sm:pb-12"}`}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();
@@ -203,94 +207,102 @@ export function PhotoCarousel({
       <div className="photo-stage pointer-events-none absolute inset-0" aria-hidden="true" />
 
       <div className="relative mx-auto max-w-[1180px] px-5 sm:px-8">
-        <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">This week</span>
-        <h2 className="font-display mt-1.5 text-3xl leading-[0.95] font-extrabold uppercase sm:text-4xl">
-          From the <span className="text-clay">boundary</span>
-        </h2>
+        <SectionTitle
+          eyebrow="Man of the match"
+          title={
+            <>
+              Players of the <span className="text-clay">week</span>
+            </>
+          }
+        />
       </div>
 
-      <div className="relative mt-5 sm:mt-6">
+      <div className="relative mx-auto mt-5 max-w-[1180px] sm:mt-6 sm:px-8">
         <div
           ref={viewportRef}
           onPointerEnter={(event) => event.pointerType === "mouse" && setHovering(true)}
           onPointerLeave={() => setHovering(false)}
-          className="photo-viewport overflow-hidden"
+          className={`photo-viewport overflow-hidden ${multiple ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
-          <div className="flex touch-pan-y">
-            {slides.map(({ photo, copy }, slideIndex) => {
-              const index = slideIndex % count;
+          <div className="flex touch-pan-y sm:justify-center">
+            {slides.map((photo, slideIndex) => {
+              const index = slideIndex;
               return (
                 <div
-                  key={`${photo.id}-${copy}`}
+                  key={photo.id}
                   role="group"
                   aria-roledescription="slide"
                   aria-label={`${index + 1} of ${count}`}
                   aria-hidden={slideIndex === selectedSlide ? undefined : true}
-                  className="photo-slide min-w-0 flex-[0_0_86%] px-1.5 sm:flex-[0_0_min(62%,560px)] sm:px-2.5 lg:flex-[0_0_min(46%,640px)]"
+                  className="photo-slide min-w-0 flex-[0_0_58%] px-1.5 sm:flex-[0_0_33.3333%] sm:px-2.5"
                 >
-                  <figure
-                    className={`photo-slide-inner border-line bg-pitch-deep relative overflow-hidden rounded-2xl border sm:aspect-[16/10] ${
-                      hasPortrait ? "aspect-square" : "aspect-[4/3]"
-                    }`}
+                  <Link
+                    href={`/mom/${photo.id}`}
+                    draggable={false}
+                    tabIndex={slideIndex === selectedSlide ? 0 : -1}
+                    aria-label={`${photo.title ?? photo.caption ?? "Match photo"}: view details`}
+                    className="focus-visible:outline-clay block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
-                    {/* Blurred copy of the photo fills the frame so portrait shots
-                      aren't letterboxed against a flat colour. */}
-                    <Image
-                      src={photo.url}
-                      alt=""
-                      fill
-                      sizes="48px"
-                      quality={30}
-                      className="scale-125 object-cover opacity-60 blur-2xl"
-                      aria-hidden="true"
-                    />
-                    <Image
-                      src={photo.url}
-                      alt={photo.caption ?? "CIL Winter League match photo"}
-                      fill
-                      sizes="(min-width: 1024px) 730px, (min-width: 640px) 72vw, 88vw"
-                      priority={slideIndex === 0}
-                      quality={78}
-                      draggable={false}
-                      className="object-contain"
-                    />
-                    {photo.caption ? (
-                      <figcaption className="from-pitch-deep/95 via-pitch-deep/60 absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent px-4 pt-14 pb-4 sm:px-6 sm:pb-5">
-                        <p className="font-display max-w-[40ch] text-xl leading-tight font-bold text-balance sm:text-2xl">
-                          {photo.caption}
+                    <figure
+                      className={`border-line bg-pitch-deep relative aspect-[3/4] overflow-hidden rounded-xl border transition duration-300 motion-reduce:transition-none sm:aspect-[4/5] ${
+                        canLoop && slideIndex !== selectedSlide ? "scale-[0.94] opacity-60" : ""
+                      }`}
+                    >
+                      <Image
+                        src={photo.url}
+                        alt={photo.title ?? photo.caption ?? "CIL Winter League match photo"}
+                        fill
+                        sizes="(min-width: 1180px) 372px, (min-width: 640px) 31vw, 58vw"
+                        priority={false}
+                        quality={78}
+                        draggable={false}
+                        className="object-cover object-top"
+                      />
+                      <figcaption className="on-brand from-pitch-deep/95 via-pitch-deep/70 absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t to-transparent px-3 pt-16 pb-3 sm:px-4 sm:pt-20 sm:pb-4">
+                        <p className="font-display line-clamp-3 text-base leading-tight font-bold text-balance sm:text-xl lg:text-2xl">
+                          {photo.title ?? photo.caption ?? "Match photo"}
                         </p>
+                        {photo.body ? (
+                          <p className="text-chalk-dim line-clamp-2 hidden text-sm sm:block">{photo.body}</p>
+                        ) : null}
+                        <span className="font-data text-clay-bright mt-0.5 text-[0.62rem] tracking-[0.1em] uppercase sm:mt-1 sm:text-[0.68rem]">
+                          {photo.match ? (
+                            <span className="hidden sm:inline">{`${photo.match.label} \u00b7 `}</span>
+                          ) : null}
+                          View details &rarr;
+                        </span>
                       </figcaption>
-                    ) : null}
-                  </figure>
+                    </figure>
+                  </Link>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {multiple ? (
-          // Arrows sit on the active slide's edges, so they track its width at each breakpoint.
-          <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-[min(62%,560px)] -translate-x-1/2 items-center justify-between px-1 sm:flex lg:w-[min(46%,640px)]">
+        {canLoop ? (
+          // Arrows sit over the outer cards' edges.
+          <div className="pointer-events-none absolute inset-y-0 right-0 left-0 hidden items-center justify-between px-1 sm:flex lg:px-2">
             <span className="pointer-events-auto">
-              <Arrow direction="prev" onClick={() => api?.scrollPrev()} disabled={!api} />
+              <Arrow direction="prev" onClick={() => api?.scrollPrev()} disabled={!canPrev} />
             </span>
             <span className="pointer-events-auto">
-              <Arrow direction="next" onClick={() => api?.scrollNext()} disabled={!api} />
+              <Arrow direction="next" onClick={() => api?.scrollNext()} disabled={!canNext} />
             </span>
           </div>
         ) : null}
       </div>
 
-      {multiple ? (
-        <div className="relative mx-auto mt-4 flex max-w-[1180px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 sm:px-8">
+      {canLoop ? (
+        <div className="relative mx-auto mt-4 hidden max-w-[1180px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 sm:flex sm:px-8">
           <div
             className="flex w-full flex-wrap items-center gap-0 sm:w-auto sm:gap-1"
             role="tablist"
             aria-label="Choose photo"
           >
-            {photos.map((photo, index) => (
+            {Array.from({ length: snapCount }, (_, index) => (
               <button
-                key={photo.id}
+                key={index}
                 type="button"
                 role="tab"
                 aria-selected={index === selected}
@@ -319,7 +331,7 @@ export function PhotoCarousel({
 
           <div className="flex w-full items-center justify-end gap-4 sm:w-auto">
             <span className="font-data text-chalk-dim text-xs tracking-[0.1em]" aria-hidden="true">
-              {String(selected + 1).padStart(2, "0")} / {String(photos.length).padStart(2, "0")}
+              {String(selected + 1).padStart(2, "0")} / {String(snapCount).padStart(2, "0")}
             </span>
             {hasAutoplay ? (
               <button
@@ -333,8 +345,8 @@ export function PhotoCarousel({
               </button>
             ) : null}
             <div className="order-first mr-auto flex gap-2 sm:hidden">
-              <Arrow direction="prev" onClick={() => api?.scrollPrev()} disabled={!api} />
-              <Arrow direction="next" onClick={() => api?.scrollNext()} disabled={!api} />
+              <Arrow direction="prev" onClick={() => api?.scrollPrev()} disabled={!canPrev} />
+              <Arrow direction="next" onClick={() => api?.scrollNext()} disabled={!canNext} />
             </div>
           </div>
         </div>
@@ -343,7 +355,7 @@ export function PhotoCarousel({
       {/* Announce the slide change to screen readers, but only while the
           carousel isn't auto-advancing (polite spam otherwise). */}
       <p className="sr-only" aria-live={api && running ? "off" : "polite"}>
-        {current?.caption ?? `Photo ${selected + 1} of ${photos.length}`}
+        {current?.title ?? current?.caption ?? `Photo ${selected + 1} of ${photos.length}`}
       </p>
     </section>
   );

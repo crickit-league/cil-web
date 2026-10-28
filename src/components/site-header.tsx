@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { CrestBadge } from "./crest-badge";
 import { UserMenu } from "./user-menu";
 
@@ -14,7 +15,7 @@ const NAV = [
   { href: "/league/fixtures", label: "Fixtures" },
   { href: "/league/points-table", label: "Points Table" },
   { href: "/rules", label: "Rules" },
-  { href: "#contact", label: "Contact" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function SiteHeader() {
@@ -24,7 +25,6 @@ export function SiteHeader() {
   // when you navigate, with no effect needed.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const menuOpen = openOn === pathname;
-  const closeMenu = () => setOpenOn(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -40,7 +40,7 @@ export function SiteHeader() {
   const isCurrent = (href: string) =>
     href === "/" ? onHome : !href.startsWith("#") && (pathname === href || pathname.startsWith(`${href}/`));
 
-  const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleHomeClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (onHome) {
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -48,38 +48,41 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="border-line bg-pitch/90 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-x-6 px-5 py-3 sm:px-8 md:py-4">
-        <Link href="/" onClick={handleLogoClick} className="flex items-center gap-3">
-          <CrestBadge size={42} />
-          <span className="flex flex-col gap-0.5">
+    <header className="bg-dugout/95 border-line sticky top-0 z-40 border-b backdrop-blur">
+      <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-x-6 px-5 py-2.5 sm:px-8">
+        <Link href="/" onClick={handleHomeClick} className="flex items-center gap-3">
+          <CrestBadge size={44} />
+          <span className="flex flex-col gap-1">
             <span className="font-display text-xl leading-none font-extrabold tracking-wide uppercase">
               Crick-It
             </span>
-            <span className="font-data text-chalk-dim text-[0.62rem] tracking-[0.16em] uppercase">
+            <span className="font-data text-chalk-dim text-[0.62rem] leading-none tracking-[0.16em] uppercase">
               Inter League
             </span>
           </span>
         </Link>
 
-        {/* Desktop: inline nav. Phones use the hamburger menu below instead. */}
-        <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={sectionHref(item.href)}
-              onClick={item.href === "/" ? handleLogoClick : undefined}
-              aria-current={isCurrent(item.href) ? "page" : undefined}
-              className={`font-data hover:border-clay hover:text-chalk border-b text-xs tracking-[0.1em] whitespace-nowrap uppercase transition-colors ${
-                isCurrent(item.href) ? "border-clay text-chalk" : "text-chalk-dim border-transparent"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        {/* Desktop: inline nav, the current page as a filled pill. Phones use the menu below. */}
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          {NAV.map((item) => {
+            const current = isCurrent(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={sectionHref(item.href)}
+                onClick={item.href === "/" ? handleHomeClick : undefined}
+                aria-current={current ? "page" : undefined}
+                className={`font-display rounded-full px-4 py-2 text-lg leading-none font-bold tracking-wide whitespace-nowrap uppercase transition-colors ${
+                  current ? "bg-clay text-on-accent" : "text-chalk-dim hover:bg-pitch-deep hover:text-chalk"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <UserMenu />
           <button
             type="button"
@@ -87,40 +90,31 @@ export function SiteHeader() {
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="border-line text-chalk-dim hover:border-chalk-dim hover:text-chalk flex h-9 w-9 items-center justify-center border transition-colors md:hidden"
+            className="border-line text-chalk-dim hover:border-clay hover:text-clay flex h-9 w-9 items-center justify-center rounded-full border transition-colors md:hidden"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-            </svg>
+            {menuOpen ? (
+              <X className="size-5" aria-hidden="true" />
+            ) : (
+              <Menu className="size-5" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
 
       {menuOpen ? (
-        <nav id="mobile-nav" aria-label="Main" className="border-line bg-pitch border-t md:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-line border-t md:hidden">
           <ul className="mx-auto flex max-w-[1180px] flex-col px-5 py-2 sm:px-8">
             {NAV.map((item) => (
-              <li key={item.href} className="border-line border-b last:border-b-0">
+              <li key={item.href}>
                 <Link
                   href={sectionHref(item.href)}
                   onClick={(event) => {
-                    if (item.href === "/") handleLogoClick(event);
-                    closeMenu();
+                    if (item.href === "/") handleHomeClick(event);
+                    setOpenOn(null);
                   }}
                   aria-current={isCurrent(item.href) ? "page" : undefined}
-                  className={`font-data block border-l-2 py-3.5 pl-3 text-sm tracking-[0.1em] uppercase transition-colors ${
-                    isCurrent(item.href)
-                      ? "border-clay text-chalk"
-                      : "text-chalk-dim hover:text-chalk border-transparent"
+                  className={`font-display my-1 block rounded-lg px-3 py-2.5 text-xl font-bold tracking-wide uppercase transition-colors ${
+                    isCurrent(item.href) ? "bg-clay text-on-accent" : "text-chalk hover:bg-pitch-deep"
                   }`}
                 >
                   {item.label}

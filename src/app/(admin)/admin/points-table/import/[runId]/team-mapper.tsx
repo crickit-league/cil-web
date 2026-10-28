@@ -6,7 +6,7 @@ import { mapPointsTableTeamAction } from "../../actions";
 const fieldClass =
   "border-line bg-pitch text-chalk focus:border-clay w-full min-w-0 border px-2 py-1.5 text-sm outline-none disabled:opacity-60";
 const secondaryButton =
-  "font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "font-data border-clay text-clay hover:bg-clay hover:text-on-accent inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 function MapRow({
   runId,

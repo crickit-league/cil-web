@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { deletePhoto, updatePhotoCaption, uploadPhoto } from "@/lib/services/photos";
+import { deletePhoto, updatePhotoDetails, uploadPhoto } from "@/lib/services/photos";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
 export type PhotoActionResult = { ok: true } | { ok: false; message: string };
@@ -38,6 +38,9 @@ export async function uploadPhotoAction(formData: FormData): Promise<PhotoAction
       width: formData.get("width"),
       height: formData.get("height"),
       caption: formData.get("caption"),
+      title: formData.get("title"),
+      body: formData.get("body"),
+      matchId: formData.get("matchId"),
     });
   } catch (error) {
     return failure(error, "Upload failed.");
@@ -47,14 +50,19 @@ export async function uploadPhotoAction(formData: FormData): Promise<PhotoAction
   return { ok: true };
 }
 
-export async function updateCaptionAction(id: string, caption: string): Promise<PhotoActionResult> {
+export type PhotoDetails = { caption: string; title: string; body: string; matchId: string };
+
+export async function updatePhotoDetailsAction(
+  id: string,
+  details: PhotoDetails,
+): Promise<PhotoActionResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, message: "You must be signed in." };
 
   try {
-    await updatePhotoCaption(session.user, { id, caption });
+    await updatePhotoDetails(session.user, { id, ...details });
   } catch (error) {
-    return failure(error, "Couldn't save the caption.");
+    return failure(error, "Couldn't save the photo.");
   }
 
   refresh();

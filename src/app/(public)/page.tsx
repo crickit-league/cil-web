@@ -1,8 +1,7 @@
-import { SeamDivider } from "@/components/seam-divider";
 import { Sponsors } from "@/components/sections/sponsors";
-import { Contact } from "@/components/sections/contact";
 import { PhotoCarousel } from "@/components/sections/photo-carousel";
-import { MatchdayStrip } from "@/components/home/matchday-strip";
+import { ScoreTicker } from "@/components/home/score-ticker";
+import { HomeHero } from "@/components/home/home-hero";
 import { MatchdaySection } from "@/components/home/matchday-section";
 import { listHomePhotos } from "@/lib/services/photos";
 import { getHomeMatchday } from "@/lib/services/schedule";
@@ -31,13 +30,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <h1 className="sr-only">CIL Winter League</h1>
-      {hasPhotos ? <PhotoCarousel photos={photos} roomBelow={stripMatches.length > 0} /> : null}
-      <MatchdayStrip matches={stripMatches} kind={lead} overlap={hasPhotos} />
+      <ScoreTicker matches={stripMatches} kind={lead} />
+      <HomeHero />
+      {hasPhotos ? <PhotoCarousel photos={photos} /> : null}
       <MatchdaySection matchday={matchday} points={points} />
-      <SeamDivider />
       <Sponsors />
-      <Contact />
     </>
   );
 }

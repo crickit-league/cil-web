@@ -18,7 +18,7 @@ export default function RulesPage() {
           <a
             href={RULE_BOOK_PDF.href}
             download={RULE_BOOK_PDF.fileName}
-            className="bg-clay text-chalk hover:bg-clay-bright font-data inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5 text-xs tracking-[0.1em] uppercase transition-colors"
+            className="bg-clay text-on-accent hover:bg-clay-bright font-data inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5 text-xs tracking-[0.1em] uppercase transition-colors"
           >
             <svg
               aria-hidden="true"

@@ -139,7 +139,7 @@ export function RuleBook() {
                 onClick={() => setCategory(c.id)}
                 className={`font-data shrink-0 border px-3.5 py-2 text-[0.8rem] tracking-[0.04em] whitespace-nowrap transition-colors ${
                   active
-                    ? "bg-clay border-clay text-chalk"
+                    ? "bg-clay border-clay text-on-accent"
                     : "border-line text-chalk-dim hover:border-clay hover:text-chalk"
                 }`}
               >
