@@ -71,6 +71,20 @@ function Arrow({
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// Tailwind's `sm` breakpoint: three cards on screen from here up, one below.
+const WIDE_QUERY = "(min-width: 640px)";
+const subscribeWide = (notify: () => void) => {
+  const query = window.matchMedia(WIDE_QUERY);
+  query.addEventListener("change", notify);
+  return () => query.removeEventListener("change", notify);
+};
+const useIsWide = () =>
+  useSyncExternalStore(
+    subscribeWide,
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => true,
+  );
+
 export function PhotoCarousel({
   photos,
   roomBelow = false,
@@ -85,8 +99,12 @@ export function PhotoCarousel({
   // three (previous, current, next) lined up with the page; a phone shows the current one
   // with its neighbours peeking. Every card shares one frame so the height never jumps.
   // Embla loops by moving the same cards round, never by drawing a photo twice, but it
-  // needs a few more cards than are on screen to do that. With fewer, it is a still row.
+  // needs a few more cards than are on screen to do that. With fewer, wide screens get a
+  // still row; a phone (one card on screen) still slides through them, and autoplay rewinds
+  // from the last photo to the first instead of looping.
   const canLoop = count >= 4;
+  const isWide = useIsWide();
+  const slideshow = canLoop || (!isWide && multiple);
   const slides = photos;
 
   // The Autoplay plugin is only a timer here: it never starts itself (playOnInit
@@ -102,7 +120,7 @@ export function PhotoCarousel({
   // stopOnInteraction/stopOnMouseEnter can't tell a hover pause from an explicit one.
   const plugins = useMemo(
     () => [
-      ...(canLoop
+      ...(slideshow
         ? [
             Autoplay({
               delay: AUTOPLAY_MS,
@@ -114,13 +132,13 @@ export function PhotoCarousel({
           ]
         : []),
     ],
-    [canLoop],
+    [slideshow],
   );
 
   const [viewportRef, api] = useEmblaCarousel(
     {
       loop: canLoop,
-      align: canLoop ? "center" : "start",
+      align: slideshow ? "center" : "start",
       containScroll: canLoop ? false : "trimSnaps",
       skipSnaps: false,
       duration: SLIDE_DURATION,
@@ -245,7 +263,7 @@ export function PhotoCarousel({
                   >
                     <figure
                       className={`border-line bg-pitch-deep relative aspect-[3/4] overflow-hidden rounded-xl border transition duration-300 motion-reduce:transition-none sm:aspect-[4/5] ${
-                        canLoop && slideIndex !== selectedSlide ? "scale-[0.94] opacity-60" : ""
+                        slideshow && slideIndex !== selectedSlide ? "scale-[0.94] opacity-60" : ""
                       }`}
                     >
                       <Image
