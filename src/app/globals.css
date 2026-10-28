@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
-/* One light theme: a cool white page, white cards, near-black ink, and the logo's
-   royal blue as the single action colour, with green for winners. Token names
-   (pitch / dugout / clay ...) are kept from the earlier themes so component
-   classes didn't need touching. clay = the action colour (buttons, borders,
-   links), clay-bright = its hover / accent-text shade, gold = winners and
-   qualifiers, on-accent = text that sits on clay / win / loss.
+/* Light theme (default) and a night theme. Light: a cool white page, white cards,
+   near-black ink and the logo's royal blue as the one action colour, green for
+   winners. Night: near-black slate with slightly lighter cards, soft white ink and
+   a brighter blue (so it reads on dark), mint for winners. Token names (pitch /
+   dugout / clay ...) are kept from the earlier themes so component classes didn't
+   need touching. clay = the action colour (buttons, borders, links), clay-bright =
+   its hover / accent-text shade, gold = winners and qualifiers, on-accent = text
+   that sits on clay / win / loss.
+
+   Which theme: the visitor's choice (header toggle, stored in localStorage and
+   applied before first paint by a script in the root layout), else their system
+   setting.
 
    `.on-brand` re-points the tokens inside an element for surfaces that sit on the
-   vivid brand blue or on photos (the home hero, photo captions): white text,
-   a white action colour and translucent cards. */
+   vivid brand blue or on photos (the home hero, photo captions): white text, a
+   white action colour and translucent cards. It looks the same in both themes. */
 :root {
   color-scheme: light;
   --pitch: #f6f8fc;
@@ -33,6 +39,52 @@
   --loss: #dc2626;
   --stage-glow-1: rgb(19 86 217 / 10%);
   --stage-glow-2: rgb(8 145 178 / 10%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --pitch: #0d1117;
+    --pitch-deep: #090c11;
+    --dugout: #151b24;
+    --dugout-2: #1d2531;
+    --line: #28313f;
+    --chalk: #f1f5fb;
+    --chalk-dim: #a4afc3;
+    --chalk-faint: #8390a8;
+    --clay: #5b9bff;
+    --clay-bright: #8dbaff;
+    --gold: #4ade80;
+    --action: #22b8d9;
+    --action-bright: #67d4ee;
+    --on-accent: #06101f;
+    --win: #34d399;
+    --loss: #f87171;
+    --stage-glow-1: rgb(91 155 255 / 12%);
+    --stage-glow-2: rgb(34 184 217 / 10%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pitch: #0d1117;
+  --pitch-deep: #090c11;
+  --dugout: #151b24;
+  --dugout-2: #1d2531;
+  --line: #28313f;
+  --chalk: #f1f5fb;
+  --chalk-dim: #a4afc3;
+  --chalk-faint: #8390a8;
+  --clay: #5b9bff;
+  --clay-bright: #8dbaff;
+  --gold: #4ade80;
+  --action: #22b8d9;
+  --action-bright: #67d4ee;
+  --on-accent: #06101f;
+  --win: #34d399;
+  --loss: #f87171;
+  --stage-glow-1: rgb(91 155 255 / 12%);
+  --stage-glow-2: rgb(34 184 217 / 10%);
 }
 
 .on-brand {

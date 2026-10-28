@@ -63,7 +63,7 @@ export function ScoreTicker({ matches, kind }: { matches: ScheduleMatch[]; kind:
   return (
     <div className="border-line bg-dugout border-b">
       <div className="mx-auto flex max-w-[1180px] items-stretch">
-        <span className="bg-clay text-on-accent font-display z-10 flex shrink-0 items-center px-4 text-lg leading-none font-extrabold tracking-wide uppercase [clip-path:polygon(0_0,100%_0,calc(100%-12px)_100%,0_100%)] sm:px-6 sm:pr-8">
+        <span className="bg-clay text-on-accent font-display z-10 flex shrink-0 items-center px-4 text-lg leading-none font-extrabold tracking-wide uppercase sm:px-6">
           {kind === "results" ? "Scores" : "Fixtures"}
         </span>
         <ul

@@ -9,7 +9,7 @@ import { titleSponsor } from "@/lib/sponsors";
 // sponsor beside the headline.
 
 const buttonBase =
-  "font-display inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base leading-none font-extrabold tracking-wide uppercase transition-colors sm:text-lg";
+  "font-display inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-base leading-none font-extrabold tracking-wide uppercase transition-colors sm:text-lg";
 
 export function HomeHero() {
   return (
@@ -29,7 +29,7 @@ export function HomeHero() {
           <div className="flex flex-wrap gap-2.5 sm:gap-3">
             <Link
               href="/league/fixtures"
-              className={`${buttonBase} bg-clay text-on-accent hover:bg-clay-bright pr-8 [clip-path:polygon(0_0,100%_0,calc(100%-10px)_100%,0_100%)]`}
+              className={`${buttonBase} bg-clay text-on-accent hover:bg-clay-bright`}
             >
               Fixtures
               <ArrowRight className="size-4 sm:size-5" aria-hidden="true" />

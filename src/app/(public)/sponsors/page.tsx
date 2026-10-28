@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const buttonBase =
-  "font-display inline-flex items-center justify-center gap-2 px-5 py-3 text-lg leading-none font-extrabold tracking-wide uppercase transition-colors";
+  "font-display inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-lg leading-none font-extrabold tracking-wide uppercase transition-colors";
 
 function TitleSponsor() {
   if (!titleSponsor?.details) return null;
@@ -34,7 +34,7 @@ function TitleSponsor() {
 
       <div className="flex flex-col gap-5 p-6 sm:p-8">
         <div>
-          <span className="bg-clay text-on-accent font-display inline-block px-3 py-1 text-sm leading-none font-extrabold tracking-wide uppercase [clip-path:polygon(0_0,100%_0,calc(100%-8px)_100%,0_100%)] sm:pr-5">
+          <span className="bg-clay text-on-accent font-display inline-block rounded px-3 py-1 text-sm leading-none font-extrabold tracking-wide uppercase">
             Title sponsor
           </span>
           <h2
