@@ -9,7 +9,8 @@ import type { ScheduleMatch } from "@/lib/services/schedule";
 // in lib/services/photos.ts (listHomePhotos and getMomEntry). The team and player
 // names are invented, and the linked fixture pages don't exist.
 //
-// It is ON by default, including in production builds. Set MOCK_MOM=0 to see real data.
+// It is ON by default, including in production builds, but the carousel only uses
+// it while no real photos have been uploaded. Set MOCK_MOM=0 to turn it off entirely.
 export function mockMomEnabled(): boolean {
   return process.env.MOCK_MOM !== "0";
 }

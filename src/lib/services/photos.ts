@@ -61,7 +61,13 @@ function describeMatch(m: MatchRow) {
  * even if the DB is unreachable or R2 isn't configured (no public URL → empty).
  */
 export async function listHomePhotos(): Promise<PublicPhoto[]> {
-  if (mockMomEnabled()) return mockMomPhotos(); // TEMPORARY, see lib/mock-mom.ts
+  const photos = await listUploadedPhotos();
+  // TEMPORARY, see lib/mock-mom.ts: mock photos fill the carousel only until real ones are uploaded.
+  if (photos.length === 0 && mockMomEnabled()) return mockMomPhotos();
+  return photos;
+}
+
+async function listUploadedPhotos(): Promise<PublicPhoto[]> {
   try {
     const rows = await prisma.photo.findMany({
       orderBy: { createdAt: "desc" },
