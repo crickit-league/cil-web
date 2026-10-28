@@ -4,7 +4,7 @@ import { formatMatchDay } from "@/lib/time";
 import { PointsTableGroup } from "@/components/points-table/points-table-group";
 
 export const metadata: Metadata = {
-  title: "Points Table · CIL Winter League",
+  title: "Points Table",
   description: "League-stage standings by group for this season's CIL Winter Championship.",
 };
 

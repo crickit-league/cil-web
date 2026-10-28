@@ -3,7 +3,7 @@ import { RuleBook } from "@/components/rules/rule-book";
 import { RULE_BOOK_PDF } from "@/lib/rules/winter-2026-27";
 
 export const metadata: Metadata = {
-  title: "Rules · CIL Winter League",
+  title: "Rules",
   description: "Search the CIL Winter 2026–27 rule book, or download it as a PDF.",
 };
 

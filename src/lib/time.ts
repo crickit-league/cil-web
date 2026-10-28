@@ -94,6 +94,19 @@ export function formatMatchWhen({ startsAt, timeTbd }: MatchWhen): string {
   return `${formatMatchDay(startsAt)}, ${timeTbd ? "time TBD" : formatMatchTime(startsAt)}`;
 }
 
+/**
+ * Oldest first, the order of the Fixtures page's two sections: earliest day first,
+ * a day's time-TBD matches after its timed ones, and matches with no date yet last.
+ */
+export function compareMatchOldestFirst(a: MatchWhen, b: MatchWhen): number {
+  if (!a.startsAt || !b.startsAt) return (a.startsAt ? 0 : 1) - (b.startsAt ? 0 : 1);
+  const dayA = matchDayKey(a.startsAt);
+  const dayB = matchDayKey(b.startsAt);
+  if (dayA !== dayB) return dayA < dayB ? -1 : 1;
+  if (a.timeTbd !== b.timeTbd) return a.timeTbd ? 1 : -1;
+  return a.startsAt.getTime() - b.startsAt.getTime();
+}
+
 /** A fixtures-list day heading: "Sat, Oct 25", or "Date TBD" for matches not scheduled yet. */
 export function formatFixtureDay(startsAt: Date | null): string {
   return startsAt ? formatMatchDay(startsAt) : "Date TBD";

@@ -216,7 +216,7 @@ export function PhotoCarousel({
       id="photos"
       aria-roledescription="carousel"
       aria-label="Match photos"
-      className={`relative overflow-hidden pt-8 sm:pt-12 ${roomBelow ? "pb-24 sm:pb-28" : "pb-8 sm:pb-12"}`}
+      className={`relative overflow-hidden pt-5 sm:pt-6 ${roomBelow ? "pb-24 sm:pb-28" : "pb-5 sm:pb-6"}`}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();

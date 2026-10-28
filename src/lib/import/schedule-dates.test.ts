@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { normalizeMatchRow, type RawMatchRecord } from "./cricclubs-matches";
 import { planScheduleImport, type ExistingMatch, type PlanTeam } from "./schedule-plan";
-import { compareMatchWhen, formatCardStampOrTbd, leagueWallTimeToUtc } from "@/lib/time";
+import {
+  compareMatchOldestFirst,
+  compareMatchWhen,
+  formatCardStampOrTbd,
+  leagueWallTimeToUtc,
+} from "@/lib/time";
 
 // Fixtures published before the committee has fixed their date and/or time.
 
@@ -180,5 +185,19 @@ describe("fixture ordering and stamps", () => {
     expect(formatCardStampOrTbd({ startsAt: null, timeTbd: false })).toBe("DATE TBD");
     expect(formatCardStampOrTbd({ startsAt: midnight, timeTbd: true })).toBe("SAT 24 OCT · TIME TBD");
     expect(formatCardStampOrTbd({ startsAt: nineAm, timeTbd: false })).toBe("SAT 24 OCT · 09:00");
+  });
+
+  it("orders oldest first for the fixtures page: earliest day first, time TBD after timed, no date last", () => {
+    const at = (date: string, time: string) => ({
+      startsAt: leagueWallTimeToUtc(date, time),
+      timeTbd: false,
+    });
+    const early = at("2026-10-24", "09:00");
+    const earlyLate = at("2026-10-24", "15:00");
+    const later = at("2026-11-01", "09:00");
+    const laterTbd = { startsAt: leagueWallTimeToUtc("2026-11-01", "00:00"), timeTbd: true };
+    const undated = { startsAt: null, timeTbd: false };
+    const shuffled = [undated, later, laterTbd, earlyLate, early];
+    expect([...shuffled].sort(compareMatchOldestFirst)).toEqual([early, earlyLate, later, laterTbd, undated]);
   });
 });

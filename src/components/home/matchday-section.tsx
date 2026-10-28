@@ -59,7 +59,7 @@ export function MatchdaySection({
   }
 
   return (
-    <section aria-labelledby="home-matchday" className="py-12 sm:py-16">
+    <section aria-labelledby="home-matchday" className="py-6 sm:py-8">
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-6">
           <SectionTitle eyebrow="Winter Championship" title="Matchday" id="home-matchday" />

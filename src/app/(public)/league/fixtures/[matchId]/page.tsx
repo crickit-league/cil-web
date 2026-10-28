@@ -8,7 +8,7 @@ import { FixtureCard } from "../fixture-card";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Fixture umpires · CIL Winter League",
+  title: "Fixture umpires",
   // Edit pages for every fixture add nothing to search results.
   robots: { index: false },
 };

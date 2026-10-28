@@ -6,16 +6,16 @@ import { titleSponsor } from "@/lib/sponsors";
 // The banner under the score ticker: the league's name, a line about the league,
 // two calls to action and the title sponsor, kept short so a phone still gets to
 // the photos and scores quickly. Wider screens put the buttons and sponsor beside
-// the headline. The faded crest watermark and the drifting lattice with its light
-// glint (hero-crest-watermark / hero-texture in globals.css) are kept from the
-// original home page at the committee's request (2026-10-28).
+// the headline. The drifting lattice with its light glint (hero-texture in globals.css) is kept
+// from the original home page at the committee's request (2026-10-28); the crest
+// watermark lives in the app-wide background (app-bg) instead.
 
 const buttonBase =
   "font-display inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-base leading-none font-extrabold tracking-wide uppercase transition-colors sm:text-lg";
 
 export function HomeHero() {
   return (
-    <section className="hero-bg hero-texture hero-crest-watermark on-brand relative isolate overflow-hidden">
+    <section className="hero-bg hero-texture on-brand relative isolate overflow-hidden">
       <div className="relative z-10 mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-9">
         <div>
           <span className="font-data text-clay inline-flex items-center gap-2 text-[0.68rem] tracking-[0.2em] uppercase sm:text-xs">

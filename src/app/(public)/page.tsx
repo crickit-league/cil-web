@@ -18,6 +18,13 @@ export const revalidate = 60;
 
 const POINTS_ROWS_PER_GROUP = 4;
 
+// Each section below the banner sits in its own card, so the page background shows between them.
+function HomeCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border-line bg-dugout/90 overflow-hidden rounded-2xl border shadow-sm">{children}</div>
+  );
+}
+
 export default async function HomePage() {
   const [photos, matchday, points] = await Promise.all([
     listHomePhotos(),
@@ -32,9 +39,19 @@ export default async function HomePage() {
     <>
       <ScoreTicker matches={stripMatches} kind={lead} />
       <HomeHero />
-      {hasPhotos ? <PhotoCarousel photos={photos} /> : null}
-      <MatchdaySection matchday={matchday} points={points} />
-      <Sponsors />
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-5 px-3 py-6 sm:gap-6 sm:px-8 sm:py-8">
+        {hasPhotos ? (
+          <HomeCard>
+            <PhotoCarousel photos={photos} />
+          </HomeCard>
+        ) : null}
+        <HomeCard>
+          <MatchdaySection matchday={matchday} points={points} />
+        </HomeCard>
+        <HomeCard>
+          <Sponsors />
+        </HomeCard>
+      </div>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CrestBadge } from "./crest-badge";
+import { PresentedBy } from "./presented-by";
 
 const LINKS = [
   { href: "/league/fixtures", label: "Fixtures & results" },
@@ -31,6 +32,7 @@ export function SiteFooter() {
             Atlanta&rsquo;s weekend cricket league: F15, hard tennis ball, on the city&rsquo;s baseball fields
             since 2013.
           </p>
+          <PresentedBy size="lg" stacked className="mt-1" />
         </div>
 
         <nav aria-label="Footer" className="flex flex-col gap-3">
