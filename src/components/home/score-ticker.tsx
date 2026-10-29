@@ -17,7 +17,7 @@ function TickerCard({ m }: { m: ScheduleMatch }) {
   const played = m.fixtureStatus === "COMPLETED";
 
   return (
-    <li className="w-[15rem] shrink-0 snap-start sm:w-[17rem]">
+    <li className="w-[13.5rem] shrink-0 snap-start sm:w-[17rem]">
       <Link
         href={`/league/fixtures/${m.id}`}
         className="border-line bg-dugout hover:border-clay flex h-full flex-col gap-1.5 border-l-2 px-3.5 py-2.5 transition-colors"
@@ -63,7 +63,7 @@ export function ScoreTicker({ matches, kind }: { matches: ScheduleMatch[]; kind:
   return (
     <div className="border-line bg-dugout border-b">
       <div className="mx-auto flex max-w-[1180px] items-stretch">
-        <span className="bg-clay text-on-accent font-display z-10 flex shrink-0 items-center px-4 text-lg leading-none font-extrabold tracking-wide uppercase sm:px-6">
+        <span className="bg-clay text-on-accent font-display z-10 flex shrink-0 rotate-180 items-center px-2 text-base leading-none font-extrabold tracking-wide uppercase [writing-mode:vertical-rl] sm:rotate-0 sm:px-6 sm:text-lg sm:[writing-mode:horizontal-tb]">
           {kind === "results" ? "Scores" : "Fixtures"}
         </span>
         <ul

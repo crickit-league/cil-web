@@ -82,9 +82,6 @@ export function RuleBook() {
     }, 80);
   }, []);
 
-  const allOpen = sections.length > 0 && sections.every((s) => searching || open.has(s.id));
-  const toggleAll = () => setOpen(allOpen ? new Set() : new Set(sections.map((s) => s.id)));
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
@@ -167,27 +164,13 @@ export function RuleBook() {
           </div>
         ) : null}
 
-        <div className="text-chalk-dim flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs">
-          <p role="status" aria-live="polite">
-            {searching
-              ? matches === 0
-                ? "No matches."
-                : `${matches} ${matches === 1 ? "match" : "matches"} in ${sections.length} ${sections.length === 1 ? "section" : "sections"}`
-              : `${sections.length} sections`}
+        {searching ? (
+          <p role="status" aria-live="polite" className="text-chalk-dim text-xs">
+            {matches === 0
+              ? "No matches."
+              : `${matches} ${matches === 1 ? "match" : "matches"} in ${sections.length} ${sections.length === 1 ? "section" : "sections"}`}
           </p>
-          <p className="flex items-center gap-3">
-            {!searching && sections.length > 0 ? (
-              <button type="button" onClick={toggleAll} className="hover:text-chalk underline">
-                {allOpen ? "Collapse all" : "Expand all"}
-              </button>
-            ) : null}
-            <span className="hidden sm:inline">
-              Tap a card to expand · press{" "}
-              <kbd className="border-line bg-dugout-2 font-data rounded-sm border px-1.5 py-px">/</kbd> to
-              search
-            </span>
-          </p>
-        </div>
+        ) : null}
       </div>
 
       {sections.length === 0 ? (

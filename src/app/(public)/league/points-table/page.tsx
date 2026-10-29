@@ -4,7 +4,7 @@ import { formatMatchDay } from "@/lib/time";
 import { PointsTableGroup } from "@/components/points-table/points-table-group";
 
 export const metadata: Metadata = {
-  title: "Points Table · CIL Winter League",
+  title: "Points Table",
   description: "League-stage standings by group for this season's CIL Winter Championship.",
 };
 
@@ -33,8 +33,8 @@ export default async function PointsTablePage() {
           Last updated {formatMatchDay(table.uploadedAt)}
         </p>
         <p>
-          League stage, from CricClubs. The top {PLAYOFF_PLACES_PER_GROUP} in each group{" "}
-          <span className="text-gold">(marked in gold)</span> go through to the playoffs.
+          League stage, from CricClubs. The top {PLAYOFF_PLACES_PER_GROUP} in each group go through to the
+          playoffs.
         </p>
       </div>
 

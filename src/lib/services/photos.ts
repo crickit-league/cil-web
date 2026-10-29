@@ -5,7 +5,6 @@ import { diffRecords, recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
 import { deleteObject, publicUrl, putObject } from "@/lib/storage/r2";
 import { matchLabel } from "@/lib/match-label";
-import { mockMomEnabled, mockMomEntry, mockMomPhotos } from "@/lib/mock-mom";
 import { getPublicFixture, type ScheduleMatch } from "@/lib/services/schedule";
 import { formatMatchDay } from "@/lib/time";
 import { photoUpdateSchema, photoUploadSchema } from "@/lib/validation/photo";
@@ -61,13 +60,6 @@ function describeMatch(m: MatchRow) {
  * even if the DB is unreachable or R2 isn't configured (no public URL → empty).
  */
 export async function listHomePhotos(): Promise<PublicPhoto[]> {
-  const photos = await listUploadedPhotos();
-  // TEMPORARY, see lib/mock-mom.ts: mock photos fill the carousel only until real ones are uploaded.
-  if (photos.length === 0 && mockMomEnabled()) return mockMomPhotos();
-  return photos;
-}
-
-async function listUploadedPhotos(): Promise<PublicPhoto[]> {
   try {
     const rows = await prisma.photo.findMany({
       orderBy: { createdAt: "desc" },
@@ -117,10 +109,6 @@ export type MomEntry = {
 
 /** A photo and its linked match for the detail page, or null. Never throws. */
 export async function getMomEntry(id: string): Promise<MomEntry | null> {
-  if (mockMomEnabled()) {
-    const mock = mockMomEntry(id); // TEMPORARY, see lib/mock-mom.ts
-    if (mock) return mock;
-  }
   try {
     const row = await prisma.photo.findUnique({ where: { id } });
     if (!row) return null;
@@ -163,6 +151,25 @@ export async function listPhotosForAdmin(user: SessionUser) {
     height: row.height,
     createdAt: row.createdAt,
     uploadedBy: row.uploadedBy?.name || row.uploadedBy?.email || null,
+  }));
+}
+
+/** The photos linked to one match, newest first, for that match's edit page. */
+export async function listPhotosForMatch(user: SessionUser, matchId: string) {
+  if (!can(user, "manage-photos")) throw new ForbiddenError();
+
+  const rows = await prisma.photo.findMany({
+    where: { matchId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, storageKey: true, caption: true, title: true, width: true, height: true },
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    url: publicUrl(row.storageKey),
+    caption: row.caption,
+    title: row.title,
+    width: row.width,
+    height: row.height,
   }));
 }
 

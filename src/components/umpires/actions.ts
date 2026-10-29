@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { auth } from "@/lib/auth";
-import { revealUmpirePhones, saveUmpireNomination } from "@/lib/services/umpire-nominations";
+import { revealUmpirePhones, saveUmpireAssignment } from "@/lib/services/umpire-assignments";
 
 // Used by both the public fixture page (no sign-in) and the admin schedule.
 // The service decides what the caller may do: admins can edit while public
@@ -42,7 +42,7 @@ export async function saveUmpiresAction(
     umpireTwoPhone: field("umpireTwoPhone"),
   };
   try {
-    await saveUmpireNomination(session?.user ?? null, matchId, values);
+    await saveUmpireAssignment(session?.user ?? null, matchId, values);
   } catch (error) {
     return { status: "error", message: errorMessage(error), values, at: Date.now() };
   }

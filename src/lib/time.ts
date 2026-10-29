@@ -66,19 +66,28 @@ export function matchDayKey(instant: Date): string {
   return instant.toLocaleDateString("en-CA", { timeZone: LEAGUE_TIME_ZONE });
 }
 
-/** "SAT 24 OCT · 09:00" in the league zone — the fixture card's header strip. */
-export function formatCardStamp(instant: Date): string {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
+/** An instant as the league-zone values an <input type="date"> and <input type="time"> take: "2026-10-31", "15:00". */
+export function leagueDateTimeInputs(instant: Date): { date: string; time: string } {
+  const parts = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
     timeZone: LEAGUE_TIME_ZONE,
   }).formatToParts(instant);
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "00";
+  return { date: matchDayKey(instant), time: `${get("hour")}:${get("minute")}` };
+}
+
+/** "SAT 24 OCT · 9:00 AM" in the league zone — the fixture card's header strip. */
+export function formatCardStamp(instant: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: LEAGUE_TIME_ZONE,
+  }).formatToParts(instant);
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("weekday")} ${get("day")} ${get("month")} · ${get("hour")}:${get("minute")}`.toUpperCase();
+  return `${get("weekday")} ${get("day")} ${get("month")} · ${formatMatchTime(instant)}`.toUpperCase();
 }
 
 /**
@@ -92,6 +101,19 @@ export type MatchWhen = { startsAt: Date | null; timeTbd: boolean };
 export function formatMatchWhen({ startsAt, timeTbd }: MatchWhen): string {
   if (!startsAt) return "Date TBD";
   return `${formatMatchDay(startsAt)}, ${timeTbd ? "time TBD" : formatMatchTime(startsAt)}`;
+}
+
+/**
+ * Oldest first, the order of the Fixtures page's two sections: earliest day first,
+ * a day's time-TBD matches after its timed ones, and matches with no date yet last.
+ */
+export function compareMatchOldestFirst(a: MatchWhen, b: MatchWhen): number {
+  if (!a.startsAt || !b.startsAt) return (a.startsAt ? 0 : 1) - (b.startsAt ? 0 : 1);
+  const dayA = matchDayKey(a.startsAt);
+  const dayB = matchDayKey(b.startsAt);
+  if (dayA !== dayB) return dayA < dayB ? -1 : 1;
+  if (a.timeTbd !== b.timeTbd) return a.timeTbd ? 1 : -1;
+  return a.startsAt.getTime() - b.startsAt.getTime();
 }
 
 /** A fixtures-list day heading: "Sat, Oct 25", or "Date TBD" for matches not scheduled yet. */
@@ -116,7 +138,7 @@ export function formatMatchTimeOrTbd({ startsAt, timeTbd }: MatchWhen): string {
   return timeTbd ? "Time TBD" : formatMatchTime(startsAt);
 }
 
-/** "SAT 24 OCT · 09:00", "SAT 24 OCT · TIME TBD" or "DATE TBD" — the fixture card's header strip. */
+/** "SAT 24 OCT · 9:00 AM", "SAT 24 OCT · TIME TBD" or "DATE TBD" — the fixture card's header strip. */
 export function formatCardStampOrTbd({ startsAt, timeTbd }: MatchWhen): string {
   if (!startsAt) return "DATE TBD";
   const stamp = formatCardStamp(startsAt);
