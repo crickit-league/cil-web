@@ -117,6 +117,7 @@ function fixture(seed: Seed, now: Date): ScheduleMatch {
     teamOneSource: null,
     teamTwoSource: null,
     umpiringTeam: null,
+    fieldId: null,
     ground: seed.ground,
     umpires: { one: null, two: null, hasPhones: false },
   };

@@ -2,13 +2,14 @@ import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/sc
 import { teamLabel } from "@/lib/team-label";
 import { TeamBadge } from "@/components/team-badge";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
-import { formatCardStampOrTbd } from "@/lib/time";
+import { formatCardStampOrTbd, leagueDateTimeInputs } from "@/lib/time";
+import { EditMatchButton, type EditMatchOptions } from "./edit-match";
 import { FixtureFooter } from "./fixture-footer";
 
 // "Scoreboard rows" fixture card (design A, chosen 2026-10-16): a header strip
 // with date/time and status, one row per team with its score, the result and
 // ground, and a dashed footer for umpiring (fixture-footer.tsx). On the fixtures list the footer's
-// "Enter umpires →" expands the card in place (umpire-entry.tsx); the fixture
+// "Assign umpires →" expands the card in place (umpire-entry.tsx); the fixture
 // page (/league/fixtures/[matchId]) reuses the card as its header.
 
 export { teamLabel } from "@/lib/team-label";
@@ -52,7 +53,7 @@ function Icon({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 const TrophyIcon = () => (
-  <Icon className="text-gold">
+  <Icon className="text-clay">
     <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
     <path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 5M17 6h2.5a2.5 2.5 0 0 1-2.5 5" />
   </Icon>
@@ -81,22 +82,25 @@ function sides(m: ScheduleMatch): Side[] {
 export function FixtureCard({
   m,
   highlight,
-  entryOpen,
+  canEditUmpires,
+  editOptions = null,
   standalone = false,
 }: {
   m: ScheduleMatch;
   /** Team picked in the team filter; its name is underlined in gold. */
   highlight: string | null;
-  /** Public umpire entry is open for the series. */
-  entryOpen: boolean;
+  /** The viewer may edit umpires (can(user, "edit-umpires")), so they can be assigned inline. */
+  canEditUmpires: boolean;
+  /** Admins only: what the pencil's edit dialog offers. Null hides the pencil. */
+  editOptions?: EditMatchOptions | null;
   /** The fixture page's header: a <div>, and no inline entry (the page has its own form). */
   standalone?: boolean;
 }) {
   const completed = m.fixtureStatus === "COMPLETED";
   const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
-  // The public form only takes umpires for matches still to be played
-  // (enforced in saveUmpireNomination), so played ones get no entry.
-  const canEnter = entryOpen && !completed && !standalone;
+  // Assigning umpires is admin-only (enforced in saveUmpireAssignment). Played
+  // matches get no inline entry; admins fix those from the admin schedule.
+  const canEnter = canEditUmpires && !completed && !standalone;
   const Tag = standalone ? "div" : "li";
 
   return (
@@ -114,6 +118,24 @@ export function FixtureCard({
             </span>
           ) : null}
           <StatusBadge status={m.fixtureStatus} />
+          {editOptions ? (
+            <EditMatchButton
+              matchId={m.id}
+              title={`${teamLabel(m.teamOne, m.teamOneSource)} v ${teamLabel(m.teamTwo, m.teamTwoSource)}`}
+              options={editOptions}
+              initial={{
+                ...(m.startsAt
+                  ? {
+                      ...leagueDateTimeInputs(m.startsAt),
+                      time: m.timeTbd ? "" : leagueDateTimeInputs(m.startsAt).time,
+                    }
+                  : { date: "", time: "" }),
+                fieldId: m.fieldId,
+                umpiringTeamId: m.umpiringTeam?.id ?? null,
+                playingTeamIds: [m.teamOne?.id, m.teamTwo?.id].filter((id): id is string => Boolean(id)),
+              }}
+            />
+          ) : null}
         </span>
       </div>
 
@@ -128,12 +150,12 @@ export function FixtureCard({
               <li
                 key={side.id ?? `slot-${i}`}
                 className={`-ml-4 flex items-center justify-between gap-3 border-l-[3px] pl-[13px] ${
-                  won ? "border-gold" : "border-transparent"
+                  won ? "border-clay" : "border-transparent"
                 }`}
               >
                 <span
                   className={`font-display flex min-w-0 items-center gap-2 text-xl leading-tight font-bold uppercase ${
-                    won ? "text-gold" : lost ? "text-chalk-dim" : "text-chalk"
+                    won ? "text-clay" : lost ? "text-chalk-dim" : "text-chalk"
                   }`}
                 >
                   <TeamBadge name={side.label} size={28} />
@@ -169,7 +191,7 @@ export function FixtureCard({
         </ul>
 
         {m.result ? (
-          <p className={`text-sm ${m.result.kind === "win" ? "text-gold font-semibold" : "text-chalk-dim"}`}>
+          <p className={`text-sm ${m.result.kind === "win" ? "text-clay font-semibold" : "text-chalk-dim"}`}>
             {m.result.kind === "win" ? `${m.result.winner.name} ${m.result.text}` : m.result.text}
           </p>
         ) : null}

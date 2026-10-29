@@ -5,7 +5,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { MatchdaySection } from "@/components/home/matchday-section";
 import { listHomePhotos } from "@/lib/services/photos";
 import { getHomeMatchday } from "@/lib/services/schedule";
-import { getPointsTableSnapshot } from "@/lib/services/points-table";
+import { getPointsTableSnapshot, PLAYOFF_PLACES_PER_GROUP } from "@/lib/services/points-table";
 
 // In-season home page ("Matchday", chosen 2026-10-27): the photo carousel as
 // the hero, the weekend's scores in a strip over its bottom edge, then results
@@ -16,7 +16,8 @@ import { getPointsTableSnapshot } from "@/lib/services/points-table";
 // most once a minute (photo admin changes also revalidate this path on demand).
 export const revalidate = 60;
 
-const POINTS_ROWS_PER_GROUP = 4;
+// The six qualifying places of each group (the playoff cut).
+const POINTS_ROWS_PER_GROUP = PLAYOFF_PLACES_PER_GROUP;
 
 export default async function HomePage() {
   const [photos, matchday, points] = await Promise.all([

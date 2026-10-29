@@ -5,7 +5,7 @@ import { UmpireEntryPanel, UmpireEntryToggle } from "./umpire-entry";
 
 // The fixture card's dashed footer. Always three labelled lines — Umpiring,
 // Umpire 1, Umpire 2 — whether or not umpires are entered, so cards in a row
-// stay the same height. Actions sit on the right: enter/change umpires and a
+// stay the same height. Actions sit on the right: assign/change umpires and a
 // compact numbers toggle. Revealed numbers go next to each name.
 
 const label = "font-data text-chalk-faint text-[0.62rem] tracking-[0.12em] whitespace-nowrap uppercase";
@@ -25,13 +25,13 @@ export function FixtureFooter({
   umpiringTeam: string | null;
   umpiringHighlighted: boolean;
   umpires: { one: string | null; two: string | null; hasPhones: boolean };
-  /** Inline umpire entry is available (scheduled match, entry open, on the fixtures list). */
+  /** Admin viewer: inline umpire assignment is available (scheduled match, on the fixtures list). */
   canEnter: boolean;
 }) {
   const phones = useUmpirePhones(matchId);
   // Played matches show names only; the service refuses their numbers too.
   const showNumbersToggle = umpires.hasPhones && !completed;
-  const nominated = Boolean(umpires.one || umpires.two);
+  const assigned = Boolean(umpires.one || umpires.two);
 
   const slots = [
     { label: "Umpire 1", name: umpires.one, phone: phones.revealed?.umpireOne?.phone ?? null },
@@ -63,9 +63,9 @@ export function FixtureFooter({
                     ) : null}
                   </>
                 ) : (
-                  // A dash, not "Not nominated yet": the line must not wrap, so
-                  // every card's footer is three lines ("Enter umpires →" says the rest).
-                  <span className="text-chalk-faint" aria-label="Not nominated">
+                  // A dash, not "Not assigned yet": the line must not wrap, so
+                  // every card's footer is three lines ("Assign umpires →" says the rest).
+                  <span className="text-chalk-faint" aria-label="Not assigned">
                     —
                   </span>
                 )}
@@ -76,7 +76,7 @@ export function FixtureFooter({
 
         {canEnter || showNumbersToggle ? (
           <div className="flex shrink-0 flex-wrap items-start gap-x-5 gap-y-1 sm:flex-col sm:items-end">
-            {canEnter ? <UmpireEntryToggle matchId={matchId} nominated={nominated} /> : null}
+            {canEnter ? <UmpireEntryToggle matchId={matchId} assigned={assigned} /> : null}
             {showNumbersToggle ? (
               <button
                 type="button"

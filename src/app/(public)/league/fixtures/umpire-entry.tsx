@@ -3,11 +3,10 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { UmpireForm } from "@/components/umpires/umpire-form";
 
-// Inline umpire entry on the Fixtures list: "Enter umpires →" expands that
-// card with the umpire form, and only one card is open at a time. The form
-// and its server action are the shared ones (components/umpires); the
-// service still decides whether a save is allowed (entry locked, match
-// played).
+// Inline umpire assignment on the Fixtures list (admins only): "Assign umpires →"
+// expands that card with the umpire form, and only one card is open at a time.
+// The form and its server action are the shared ones (components/umpires); the
+// service still checks the admin role on every save.
 
 type Expansion = {
   openId: string | null;
@@ -48,8 +47,8 @@ export function FixtureExpansionProvider({ children }: { children: React.ReactNo
   return <ExpansionContext.Provider value={value}>{children}</ExpansionContext.Provider>;
 }
 
-/** The footer action: "Enter umpires →" / "Change umpires →", or a brief "Saved" after a save. */
-export function UmpireEntryToggle({ matchId, nominated }: { matchId: string; nominated: boolean }) {
+/** The footer action: "Assign umpires →" / "Change umpires →", or a brief "Saved" after a save. */
+export function UmpireEntryToggle({ matchId, assigned }: { matchId: string; assigned: boolean }) {
   const { openId, savedId, open, close } = useExpansion();
   const isOpen = openId === matchId;
 
@@ -62,7 +61,7 @@ export function UmpireEntryToggle({ matchId, nominated }: { matchId: string; nom
         onClick={() => (isOpen ? close() : open(matchId))}
         className="font-data text-clay-bright py-1 text-[0.68rem] tracking-[0.08em] whitespace-nowrap uppercase underline-offset-2 hover:underline"
       >
-        {isOpen ? "Close" : nominated ? "Change umpires →" : "Enter umpires →"}
+        {isOpen ? "Close" : assigned ? "Change umpires →" : "Assign umpires →"}
       </button>
       {savedId === matchId ? (
         <span role="status" className="font-data text-gold text-[0.68rem] tracking-[0.08em] uppercase">

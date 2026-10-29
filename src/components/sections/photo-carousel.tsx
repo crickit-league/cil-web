@@ -276,7 +276,7 @@ export function PhotoCarousel({
                         draggable={false}
                         className="object-cover object-top"
                       />
-                      <figcaption className="on-brand from-pitch-deep/95 via-pitch-deep/70 absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t to-transparent px-3 pt-16 pb-3 sm:px-4 sm:pt-20 sm:pb-4">
+                      <figcaption className="on-brand text-chalk from-pitch-deep/95 via-pitch-deep/70 absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t to-transparent px-3 pt-16 pb-3 sm:px-4 sm:pt-20 sm:pb-4">
                         <p className="font-display line-clamp-3 text-base leading-tight font-bold text-balance sm:text-xl lg:text-2xl">
                           {photo.title ?? photo.caption ?? "Match photo"}
                         </p>

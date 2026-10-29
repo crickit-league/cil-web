@@ -179,6 +179,6 @@ describe("fixture ordering and stamps", () => {
   it("stamps the card header", () => {
     expect(formatCardStampOrTbd({ startsAt: null, timeTbd: false })).toBe("DATE TBD");
     expect(formatCardStampOrTbd({ startsAt: midnight, timeTbd: true })).toBe("SAT 24 OCT · TIME TBD");
-    expect(formatCardStampOrTbd({ startsAt: nineAm, timeTbd: false })).toBe("SAT 24 OCT · 09:00");
+    expect(formatCardStampOrTbd({ startsAt: nineAm, timeTbd: false })).toBe("SAT 24 OCT · 9:00 AM");
   });
 });

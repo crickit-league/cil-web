@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublicFixture } from "@/lib/services/schedule";
+import { auth } from "@/lib/auth";
+import { can } from "@/lib/auth/permissions";
+import { getMatchEditOptions, getPublicFixture } from "@/lib/services/schedule";
 import { UmpireForm } from "@/components/umpires/umpire-form";
 import { FixtureCard } from "../fixture-card";
 
@@ -17,7 +19,11 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
   const { matchId } = await params;
   const fixture = await getPublicFixture(matchId);
   if (!fixture) notFound();
-  const { match: m, series, canEditUmpires } = fixture;
+  const { match: m } = fixture;
+  const session = await auth();
+  const canEditUmpires = can(session?.user, "edit-umpires");
+  const canEditMatch = can(session?.user, "manage-league");
+  const editOptions = canEditMatch && session?.user ? await getMatchEditOptions(session.user) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -29,24 +35,22 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
       </Link>
 
       {/* Same card as the fixtures list; entry happens in the form below instead of inline. */}
-      <FixtureCard m={m} highlight={null} entryOpen={false} standalone />
+      <FixtureCard m={m} highlight={null} canEditUmpires={false} editOptions={editOptions} standalone />
 
       {canEditUmpires ? (
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Enter umpires</h2>
+            <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Assign umpires</h2>
             <p className="text-chalk-dim mt-1 text-sm">
-              For {m.umpiringTeam ? `${m.umpiringTeam.name}, the umpiring team` : "the umpiring team"}: name
-              Umpire 1 and Umpire 2, with a phone number for each.
+              Assign Umpire 1 and Umpire 2 for this match, with a phone number for each.
             </p>
           </div>
           <UmpireForm matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />
         </section>
       ) : (
         <p role="status" className="border-gold/40 bg-dugout border p-4 text-sm">
-          {series.umpireEntryLocked
-            ? "Umpire entry is closed. Contact the committee if this fixture's umpires need to change."
-            : "This match has been played, so its umpires can't be changed here."}
+          Only admins can assign or change umpires. Contact the committee if this fixture&apos;s umpires need
+          to change.
         </p>
       )}
     </div>

@@ -11,7 +11,7 @@ export default async function LeagueLayout({ children }: { children: React.React
   const { season, series } = await findCurrentSeries();
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20">
+    <section className="py-8 sm:py-10 lg:py-12">
       <div className="mx-auto max-w-[1180px] px-5 sm:px-8">
         <div className="mb-6 flex flex-col gap-2">
           <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">
@@ -20,7 +20,7 @@ export default async function LeagueLayout({ children }: { children: React.React
           <LeagueHeading />
           {series ? <p className="text-chalk-dim mt-1">{series.name}</p> : null}
         </div>
-        <div className="mt-8">{children}</div>
+        <div className="mt-5">{children}</div>
       </div>
     </section>
   );
