@@ -173,7 +173,16 @@ export function FixtureCard({
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
           <p className="text-chalk-dim flex items-center gap-1.5">
             <PinIcon />
-            {m.ground ?? "Ground to be confirmed"}
+            {m.ground && m.fieldId ? (
+              <Link
+                href={`/grounds/field/${m.fieldId}`}
+                className="hover:text-clay underline-offset-2 transition-colors hover:underline"
+              >
+                {m.ground}
+              </Link>
+            ) : (
+              (m.ground ?? "Ground to be confirmed")
+            )}
           </p>
           <p className="text-right">
             <span className="font-data text-chalk-faint mr-2 text-[0.62rem] tracking-[0.12em] uppercase">

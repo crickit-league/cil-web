@@ -5,6 +5,7 @@ import { PresentedBy } from "./presented-by";
 const LINKS = [
   { href: "/league/fixtures", label: "Fixtures & results" },
   { href: "/league/points-table", label: "Points table" },
+  { href: "/grounds", label: "Grounds" },
   { href: "/sponsors", label: "Our sponsors" },
   { href: "/contact", label: "Contact the committee" },
   { href: "/login", label: "Admin" },

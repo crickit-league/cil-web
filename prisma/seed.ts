@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { prisma } from "@/lib/db/prisma";
+import { seedGrounds } from "./seed-grounds";
 
 async function main() {
   const season = await prisma.season.upsert({
@@ -15,6 +16,8 @@ async function main() {
   });
 
   console.log("Seeded season:", season);
+
+  await seedGrounds(prisma);
 }
 
 main()

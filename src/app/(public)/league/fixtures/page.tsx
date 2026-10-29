@@ -24,8 +24,8 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
   // Within a section, matches with no date yet come last.
   const byAge = [...matches].sort(compareMatchOldestFirst);
   const sections = [
-    { key: "upcoming", title: "Upcoming", matches: byAge.filter((m) => m.fixtureStatus === "SCHEDULED") },
-    { key: "completed", title: "Completed", matches: byAge.filter((m) => m.fixtureStatus === "COMPLETED") },
+    { key: "upcoming", title: "Scheduled", matches: byAge.filter((m) => m.fixtureStatus === "SCHEDULED") },
+    { key: "completed", title: "Results", matches: byAge.filter((m) => m.fixtureStatus === "COMPLETED") },
   ].filter((section) => section.matches.length > 0);
 
   return (
