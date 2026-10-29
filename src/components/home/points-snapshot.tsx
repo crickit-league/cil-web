@@ -3,16 +3,17 @@ import type { SnapshotGroup } from "@/lib/services/points-table";
 import { formatNrr } from "@/components/points-table/points-table-group";
 import { FORM_LENGTH, type FormResult } from "@/lib/form";
 import { formatMatchDay } from "@/lib/time";
+import { TeamBadge } from "@/components/team-badge";
 
 // The top of each group of the uploaded CricClubs points table, as a short
 // list (rank, team and form guide, points and NRR) that fits a phone and the
 // home page's sidebar alike. The full table is on /league/points-table.
 
 const FORM_STYLE: Record<FormResult, { className: string; label: string }> = {
-  W: { className: "bg-win text-pitch-deep", label: "Won" },
-  L: { className: "bg-loss text-pitch-deep", label: "Lost" },
-  T: { className: "bg-chalk-faint text-pitch-deep", label: "Tied" },
-  N: { className: "bg-chalk-faint text-pitch-deep", label: "No result" },
+  W: { className: "bg-win text-on-accent", label: "Won" },
+  L: { className: "bg-loss text-on-accent", label: "Lost" },
+  T: { className: "bg-chalk-faint text-on-accent", label: "Tied" },
+  N: { className: "bg-chalk-faint text-on-accent", label: "No result" },
 };
 
 /** Last results, oldest first, padded with empty squares to a fixed width so every row lines up. */
@@ -67,7 +68,7 @@ export function PointsSnapshot({
           {snapshot.groups.map((group) => (
             <div
               key={group.name}
-              className="bg-dugout border-line flex flex-col rounded-xl border px-3.5 pt-2.5 pb-1"
+              className="bg-dugout border-line flex flex-col rounded-lg border px-3.5 pt-2.5 pb-1 shadow-sm"
             >
               <h3 className="font-data text-chalk-dim border-line border-b pb-2 text-[0.68rem] tracking-[0.12em] uppercase">
                 {group.name}
@@ -76,9 +77,10 @@ export function PointsSnapshot({
                 {group.rows.map((row) => (
                   <li
                     key={row.position}
-                    className="border-line grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-3 border-b py-2 last:border-b-0"
+                    className="border-line grid grid-cols-[1.25rem_auto_minmax(0,1fr)_auto] items-center gap-3 border-b py-2 last:border-b-0"
                   >
                     <span className="font-data text-chalk-faint text-right text-xs">{row.position}</span>
+                    <TeamBadge name={row.teamName} size={28} />
                     <span className="flex min-w-0 flex-col gap-1">
                       <span className="truncate font-semibold">{row.teamName}</span>
                       <span className="flex items-center gap-2">
@@ -104,7 +106,7 @@ export function PointsSnapshot({
           </p>
         </>
       ) : (
-        <p className="border-line bg-dugout text-chalk-dim rounded-xl border p-4 text-sm">
+        <p className="border-line bg-dugout text-chalk-dim rounded-lg border p-4 text-sm">
           The committee posts the table from CricClubs once league matches are under way.
         </p>
       )}

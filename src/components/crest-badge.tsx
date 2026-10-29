@@ -3,7 +3,7 @@ import Image from "next/image";
 export function CrestBadge({ size = 42 }: { size?: number }) {
   return (
     <span
-      className="bg-dugout ring-line relative block flex-none overflow-hidden rounded-full ring-1"
+      className="bg-dugout ring-clay/70 relative block flex-none overflow-hidden rounded-full shadow-[0_0_18px_-4px_color-mix(in_srgb,var(--clay)_70%,transparent)] ring-2"
       style={{ width: size, height: size }}
     >
       <Image

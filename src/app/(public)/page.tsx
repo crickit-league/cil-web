@@ -1,17 +1,14 @@
-import { SeamDivider } from "@/components/seam-divider";
-import { Hero } from "@/components/sections/hero";
 import { Sponsors } from "@/components/sections/sponsors";
-import { Contact } from "@/components/sections/contact";
 import { PhotoCarousel } from "@/components/sections/photo-carousel";
-import { MatchdayStrip } from "@/components/home/matchday-strip";
+import { ScoreTicker } from "@/components/home/score-ticker";
+import { HomeHero } from "@/components/home/home-hero";
 import { MatchdaySection } from "@/components/home/matchday-section";
 import { listHomePhotos } from "@/lib/services/photos";
 import { getHomeMatchday } from "@/lib/services/schedule";
 import { getPointsTableSnapshot } from "@/lib/services/points-table";
 
-// In-season home page ("Matchday", chosen 2026-10-27): a short hero (league
-// name, title sponsor, a line about the league), the photo carousel, the
-// weekend's scores in a strip over the carousel's bottom edge, then results
+// In-season home page ("Matchday", chosen 2026-10-27): the photo carousel as
+// the hero, the weekend's scores in a strip over its bottom edge, then results
 // and fixtures beside the top of the points table. Each loader never throws,
 // so the page renders (with what it has) even if the DB or R2 is unavailable.
 
@@ -33,14 +30,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero />
-      <SeamDivider />
-      {hasPhotos ? <PhotoCarousel photos={photos} roomBelow={stripMatches.length > 0} /> : null}
-      <MatchdayStrip matches={stripMatches} kind={lead} overlap={hasPhotos} />
+      <ScoreTicker matches={stripMatches} kind={lead} />
+      <HomeHero />
+      {hasPhotos ? <PhotoCarousel photos={photos} /> : null}
       <MatchdaySection matchday={matchday} points={points} />
-      <SeamDivider />
       <Sponsors />
-      <Contact />
     </>
   );
 }

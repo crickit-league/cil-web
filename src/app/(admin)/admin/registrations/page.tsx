@@ -21,7 +21,7 @@ export default async function RegistrationsPage() {
           <a
             href="/admin/registrations/export"
             download
-            className="font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex items-center justify-center self-start border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors sm:self-auto"
+            className="font-data border-clay text-clay hover:bg-clay hover:text-on-accent inline-flex items-center justify-center self-start border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors sm:self-auto"
           >
             Download Excel
           </a>

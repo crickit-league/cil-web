@@ -4,9 +4,9 @@ import { useState, useTransition } from "react";
 import { discardPointsTableAction, publishPointsTableAction } from "../../actions";
 
 const primaryButton =
-  "font-data border-clay bg-clay text-pitch-deep hover:border-clay-bright hover:bg-clay-bright inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "font-data border-clay bg-clay text-on-accent hover:border-clay-bright hover:bg-clay-bright inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 const secondaryButton =
-  "font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "font-data border-clay text-clay hover:bg-clay hover:text-on-accent inline-flex items-center justify-center border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 export function CommitBar({ runId, canCommit }: { runId: string; canCommit: boolean }) {
   const [publishing, startPublish] = useTransition();

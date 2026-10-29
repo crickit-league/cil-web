@@ -3,6 +3,7 @@ import type { HomeMatchday } from "@/lib/services/schedule";
 import type { SnapshotGroup } from "@/lib/services/points-table";
 import { formatMatchdaySpan } from "@/lib/matchday";
 import { formatFixtureDay, groupByMatchDay } from "@/lib/time";
+import { SectionTitle } from "@/components/section-title";
 import { HomeMatchCard } from "./home-match-card";
 import { MatchdayTabs, type MatchdayTab } from "./matchday-tabs";
 import { PointsSnapshot } from "./points-snapshot";
@@ -58,25 +59,15 @@ export function MatchdaySection({
   }
 
   return (
-    <section aria-labelledby="home-matchday" className="py-10 sm:py-14">
+    <section aria-labelledby="home-matchday" className="py-12 sm:py-16">
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-6">
-          <div>
-            <span className="font-data text-clay-bright text-xs tracking-[0.18em] uppercase">
-              Winter Championship
-            </span>
-            <h2
-              id="home-matchday"
-              className="font-display mt-2 text-4xl leading-[0.95] font-extrabold uppercase sm:text-5xl"
-            >
-              Matchday
-            </h2>
-          </div>
+          <SectionTitle eyebrow="Winter Championship" title="Matchday" id="home-matchday" />
 
           {tabs.length > 0 ? (
             <MatchdayTabs tabs={tabs} initial={matchday?.lead ?? "results"} />
           ) : (
-            <p className="text-chalk-dim border-line bg-dugout rounded-xl border p-6">
+            <p className="text-chalk-dim border-line bg-dugout rounded-lg border p-6">
               Fixtures will appear here once the committee publishes the schedule.
             </p>
           )}

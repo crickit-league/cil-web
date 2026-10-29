@@ -1,24 +1,106 @@
 @import "tailwindcss";
 
-/* Winter League palette — deep night-sky navy, icy chalk, gold championship
-   accent. Reference: committee-supplied championship poster (navy/gold/ice,
-   floodlit stadium at night). Token names kept from the previous pitch/clay
-   theme so component classes didn't need touching — only the hues moved. */
+/* Light theme (default) and a night theme. Light: a cool white page, white cards,
+   near-black ink and the logo's royal blue as the one action colour, green for
+   winners. Night: near-black slate with slightly lighter cards, soft white ink and
+   a brighter blue (so it reads on dark), mint for winners. Token names (pitch /
+   dugout / clay ...) are kept from the earlier themes so component classes didn't
+   need touching. clay = the action colour (buttons, borders, links), clay-bright =
+   its hover / accent-text shade, gold = winners and qualifiers, on-accent = text
+   that sits on clay / win / loss.
+
+   Which theme: the visitor's choice (header toggle, stored in localStorage and
+   applied before first paint by a script in the root layout), else their system
+   setting.
+
+   `.on-brand` re-points the tokens inside an element for surfaces that sit on the
+   vivid brand blue or on photos (the home hero, photo captions): white text, a
+   white action colour and translucent cards. It looks the same in both themes. */
 :root {
-  --pitch: #0a1526;
-  --pitch-deep: #050b16;
-  --dugout: #13213c;
-  --dugout-2: #1c3155;
-  --line: #2e4468;
-  --chalk: #eef4fc;
-  --chalk-dim: #a7b8d8;
-  --chalk-faint: #64749c;
-  --clay: #d6a544;
-  --clay-bright: #f0c66c;
-  --gold: #f5cf62;
-  /* Form guide only (W / L squares on the points table). */
-  --win: #5cc48b;
-  --loss: #e3735f;
+  color-scheme: light;
+  --pitch: #f6f8fc;
+  --pitch-deep: #eaf0f9;
+  --dugout: #ffffff;
+  --dugout-2: #f0f4fa;
+  --line: #dce4f0;
+  --chalk: #0b1b33;
+  --chalk-dim: #4a5b78;
+  --chalk-faint: #66768f;
+  --clay: #1356d9;
+  --clay-bright: #0e44b8;
+  --gold: #15803d;
+  --brand: #1356d9;
+  --brand-deep: #0a2c86;
+  --action: #0891b2;
+  --action-bright: #0e7490;
+  --on-accent: #ffffff;
+  /* Win / loss squares on the points table form guide. */
+  --win: #16a34a;
+  --loss: #dc2626;
+  --stage-glow-1: rgb(19 86 217 / 10%);
+  --stage-glow-2: rgb(8 145 178 / 10%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --pitch: #0d1117;
+    --pitch-deep: #090c11;
+    --dugout: #151b24;
+    --dugout-2: #1d2531;
+    --line: #28313f;
+    --chalk: #f1f5fb;
+    --chalk-dim: #a4afc3;
+    --chalk-faint: #8390a8;
+    --clay: #5b9bff;
+    --clay-bright: #8dbaff;
+    --gold: #4ade80;
+    --action: #22b8d9;
+    --action-bright: #67d4ee;
+    --on-accent: #06101f;
+    --win: #34d399;
+    --loss: #f87171;
+    --stage-glow-1: rgb(91 155 255 / 12%);
+    --stage-glow-2: rgb(34 184 217 / 10%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pitch: #0d1117;
+  --pitch-deep: #090c11;
+  --dugout: #151b24;
+  --dugout-2: #1d2531;
+  --line: #28313f;
+  --chalk: #f1f5fb;
+  --chalk-dim: #a4afc3;
+  --chalk-faint: #8390a8;
+  --clay: #5b9bff;
+  --clay-bright: #8dbaff;
+  --gold: #4ade80;
+  --action: #22b8d9;
+  --action-bright: #67d4ee;
+  --on-accent: #06101f;
+  --win: #34d399;
+  --loss: #f87171;
+  --stage-glow-1: rgb(91 155 255 / 12%);
+  --stage-glow-2: rgb(34 184 217 / 10%);
+}
+
+.on-brand {
+  color-scheme: dark;
+  --pitch: #0f3fa8;
+  --pitch-deep: #071b52;
+  --dugout: rgb(255 255 255 / 12%);
+  --dugout-2: rgb(255 255 255 / 18%);
+  --line: rgb(255 255 255 / 25%);
+  --chalk: #ffffff;
+  --chalk-dim: #d3e0ff;
+  --chalk-faint: #a9c0f5;
+  --clay: #ffffff;
+  --clay-bright: #e3ecff;
+  --gold: #b6ff6b;
+  --on-accent: #0a2c86;
 }
 
 @theme inline {
@@ -33,12 +115,34 @@
   --color-clay: var(--clay);
   --color-clay-bright: var(--clay-bright);
   --color-gold: var(--gold);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-action: var(--action);
+  --color-action-bright: var(--action-bright);
+  --color-on-accent: var(--on-accent);
   --color-win: var(--win);
   --color-loss: var(--loss);
 
   --font-display: var(--font-big-shoulders), "Arial Narrow", "Helvetica Neue", sans-serif;
   --font-body: var(--font-libre-franklin), -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-data: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Anchor jumps (rule index, "Open full rule") glide, and land below the sticky header. */
+html {
+  scroll-padding-top: 7rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* One clear keyboard focus ring everywhere, in the gold accent. */
+:focus-visible {
+  outline: 2px solid var(--clay-bright);
+  outline-offset: 2px;
 }
 
 body {
@@ -49,7 +153,50 @@ body {
 
 ::selection {
   background: var(--clay);
-  color: var(--chalk);
+  color: var(--on-accent);
+}
+
+/* Anchor jumps glide (unless the visitor prefers less motion) and land below the sticky header. */
+html {
+  scroll-padding-top: 7rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* One clear keyboard focus ring everywhere. */
+:focus-visible {
+  outline: 2px solid var(--clay-bright);
+  outline-offset: 2px;
+}
+
+/* Cards that open something: a small lift and shadow on hover. */
+.lift {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.lift:hover {
+  transform: translateY(-2px);
+  border-color: var(--clay);
+  box-shadow:
+    0 12px 24px -12px rgb(0 0 0 / 60%),
+    0 0 0 1px color-mix(in srgb, var(--clay) 40%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift {
+    transition: none;
+  }
+
+  .lift:hover {
+    transform: none;
+  }
 }
 
 /* Hero decoration: diagonal cross-hatch lattice, masked to the top-right, drifting with a light sweep */
@@ -124,7 +271,9 @@ body {
   }
 }
 
-/* Hero decoration: the crest, inverted so its white canvas reads as pitch-dark, faded to near nothing */
+/* Hero decoration: the crest as a faint white watermark. Inverted so the logo's
+   white canvas turns black, which the screen blend then drops, leaving only the
+   crest's lines lightening the brand blue behind it. */
 .hero-crest-watermark::after {
   content: "";
   position: absolute;
@@ -135,42 +284,18 @@ body {
   background-image: url("/img/logo2.jpeg");
   background-size: contain;
   background-repeat: no-repeat;
-  filter: invert(1) brightness(0.9);
-  opacity: 0.05;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  opacity: 0.1;
   z-index: 0;
+  pointer-events: none;
 }
 
-/* Photo carousel: floodlit-stage glow behind the slides, and the active-slide
-   treatment (embla-carousel-class-names adds .is-snapped to the centred slide). */
+/* Photo carousel: a soft stage glow behind the slides. */
 .photo-stage {
   background:
-    radial-gradient(ellipse 60% 70% at 50% 55%, rgb(214 165 68 / 14%), transparent 70%),
-    radial-gradient(ellipse 90% 50% at 50% 0%, rgb(46 68 104 / 45%), transparent 70%);
-}
-
-.photo-viewport.is-draggable {
-  cursor: grab;
-}
-
-.photo-viewport.is-dragging {
-  cursor: grabbing;
-}
-
-/* The dim/scale treatment lives on an inner element, never on .photo-slide
-   itself: Embla's loop repositions slides with an inline transform on the slide,
-   and a CSS transition on that same property would animate the repositioning,
-   making the wrap from the last photo to the first visibly slide across. */
-.photo-slide-inner {
-  opacity: 0.4;
-  transform: scale(0.92);
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
-}
-
-.photo-slide.is-snapped .photo-slide-inner {
-  opacity: 1;
-  transform: scale(1);
+    radial-gradient(ellipse 60% 70% at 50% 55%, var(--stage-glow-1), transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 0%, var(--stage-glow-2), transparent 70%);
 }
 
 /* Time-left indicator: fills the active pagination dash over the autoplay delay. */
@@ -196,4 +321,12 @@ body {
   .photo-dash-fill {
     animation: none;
   }
+}
+
+/* Home hero stage: the vivid brand blue sweeping to a deeper blue, with one soft
+   light pool at the top right. Nothing busy behind the text. */
+.hero-bg {
+  background:
+    radial-gradient(46rem 22rem at 92% 0, rgb(94 231 255 / 28%), transparent 70%),
+    linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
 }

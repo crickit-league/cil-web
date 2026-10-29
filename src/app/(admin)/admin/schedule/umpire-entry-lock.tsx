@@ -35,8 +35,8 @@ export function UmpireEntryLock({ locked }: { locked: boolean }) {
         }}
         className={`font-data shrink-0 self-start border px-5 py-3 text-xs tracking-[0.08em] uppercase transition-colors disabled:opacity-60 sm:self-auto ${
           locked
-            ? "border-clay bg-clay text-pitch-deep hover:bg-clay-bright"
-            : "border-clay text-clay hover:bg-clay hover:text-pitch-deep"
+            ? "border-clay bg-clay text-on-accent hover:bg-clay-bright"
+            : "border-clay text-clay hover:bg-clay hover:text-on-accent"
         }`}
       >
         {pending ? "Saving…" : locked ? "Open entry" : "Close entry"}

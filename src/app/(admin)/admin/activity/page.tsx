@@ -56,7 +56,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const { entries, hasMore } = await listAuditLog(session!.user, page);
 
   const pagerClass =
-    "font-data border-clay text-clay hover:bg-clay hover:text-pitch-deep inline-flex items-center border px-4 py-2 text-xs tracking-[0.08em] uppercase transition-colors";
+    "font-data border-clay text-clay hover:bg-clay hover:text-on-accent inline-flex items-center border px-4 py-2 text-xs tracking-[0.08em] uppercase transition-colors";
 
   return (
     <section className="flex flex-col gap-8">
