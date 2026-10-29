@@ -6,12 +6,13 @@ Also see [AGENTS.md](AGENTS.md) — Next.js-version-specific framework notes, au
 
 ## Before pushing to any branch
 
-Run all four, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
+Run all five, in this order, and fix whatever fails before pushing — this is exactly what CI re-checks on every push/PR, so catching it locally saves a round trip:
 
 ```bash
 npm run format:check   # prettier — run `npm run format` to auto-fix
 npm run lint            # eslint
 npm run typecheck       # tsc --noEmit
+npm test                # vitest — CricClubs import parsing (points table CSV, score summaries)
 npm run build           # next build — catches issues the others don't
 ```
 
@@ -30,15 +31,16 @@ Next.js App Router + TypeScript, Postgres on Neon via Prisma, magic-link + 6-dig
 - **Types**: `strict: true`, no `any`.
 - **Migrations**: Prisma migrations committed to git. Nobody edits the production DB by hand. `prisma migrate deploy` runs automatically at build time for Preview/Dev (`scripts/vercel-build.mjs`, gated on `VERCEL_ENV`) — Production is deliberately excluded from that automation and stays a manually-run step; see `docs/service-setup.md`.
 - **Prisma 7**: connection URLs live in `prisma.config.ts` / env, not in `schema.prisma`'s `datasource` block — that's a Prisma 7 breaking change from what the original architecture doc assumed. The runtime client uses `@prisma/adapter-neon` (`src/lib/db/prisma.ts`) against pooled `DATABASE_URL`; Migrate uses unpooled `DATABASE_URL_UNPOOLED`. Generated client output is `src/generated/prisma` (gitignored), imported via `@/generated/prisma`.
-- **Stats are derived, never hand-typed** — standings and player stats are computed on read in the service layer from `Match`/`Innings`/scorecard rows, never stored — with one deliberate exception: `standings_adjustments` for committee-issued penalties (see below). Never overwrite that table from an import.
+- **Stats are never hand-typed** — the points table is uploaded from CricClubs' Points Table export (CricClubs does the calculation: points, NRR, tie-breaks) and published as given; **this site does not compute standings**. Player stats, when they come, are computed on read in the service layer from scorecard rows, never stored. `standings_adjustments` is in the schema but nothing reads it since the points table became an upload — don't build on it without asking.
+- **A team's name is stored in one place: `TeamEntry.displayName`** (per series, sponsor prefix and all). Every page reads it through the `TeamEntry` relation — never copy a team name into another column or string that's displayed later. Renames go only through `renameTeam` (`src/lib/services/teams.ts`), which keeps the old name as a `NameAlias` so CricClubs files with the old spelling still match, and writes the audit log. `Team.name` is the canonical cross-season key and is never displayed; `Registration.teamName` is the name as submitted and is shown only until the registration is added to a series. Imports resolve file names to teams with `lib/teams/names.ts` (display name + canonical + aliases, normalised).
 - **Mobile-first, no exceptions** — every page, including internal/admin ones, must be checked at phone width before it's done. A table with more than ~3 columns is not a mobile layout on its own: render a stacked-card view below the `sm` breakpoint and the table at `sm` and up (`sm:hidden` / `hidden sm:block`), don't just let it scroll horizontally. See `(admin)/admin/page.tsx` and `admin-management.tsx` for the pattern.
 
 ## Facts that shape the data model — confirmed by the committee, don't re-litigate
 
 - **Season structure**: 2 pools (A/B), T15, up to 10 league-stage matches/team, top 6 per pool advance to playoffs. That's the Winter Championship; a season can also hold side series (e.g. the 8-over E8 Championship), so the schema is Season → Series → TeamEntry, with overs/players-per-side/points as columns on `Series`.
 - **CricClubs stays the primary scoring platform** — this site complements it and imports its admin exports (see architecture.md §6.0 and §8 spike findings). League tables carry CricClubs IDs as external refs; `Person.cricclubsPlayerId` is the player-matching key.
-- **Points**: win = 2, tie = 1 each, no result = 1 each. NRR stored to 4 decimal places.
-- **Standings tie-break is a 5-level cascade**, not a sort: points → NRR → head-to-head → most wins among tied teams → most wickets taken → random draw. Needs dedicated test cases — getting this wrong seeds the playoffs wrong.
+- **Points**: win = 2, tie = 1 each, no result = 1 each; NRR to 4 decimal places — as CricClubs calculates them. Shown as uploaded, never recomputed here.
+- **Standings tie-break** (points → NRR → head-to-head → most wins among tied teams → most wickets taken → random draw) is applied by CricClubs, not by this site — the uploaded table already reflects it. The top 6 per group are marked as qualifiers.
 - **Playoff bracket is fully specified** (top 2/pool direct to QF; 3rd–6th play pre-quarter-finals; specific cross-pool QF/SF/Final pairing) — see architecture.md §1.2 for the exact bracket. Don't re-ask the committee about this.
 - **Player ↔ team binding is 1:1 per season** — no mid-season moves, no free-agent flow needed (handled in CricClubs already).
 - **Roster cap is 22; new players must be added by Friday to be eligible that weekend** — recurring weekly deadline, not one-time. Soft warning on the captain's roster screen, not necessarily a hard gate.

@@ -158,7 +158,7 @@ export function DataTable<T extends object, D = never>({
               type="button"
               onClick={() => save(row)}
               disabled={pending}
-              className={`${buttonClass} border-clay bg-clay text-pitch-deep hover:bg-clay-bright`}
+              className={`${buttonClass} border-clay bg-clay text-on-accent hover:bg-clay-bright`}
             >
               {pending ? "Saving…" : "Save"}
             </button>
@@ -184,7 +184,7 @@ export function DataTable<T extends object, D = never>({
         type="button"
         onClick={() => startEdit(row, rowId)}
         disabled={editingId !== null}
-        className={`${buttonClass} border-clay text-clay hover:bg-clay hover:text-pitch-deep`}
+        className={`${buttonClass} border-clay text-clay hover:bg-clay hover:text-on-accent`}
       >
         Edit
       </button>
