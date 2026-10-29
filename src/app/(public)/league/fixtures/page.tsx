@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { can } from "@/lib/auth/permissions";
 import { getPublicFixtures } from "@/lib/services/schedule";
-import { compareMatchOldestFirst, formatFixtureDay, groupByMatchDay } from "@/lib/time";
+import { compareMatchOldestFirst } from "@/lib/time";
 import { FixtureCard } from "./fixture-card";
 import { TeamFilter } from "./team-filter";
 
@@ -61,18 +61,11 @@ export default async function FixturesPage({ searchParams }: { searchParams: Pro
                   {section.matches.length}
                 </span>
               </h2>
-              {[...groupByMatchDay(section.matches).entries()].map(([key, dayMatches]) => (
-                <div key={key} className="flex flex-col gap-3">
-                  <h3 className="font-display border-line border-b pb-2 text-[1.4rem] font-extrabold uppercase">
-                    {formatFixtureDay(dayMatches[0].startsAt)}
-                  </h3>
-                  <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                    {dayMatches.map((m) => (
-                      <FixtureCard key={m.id} m={m} highlight={selectedTeamId ?? null} canEdit={canEdit} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              <ul className="grid grid-cols-1 gap-3">
+                {section.matches.map((m) => (
+                  <FixtureCard key={m.id} m={m} highlight={selectedTeamId ?? null} canEdit={canEdit} />
+                ))}
+              </ul>
             </section>
           ))}
         </div>

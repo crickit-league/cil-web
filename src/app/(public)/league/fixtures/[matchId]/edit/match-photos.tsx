@@ -3,7 +3,11 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { deletePhotoAction, uploadPhotoAction } from "@/app/(admin)/admin/photos/actions";
+import {
+  deletePhotoAction,
+  setPhotoInCarouselAction,
+  uploadPhotoAction,
+} from "@/app/(admin)/admin/photos/actions";
 import { resizeImage } from "@/app/(admin)/admin/photos/resize-image";
 
 export type MatchPhoto = {
@@ -11,6 +15,7 @@ export type MatchPhoto = {
   url: string | null;
   caption: string | null;
   title: string | null;
+  inCarousel: boolean;
   width: number;
   height: number;
 };
@@ -21,6 +26,7 @@ type QueuedPicture = {
   preview: string;
   title: string;
   body: string;
+  inCarousel: boolean;
   status: "pending" | "uploading" | "error";
   error?: string;
 };
@@ -37,7 +43,8 @@ const secondaryButton =
  * The pictures linked to one match: the ones already there (with Remove), and
  * "Add pictures", which opens a dialog to give each new picture a title and a
  * description before it uploads. Pictures are shrunk in the browser and uploaded
- * one at a time. Photos linked here also show in the home page carousel.
+ * one at a time. They show on the match's page; "Show in home carousel" (off by
+ * default, also a toggle on each picture) adds one to the home page carousel too.
  */
 export function MatchPhotos({ matchId, photos }: { matchId: string; photos: MatchPhoto[] }) {
   const router = useRouter();
@@ -72,6 +79,7 @@ export function MatchPhotos({ matchId, photos }: { matchId: string; photos: Matc
         preview,
         title: "",
         body: "",
+        inCarousel: false,
         status: "pending" as const,
       };
     });
@@ -98,6 +106,7 @@ export function MatchPhotos({ matchId, photos }: { matchId: string; photos: Matc
         form.set("title", item.title);
         form.set("body", item.body);
         form.set("matchId", matchId);
+        form.set("inCarousel", String(item.inCarousel));
         const result = await uploadPhotoAction(form);
         if (result.ok) {
           setQueue((prev) => prev.filter((q) => q.key !== item.key));
@@ -117,6 +126,15 @@ export function MatchPhotos({ matchId, photos }: { matchId: string; photos: Matc
     router.refresh();
     // Close once everything went up; otherwise the failed pictures stay listed with their errors.
     if (failed === 0) closeDialog();
+  };
+
+  const toggleCarousel = async (photo: MatchPhoto, inCarousel: boolean) => {
+    setBusy(true);
+    setRemoveError(null);
+    const result = await setPhotoInCarouselAction(photo.id, inCarousel);
+    setBusy(false);
+    if (!result.ok) setRemoveError(result.message);
+    router.refresh();
   };
 
   const remove = async (photo: MatchPhoto) => {
@@ -180,6 +198,15 @@ export function MatchPhotos({ matchId, photos }: { matchId: string; photos: Matc
                   Remove
                 </button>
               </div>
+              <label className="border-line text-chalk-dim flex items-center gap-2 border-t px-2 py-1.5 text-xs">
+                <input
+                  type="checkbox"
+                  checked={photo.inCarousel}
+                  disabled={busy}
+                  onChange={(e) => toggleCarousel(photo, e.target.checked)}
+                />
+                Home carousel
+              </label>
             </li>
           ))}
         </ul>
@@ -235,6 +262,15 @@ export function MatchPhotos({ matchId, photos }: { matchId: string; photos: Matc
                       disabled={busy}
                       className={inputClass}
                     />
+                  </label>
+                  <label className="text-chalk-dim flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={item.inCarousel}
+                      disabled={busy}
+                      onChange={(e) => patch(item.key, { inCarousel: e.target.checked })}
+                    />
+                    Also show in the home page carousel
                   </label>
                   {item.status === "uploading" ? (
                     <span className="text-chalk-faint text-xs">Uploading…</span>

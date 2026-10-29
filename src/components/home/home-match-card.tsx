@@ -84,7 +84,7 @@ function FixtureCard({ m }: { m: ScheduleMatch }) {
   const [time, meridiem] = /^\d/.test(when) ? when.split(" ") : [when, null];
   const [one, two] = sides(m);
   return (
-    <Link href={`/league/fixtures/${m.id}`} className={`${cardClass} items-center gap-4`}>
+    <div className={`${cardClass} items-center gap-4`}>
       <span className="border-line flex w-16 shrink-0 flex-col items-center border-r pr-4 text-center">
         <span className="font-display text-2xl leading-none font-extrabold">{time}</span>
         {meridiem ? <span className="font-data text-chalk-faint mt-1 text-[0.62rem]">{meridiem}</span> : null}
@@ -101,7 +101,7 @@ function FixtureCard({ m }: { m: ScheduleMatch }) {
           {m.ground ?? "Ground to be confirmed"}
         </span>
       </span>
-    </Link>
+    </div>
   );
 }
 

@@ -6,7 +6,26 @@ import { TeamBadge } from "@/components/team-badge";
 
 // The scoreboard strip under the header, like the live-score bars on the big T20
 // league sites: a sideways-scrolling row of compact cards, results or fixtures.
-// Each card opens the fixture page.
+// Each played match opens its match page.
+
+/** A link to the match page for played matches; a plain box for fixtures still to come. */
+function Card({
+  href,
+  className,
+  children,
+}: {
+  href: string | null;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return href ? (
+    <Link href={href} className={`${className} hover:border-clay transition-colors`}>
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
 
 function TickerCard({ m }: { m: ScheduleMatch }) {
   const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
@@ -18,9 +37,9 @@ function TickerCard({ m }: { m: ScheduleMatch }) {
 
   return (
     <li className="w-[13.5rem] shrink-0 snap-start sm:w-[17rem]">
-      <Link
-        href={`/league/fixtures/${m.id}`}
-        className="border-line bg-dugout hover:border-clay flex h-full flex-col gap-1.5 border-l-2 px-3.5 py-2.5 transition-colors"
+      <Card
+        href={played ? `/league/fixtures/${m.id}` : null}
+        className="border-line bg-dugout flex h-full flex-col gap-1.5 border-l-2 px-3.5 py-2.5"
       >
         <span className="font-data text-chalk-faint flex items-center justify-between gap-2 text-[0.62rem] tracking-[0.1em] uppercase">
           <span className="truncate">{formatCardStampOrTbd(m)}</span>
@@ -52,7 +71,7 @@ function TickerCard({ m }: { m: ScheduleMatch }) {
               : m.result.text
             : (m.ground ?? "Ground to be confirmed")}
         </span>
-      </Link>
+      </Card>
     </li>
   );
 }

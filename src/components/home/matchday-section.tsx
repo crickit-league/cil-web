@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { HomeMatchday } from "@/lib/services/schedule";
 import type { SnapshotGroup } from "@/lib/services/points-table";
 import { formatMatchdaySpan } from "@/lib/matchday";
-import { formatFixtureDay, groupByMatchDay } from "@/lib/time";
+import { compareMatchOldestFirst, formatFixtureDay, groupByMatchDay } from "@/lib/time";
 import { SectionTitle } from "@/components/section-title";
 import { HomeMatchCard } from "./home-match-card";
 import { MatchdayTabs, type MatchdayTab } from "./matchday-tabs";
@@ -15,7 +15,7 @@ import { PointsSnapshot } from "./points-snapshot";
 function MatchList({ matches }: { matches: HomeMatchday["results"] }) {
   return (
     <div className="flex flex-col gap-8">
-      {[...groupByMatchDay(matches).entries()].map(([key, dayMatches]) => (
+      {[...groupByMatchDay([...matches].sort(compareMatchOldestFirst)).entries()].map(([key, dayMatches]) => (
         <section key={key} className="flex flex-col gap-3">
           <h3 className="font-display border-line border-b pb-2 text-[1.25rem] font-extrabold uppercase">
             {formatFixtureDay(dayMatches[0].startsAt)}
