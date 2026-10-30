@@ -245,12 +245,8 @@ export function FixtureCard({
                     <TeamBadge name={side.label} size={36} />
                   </span>
                   <span
-                    className={`min-w-0 text-base leading-tight break-words md:text-lg ${
-                      won
-                        ? "text-chalk font-bold"
-                        : lost
-                          ? "text-chalk-dim font-medium"
-                          : "text-chalk font-semibold"
+                    className={`font-display min-w-0 text-lg leading-tight font-extrabold tracking-wide break-words uppercase md:text-xl ${
+                      won ? "text-clay" : lost ? "text-chalk-dim" : "text-chalk"
                     } ${highlighted ? "decoration-clay underline decoration-2 underline-offset-4" : ""}`}
                   >
                     {side.label}
@@ -268,8 +264,10 @@ export function FixtureCard({
                       className={`font-display text-xl font-bold md:text-2xl ${lost ? "text-chalk-dim" : "text-chalk"}`}
                     >
                       {side.score.runs}/{side.score.wickets}
-                    </span>{" "}
-                    <span className="text-chalk-faint text-xs">({formatOvers(side.score.legalBalls)})</span>
+                    </span>
+                    <span className="text-chalk-faint ml-1 text-xs">
+                      {formatOvers(side.score.legalBalls)}
+                    </span>
                   </span>
                 ) : null}
               </li>
