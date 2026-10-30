@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { can } from "@/lib/auth/permissions";
 import { getPublicFixture } from "@/lib/services/schedule";
-import { UmpireForm } from "@/components/umpires/umpire-form";
 import { FixtureCard } from "../fixture-card";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Fixture umpires · CIL Winter League",
-  // Edit pages for every fixture add nothing to search results.
+  title: "Fixture",
+  // One page per fixture adds nothing to search results.
   robots: { index: false },
 };
 
@@ -17,7 +18,8 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
   const { matchId } = await params;
   const fixture = await getPublicFixture(matchId);
   if (!fixture) notFound();
-  const { match: m, series, canEditUmpires } = fixture;
+  const { match: m } = fixture;
+  const canEdit = can((await auth())?.user, "manage-league");
 
   return (
     <div className="flex flex-col gap-8">
@@ -28,27 +30,8 @@ export default async function FixturePage({ params }: { params: Promise<{ matchI
         ← All fixtures
       </Link>
 
-      {/* Same card as the fixtures list; entry happens in the form below instead of inline. */}
-      <FixtureCard m={m} highlight={null} entryOpen={false} standalone />
-
-      {canEditUmpires ? (
-        <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="font-display text-2xl font-extrabold tracking-wide uppercase">Enter umpires</h2>
-            <p className="text-chalk-dim mt-1 text-sm">
-              For {m.umpiringTeam ? `${m.umpiringTeam.name}, the umpiring team` : "the umpiring team"}: name
-              Umpire 1 and Umpire 2, with a phone number for each.
-            </p>
-          </div>
-          <UmpireForm matchId={m.id} umpireOneName={m.umpires.one} umpireTwoName={m.umpires.two} />
-        </section>
-      ) : (
-        <p role="status" className="border-gold/40 bg-dugout border p-4 text-sm">
-          {series.umpireEntryLocked
-            ? "Umpire entry is closed. Contact the committee if this fixture's umpires need to change."
-            : "This match has been played, so its umpires can't be changed here."}
-        </p>
-      )}
+      {/* Same card as the fixtures list. Admins get a gear icon here that opens the edit page. */}
+      <FixtureCard m={m} highlight={null} canEdit={canEdit} standalone />
     </div>
   );
 }

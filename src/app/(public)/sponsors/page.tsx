@@ -5,7 +5,7 @@ import { SectionTitle } from "@/components/section-title";
 import { otherSponsors, titleSponsor } from "@/lib/sponsors";
 
 export const metadata: Metadata = {
-  title: "Sponsors · CIL Winter League",
+  title: "Sponsors",
   description: "The partners behind the CIL Winter League, and where to find them.",
 };
 

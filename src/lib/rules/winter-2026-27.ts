@@ -846,7 +846,7 @@ export const RULE_BOOK: RuleSection[] = [
           "Any other action the umpire(s) consider unfair.",
         ],
       ),
-      heading("Illegal bowling action (throwing)"),
+      heading("Illegal bowling action (throwing/chucking)"),
       rule(
         "15.14",
         "A ball is considered thrown when the bowler’s elbow cannot fully straighten after the arm reaches shoulder height in the delivery swing. Wrist movement (flexing, rotating) is allowed.",

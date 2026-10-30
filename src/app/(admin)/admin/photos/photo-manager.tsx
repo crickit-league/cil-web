@@ -60,7 +60,7 @@ function DetailFields({
       <input
         type="text"
         value={value.title}
-        maxLength={80}
+        maxLength={50}
         disabled={disabled}
         placeholder="Title, e.g. Man of the Match: A. Kumar"
         aria-label={`Title for ${label}`}

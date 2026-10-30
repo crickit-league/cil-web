@@ -19,7 +19,7 @@ const optionalText = (max: number, message: string) =>
     .max(max, message)
     .transform((value) => (value === "" ? null : value));
 
-export const photoTitleSchema = optionalText(80, "Keep titles under 80 characters.");
+export const photoTitleSchema = optionalText(50, "Keep titles under 50 characters.");
 export const photoBodySchema = optionalText(500, "Keep the text under 500 characters.");
 /** The match a photo is linked to; empty means none. */
 export const photoMatchIdSchema = z

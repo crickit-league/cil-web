@@ -3,18 +3,20 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { titleSponsor } from "@/lib/sponsors";
 
-// The slim banner under the score ticker: the league's name and two calls to
-// action, kept short so a phone gets to the scores and fixtures straight away.
-// On a phone it is about 150px tall; wider screens put the buttons and the title
-// sponsor beside the headline.
+// The banner under the score ticker: the league's name, a line about the league,
+// two calls to action and the title sponsor, kept short so a phone still gets to
+// the photos and scores quickly. Wider screens put the buttons and sponsor beside
+// the headline. The drifting lattice with its light glint (hero-texture in globals.css) is kept
+// from the original home page at the committee's request (2026-10-28); the crest
+// watermark lives in the app-wide background (app-bg) instead.
 
 const buttonBase =
   "font-display inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-base leading-none font-extrabold tracking-wide uppercase transition-colors sm:text-lg";
 
 export function HomeHero() {
   return (
-    <section className="hero-bg on-brand relative isolate overflow-hidden">
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-7">
+    <section className="hero-bg hero-texture on-brand relative isolate overflow-hidden">
+      <div className="relative z-10 mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8 sm:py-9">
         <div>
           <span className="font-data text-clay inline-flex items-center gap-2 text-[0.68rem] tracking-[0.2em] uppercase sm:text-xs">
             <span aria-hidden="true" className="bg-clay h-px w-6 sm:w-8" />
@@ -23,6 +25,10 @@ export function HomeHero() {
           <h1 className="font-display mt-2 text-[2.1rem] leading-[0.95] font-extrabold tracking-wide uppercase sm:text-5xl lg:text-6xl">
             CIL Winter League <span className="text-clay">Championship</span>
           </h1>
+          <p className="text-chalk-dim mt-3 max-w-[50ch] text-sm sm:text-base">
+            Over 13 years of weekend cricket at Atlanta continues with another exciting season. The
+            2026&ndash;27 league stage began October 24.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -47,7 +53,7 @@ export function HomeHero() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Presented by ${titleSponsor.name} (opens their website)`}
-              className="hidden items-center gap-3 sm:inline-flex"
+              className="inline-flex items-center gap-3"
             >
               <span className="font-data text-chalk-dim text-[0.62rem] tracking-[0.16em] uppercase">
                 Presented by

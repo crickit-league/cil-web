@@ -2,15 +2,22 @@ import { z } from "zod";
 import type { MatchStage, MatchStatus, ResultType } from "@/generated/prisma";
 import { prisma } from "@/lib/db/prisma";
 import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
-import { recordAudit } from "@/lib/services/audit";
+import { diffRecords, recordAudit } from "@/lib/services/audit";
 import { findCurrentSeries } from "@/lib/services/series";
-import { compareMatchWhen } from "@/lib/time";
+import { compareMatchWhen, leagueWallTimeToUtc } from "@/lib/time";
 import { pickMatchday, type Matchday } from "@/lib/matchday";
 
 export class MatchNotFoundError extends Error {
   constructor() {
     super("That match no longer exists.");
     this.name = "MatchNotFoundError";
+  }
+}
+
+export class InvalidMatchInfoError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidMatchInfoError";
   }
 }
 
@@ -37,9 +44,9 @@ const scheduleSelect = {
   teamOneSource: true,
   teamTwoSource: true,
   umpiringTeam: { select: { id: true, displayName: true } },
-  field: { select: { label: true, ground: { select: { name: true } } } },
+  field: { select: { id: true, label: true, ground: { select: { name: true } } } },
   // Phones are selected only to turn into `hasPhones` in toScheduleMatch;
-  // the numbers themselves never leave this file (see umpire-nominations.ts).
+  // the numbers themselves never leave this file (see umpire-assignments.ts).
   umpireNomination: {
     select: { umpireOneName: true, umpireOnePhone: true, umpireTwoName: true, umpireTwoPhone: true },
   },
@@ -90,7 +97,9 @@ export type ScheduleMatch = {
   teamTwoSource: string | null;
   umpiringTeam: { id: string; name: string } | null;
   ground: string | null;
-  /** Nominated umpires' names (public). Never the phone numbers. */
+  /** The field (within the ground) the match is on; what the admin edit form preselects. */
+  fieldId: string | null;
+  /** The assigned umpires' names (public). Never the phone numbers. */
   umpires: { one: string | null; two: string | null; hasPhones: boolean };
 };
 
@@ -111,7 +120,7 @@ type ScheduleRow = {
   teamOneSource: string | null;
   teamTwoSource: string | null;
   umpiringTeam: { id: string; displayName: string } | null;
-  field: { label: string; ground: { name: string } } | null;
+  field: { id: string; label: string; ground: { name: string } } | null;
   umpireNomination: {
     umpireOneName: string | null;
     umpireOnePhone: string | null;
@@ -181,6 +190,7 @@ function toScheduleMatch(m: ScheduleRow): ScheduleMatch {
     teamOneSource: m.teamOneSource,
     teamTwoSource: m.teamTwoSource,
     umpiringTeam: team(m.umpiringTeam),
+    fieldId: m.field?.id ?? null,
     ground: m.field
       ? m.field.label
         ? `${m.field.ground.name} ${m.field.label}`
@@ -227,7 +237,7 @@ export async function getPublicFixtures(filter: { teamEntryId?: string } = {}) {
 
   return {
     season,
-    series: { name: series.name, umpireEntryLocked: series.umpireEntryLocked },
+    series: { name: series.name },
     teams: teams.map((t) => ({ id: t.id, name: t.displayName })),
     selectedTeamId: teamFilter ?? null,
     matches: matches.map(toScheduleMatch).sort(compareMatchWhen),
@@ -252,18 +262,16 @@ export async function getHomeMatchday(now = new Date()): Promise<HomeMatchday | 
   }
 }
 
-/** One fixture for its public page (the umpire form), or null. */
+/** One fixture for its public page (the admin umpire form), or null. */
 export async function getPublicFixture(matchId: string) {
   const match = await prisma.match.findFirst({
     where: { id: matchId, status: { not: "CANCELLED" } },
-    select: { ...scheduleSelect, series: { select: { name: true, umpireEntryLocked: true } } },
+    select: { ...scheduleSelect, series: { select: { name: true } } },
   });
   if (!match) return null;
   return {
     match: toScheduleMatch(match),
     series: match.series,
-    // What the public form may do; admins edit from the admin schedule instead.
-    canEditUmpires: !match.series.umpireEntryLocked && match.status === "SCHEDULED",
   };
 }
 
@@ -293,7 +301,7 @@ export async function getAdminSchedule(user: SessionUser) {
   ]);
 
   return {
-    series: { id: series.id, name: series.name, umpireEntryLocked: series.umpireEntryLocked },
+    series: { id: series.id, name: series.name },
     teams: teams.map((t) => ({ id: t.id, name: t.displayName })),
     matches: matches
       .map((m) => ({ ...toScheduleMatch(m), umpiringTeamSource: m.umpiringTeamSource }))
@@ -357,4 +365,118 @@ export async function setUmpiringTeam(user: SessionUser, matchId: string, input:
       changes: { umpiringTeam: [match.umpiringTeam?.displayName ?? null, newName] },
     });
   });
+}
+
+const updateMatchInfoSchema = z
+  .object({
+    // "" = date not set yet (shown as "Date TBD").
+    date: z
+      .string()
+      .regex(/^(\d{4}-\d{2}-\d{2})?$/, "Enter a valid date.")
+      .refine((v) => v === "" || !Number.isNaN(Date.parse(v)), "Enter a valid date."),
+    // "" with a date = the date is fixed but the start time isn't ("Time TBD").
+    time: z.string().regex(/^(([01]\d|2[0-3]):[0-5]\d)?$/, "Enter a valid time."),
+    // "" = no field / no umpiring team.
+    fieldId: z.string().transform((v) => v || null),
+    umpiringTeamId: z.string().transform((v) => v || null),
+  })
+  .refine((v) => !(v.time && !v.date), { message: "Enter a date for that time.", path: ["time"] });
+
+/** What the admin edit form offers: every field (with its ground) and the current series' teams. */
+export async function getMatchEditOptions(user: SessionUser) {
+  if (!can(user, "manage-league")) throw new ForbiddenError();
+
+  const { series } = await findCurrentSeries();
+  const [fields, teams] = await Promise.all([
+    prisma.field.findMany({
+      select: { id: true, label: true, ground: { select: { name: true } } },
+      orderBy: [{ ground: { name: "asc" } }, { label: "asc" }],
+    }),
+    series
+      ? prisma.teamEntry.findMany({
+          where: { seriesId: series.id },
+          select: { id: true, displayName: true },
+          orderBy: { displayName: "asc" },
+        })
+      : [],
+  ]);
+  return {
+    fields: fields.map((f) => ({
+      id: f.id,
+      label: f.label ? `${f.ground.name} · ${f.label}` : f.ground.name,
+    })),
+    teams: teams.map((t) => ({ id: t.id, name: t.displayName })),
+  };
+}
+
+/**
+ * Admin edit of a match's schedule info: date, start time, field and umpiring
+ * team (the teams themselves and results come from CricClubs). Note a later
+ * CricClubs schedule import rewrites date, time and field from its file; only
+ * the umpiring team is marked ADMIN and kept (see setUmpiringTeam).
+ */
+export async function updateMatchInfo(user: SessionUser, matchId: string, input: unknown) {
+  if (!can(user, "manage-league")) throw new ForbiddenError();
+  const { date, time, fieldId, umpiringTeamId } = updateMatchInfoSchema.parse(input);
+
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: {
+      id: true,
+      startsAt: true,
+      timeTbd: true,
+      umpiringTeamId: true,
+      field: { select: { id: true, label: true, ground: { select: { name: true } } } },
+      teamOne: { select: { displayName: true } },
+      teamTwo: { select: { displayName: true } },
+    },
+  });
+  if (!match) throw new MatchNotFoundError();
+
+  const newField = fieldId
+    ? await prisma.field.findUnique({
+        where: { id: fieldId },
+        select: { id: true, label: true, ground: { select: { name: true } } },
+      })
+    : null;
+  if (fieldId && !newField) throw new InvalidMatchInfoError("That field no longer exists.");
+
+  // Validates the umpiring team (not a playing team, in this series) before anything is saved.
+  if (umpiringTeamId !== match.umpiringTeamId) {
+    await setUmpiringTeam(user, matchId, { teamEntryId: umpiringTeamId ?? "" });
+  }
+
+  const startsAt = date ? leagueWallTimeToUtc(date, time || "00:00") : null;
+  const timeTbd = Boolean(date) && !time;
+  const fieldName = (f: { label: string; ground: { name: string } } | null) =>
+    f ? (f.label ? `${f.ground.name} · ${f.label}` : f.ground.name) : null;
+  const changes = diffRecords(
+    {
+      startsAt: match.startsAt?.toISOString() ?? null,
+      timeTbd: match.timeTbd,
+      field: fieldName(match.field),
+    },
+    { startsAt: startsAt?.toISOString() ?? null, timeTbd, field: fieldName(newField) },
+  );
+  if (Object.keys(changes).length === 0) return;
+
+  const label = `${match.teamOne?.displayName ?? "TBD"} v ${match.teamTwo?.displayName ?? "TBD"}`;
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.match.update({ where: { id: matchId }, data: { startsAt, timeTbd, fieldId } });
+      await recordAudit(tx, user, {
+        action: "match.updateInfo",
+        entityType: "Match",
+        entityId: matchId,
+        summary: `updated the date, time or field for ${label}`,
+        changes,
+      });
+    });
+  } catch (error) {
+    // The same two teams can't have two matches starting at the same moment.
+    if ((error as { code?: string }).code === "P2002") {
+      throw new InvalidMatchInfoError("These two teams already have a match at that date and time.");
+    }
+    throw error;
+  }
 }

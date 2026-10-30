@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { auth } from "@/lib/auth";
 import { setUmpiringTeam } from "@/lib/services/schedule";
-import { setUmpireEntryLocked } from "@/lib/services/umpire-nominations";
 import {
   addUnmatchedImportTeams,
   commitScheduleImport,
@@ -115,18 +114,6 @@ export async function setUmpiringTeamAction(matchId: string, teamEntryId: string
   if (!session?.user) return { ok: false, message: "You must be signed in." };
   try {
     await setUmpiringTeam(session.user, matchId, { teamEntryId });
-  } catch (error) {
-    return { ok: false, message: errorMessage(error) };
-  }
-  revalidateSchedule();
-  return { ok: true };
-}
-
-export async function setUmpireEntryLockedAction(locked: boolean): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user) return { ok: false, message: "You must be signed in." };
-  try {
-    await setUmpireEntryLocked(session.user, { locked });
   } catch (error) {
     return { ok: false, message: errorMessage(error) };
   }

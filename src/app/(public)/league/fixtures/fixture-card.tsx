@@ -1,4 +1,6 @@
-import type { FixtureStatus, MatchScore, ScheduleMatch } from "@/lib/services/schedule";
+import Link from "next/link";
+import { Settings } from "lucide-react";
+import type { MatchScore, ScheduleMatch } from "@/lib/services/schedule";
 import { teamLabel } from "@/lib/team-label";
 import { TeamBadge } from "@/components/team-badge";
 import { STAGE_LABEL } from "@/lib/import/schedule-plan";
@@ -7,23 +9,11 @@ import { FixtureFooter } from "./fixture-footer";
 
 // "Scoreboard rows" fixture card (design A, chosen 2026-10-16): a header strip
 // with date/time and status, one row per team with its score, the result and
-// ground, and a dashed footer for umpiring (fixture-footer.tsx). On the fixtures list the footer's
-// "Enter umpires →" expands the card in place (umpire-entry.tsx); the fixture
-// page (/league/fixtures/[matchId]) reuses the card as its header.
+// ground, and a dashed footer for umpiring (fixture-footer.tsx). The fixture page
+// (/league/fixtures/[matchId]) reuses the card as its header; admins get a gear
+// icon on it that opens the edit-match page, where umpires are assigned.
 
 export { teamLabel } from "@/lib/team-label";
-
-export function StatusBadge({ status }: { status: FixtureStatus }) {
-  return (
-    <span
-      className={`font-data inline-flex items-center border px-2 py-0.5 text-[0.6rem] tracking-[0.12em] whitespace-nowrap uppercase ${
-        status === "COMPLETED" ? "border-gold/50 bg-gold/10 text-gold" : "border-line text-chalk-dim"
-      }`}
-    >
-      {status === "COMPLETED" ? "Completed" : "Scheduled"}
-    </span>
-  );
-}
 
 /** "11.5" — legal balls in the usual overs.balls notation. */
 function formatOvers(legalBalls: number) {
@@ -52,7 +42,7 @@ function Icon({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 const TrophyIcon = () => (
-  <Icon className="text-gold">
+  <Icon className="text-clay">
     <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
     <path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 5M17 6h2.5a2.5 2.5 0 0 1-2.5 5" />
   </Icon>
@@ -81,27 +71,24 @@ function sides(m: ScheduleMatch): Side[] {
 export function FixtureCard({
   m,
   highlight,
-  entryOpen,
+  canEdit = false,
   standalone = false,
 }: {
   m: ScheduleMatch;
-  /** Team picked in the team filter; its name is underlined in gold. */
+  /** Team picked in the team filter; its name is underlined in the theme color. */
   highlight: string | null;
-  /** Public umpire entry is open for the series. */
-  entryOpen: boolean;
+  /** Admins only: shows the gear icon that opens the edit-match page. */
+  canEdit?: boolean;
   /** The fixture page's header: a <div>, and no inline entry (the page has its own form). */
   standalone?: boolean;
 }) {
   const completed = m.fixtureStatus === "COMPLETED";
   const winnerId = m.result?.kind === "win" ? m.result.winner.id : null;
-  // The public form only takes umpires for matches still to be played
-  // (enforced in saveUmpireNomination), so played ones get no entry.
-  const canEnter = entryOpen && !completed && !standalone;
   const Tag = standalone ? "div" : "li";
 
   return (
     // h-full + the body's flex-1 + the footer's mt-auto: cards in a grid row match heights.
-    <Tag className="bg-dugout border-line flex h-full scroll-mt-36 flex-col border">
+    <Tag className="bg-dugout border-line flex h-full scroll-mt-36 flex-col overflow-hidden rounded-[10px] border">
       {/* Header strip */}
       <div className="border-line flex items-center justify-between gap-3 border-b px-4 py-2.5">
         <span className="font-data text-chalk-dim text-[0.68rem] tracking-[0.1em] whitespace-nowrap uppercase">
@@ -113,7 +100,16 @@ export function FixtureCard({
               {STAGE_LABEL[m.stage]}
             </span>
           ) : null}
-          <StatusBadge status={m.fixtureStatus} />
+          {canEdit ? (
+            <Link
+              href={`/league/fixtures/${m.id}/edit`}
+              aria-label="Edit match"
+              title="Edit match (admin)"
+              className="text-chalk-faint hover:text-clay-bright -my-1 flex h-7 w-7 items-center justify-center rounded transition-colors"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </Link>
+          ) : null}
         </span>
       </div>
 
@@ -128,18 +124,18 @@ export function FixtureCard({
               <li
                 key={side.id ?? `slot-${i}`}
                 className={`-ml-4 flex items-center justify-between gap-3 border-l-[3px] pl-[13px] ${
-                  won ? "border-gold" : "border-transparent"
+                  won ? "border-clay" : "border-transparent"
                 }`}
               >
                 <span
                   className={`font-display flex min-w-0 items-center gap-2 text-xl leading-tight font-bold uppercase ${
-                    won ? "text-gold" : lost ? "text-chalk-dim" : "text-chalk"
+                    won ? "text-clay" : lost ? "text-chalk-dim" : "text-chalk"
                   }`}
                 >
                   <TeamBadge name={side.label} size={28} />
                   <span
                     className={
-                      highlighted ? "decoration-gold underline decoration-2 underline-offset-4" : undefined
+                      highlighted ? "decoration-clay underline decoration-2 underline-offset-4" : undefined
                     }
                   >
                     {side.label}
@@ -169,24 +165,45 @@ export function FixtureCard({
         </ul>
 
         {m.result ? (
-          <p className={`text-sm ${m.result.kind === "win" ? "text-gold font-semibold" : "text-chalk-dim"}`}>
+          <p className={`text-sm ${m.result.kind === "win" ? "text-clay font-semibold" : "text-chalk-dim"}`}>
             {m.result.kind === "win" ? `${m.result.winner.name} ${m.result.text}` : m.result.text}
           </p>
         ) : null}
-        <p className="text-chalk-dim flex items-center gap-1.5 text-sm">
-          <PinIcon />
-          {m.ground ?? "Ground to be confirmed"}
-        </p>
+        {/* The ground on the left, the umpiring team on the right of the same line. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
+          <p className="text-chalk-dim flex items-center gap-1.5">
+            <PinIcon />
+            {m.ground && m.fieldId ? (
+              <Link
+                href={`/grounds/field/${m.fieldId}`}
+                className="hover:text-clay underline-offset-2 transition-colors hover:underline"
+              >
+                {m.ground}
+              </Link>
+            ) : (
+              (m.ground ?? "Ground to be confirmed")
+            )}
+          </p>
+          <p className="text-right">
+            <span className="font-data text-chalk-faint mr-2 text-[0.62rem] tracking-[0.12em] uppercase">
+              Umpiring
+            </span>
+            <span
+              className={
+                m.umpiringTeam && m.umpiringTeam.id === highlight ? "text-clay font-semibold" : "text-chalk"
+              }
+            >
+              {m.umpiringTeam?.name ?? (
+                <span className="text-chalk-faint">{completed ? "—" : "To be assigned"}</span>
+              )}
+            </span>
+          </p>
+        </div>
       </div>
 
-      <FixtureFooter
-        matchId={m.id}
-        completed={completed}
-        umpiringTeam={m.umpiringTeam?.name ?? null}
-        umpiringHighlighted={Boolean(m.umpiringTeam && m.umpiringTeam.id === highlight)}
-        umpires={m.umpires}
-        canEnter={canEnter}
-      />
+      {m.umpires.one || m.umpires.two ? (
+        <FixtureFooter matchId={m.id} completed={completed} umpires={m.umpires} />
+      ) : null}
     </Tag>
   );
 }
