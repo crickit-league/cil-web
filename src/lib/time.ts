@@ -158,3 +158,33 @@ export function compareMatchWhen(a: MatchWhen, b: MatchWhen): number {
   if (a.timeTbd !== b.timeTbd) return a.timeTbd ? 1 : -1;
   return a.startsAt.getTime() - b.startsAt.getTime();
 }
+
+/** The Monday on or before a league-zone day key ("2026-10-28" -> "2026-10-26"), so weeks run Monday to Sunday. */
+export function weekStartKey(dayKey: string): string {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const day = new Date(Date.UTC(y, m - 1, d));
+  const sinceMonday = (day.getUTCDay() + 6) % 7;
+  day.setUTCDate(day.getUTCDate() - sinceMonday);
+  return day.toISOString().slice(0, 10);
+}
+
+/** "Oct 26 – Nov 1" for the week starting on the given Monday key. */
+export function formatWeekRange(mondayKey: string): string {
+  const [y, m, d] = mondayKey.split("-").map(Number);
+  const fmt = (date: Date) =>
+    date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const monday = new Date(Date.UTC(y, m - 1, d));
+  const sunday = new Date(Date.UTC(y, m - 1, d + 6));
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
+
+/** Groups matches by Monday-to-Sunday week ("tbd" for no date), keeping their order. */
+export function groupByWeek<T extends MatchWhen>(matches: T[]): Map<string, T[]> {
+  const weeks = new Map<string, T[]>();
+  for (const m of matches) {
+    const key = m.startsAt ? weekStartKey(matchDayKey(m.startsAt)) : "tbd";
+    if (!weeks.has(key)) weeks.set(key, []);
+    weeks.get(key)!.push(m);
+  }
+  return weeks;
+}
