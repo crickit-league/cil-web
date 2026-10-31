@@ -352,9 +352,9 @@ export const RULE_BOOK: RuleSection[] = [
   {
     id: "wides-no-balls",
     number: 8,
-    title: "Wides and No-balls",
+    title: "Wides and No balls",
     category: "playing",
-    quick: "Wide at 36 in from the stump; return crease at 48 in; every no-ball is a Free Hit.",
+    quick: "Wide at 36 in from the stump; return crease at 48 in; every no ball is a Free Hit.",
     items: [
       heading("Wides"),
       rule(
@@ -381,11 +381,11 @@ export const RULE_BOOK: RuleSection[] = [
         "8.6",
         "Reverse sweep / switch hit: wide guidelines apply equally to both sides of the wicket and both sides are considered off sides. This replaces the standard leg-side wide rule, and applies even when the batter prepares for but then abandons a reverse sweep or switch hit.",
       ),
-      heading("No-balls"),
-      rule("8.7", "A ball is a no-ball if:", [
+      heading("No balls"),
+      rule("8.7", "A ball is a no ball if:", [
         "The bowler has overstepped the popping crease, i.e., some part of the bowler’s front foot, whether grounded or raised, is not behind the popping crease; or",
         "The front foot touches or lands on the other side of the imaginary line connecting the middle stumps at either end; or",
-        "The back foot does not land within the return crease and/or touches the return crease. Only the back foot is considered for a return-crease (side line) no-ball; or",
+        "The back foot does not land within the return crease and/or touches the return crease. Only the back foot is considered for a return-crease (side line) no ball; or",
         "The ball is a full toss above the waist height of the batsman in a normal stance; or",
         "The ball is over the shoulder of the batsman after one bounce, with a warning provided by the umpires in the same over. (There is one warning for a ball bowled over the shoulder, and a Free Hit is awarded for the second bounce by the bowler.)",
       ]),
@@ -393,20 +393,20 @@ export const RULE_BOOK: RuleSection[] = [
         "8.8",
         "The bowling side return crease is 48 inches (4 feet) from the outside stump of the bowling wicket.",
       ),
-      rule("8.9", "A no-ball call always overrides a wide."),
+      rule("8.9", "A no ball call always overrides a wide."),
       rule(
         "8.10",
-        "Free Hit: all no-balls result in a Free Hit for the batting team. On a Free Hit delivery, the batsman can be dismissed only by Run Out, Handling the Ball, Hitting the Ball Twice, or Obstructing the Field. The fielding team cannot change positions for a Free Hit unless the batsmen switch ends or a new batsman comes to bat.",
+        "Free Hit: all no balls result in a Free Hit for the batting team. On a Free Hit delivery, the batsman can be dismissed only by Run Out, Handling the Ball, Hitting the Ball Twice, or Obstructing the Field. The fielding team cannot change positions for a Free Hit unless the batsmen switch ends or a new batsman comes to bat.",
       ),
       rule("8.11", "If only one designated umpire is available, the neutral umpire’s call is final."),
-      heading("Runs and dismissals on wides and no-balls"),
+      heading("Runs and dismissals on wides and no balls"),
       rule(
         "8.12",
-        "Wides and no-balls each count as 1 extra run, and an extra ball must be bowled in the over. Any runs (byes, leg byes, etc.) scored off wides or no-balls are credited as well. The ball is still in play after a no-ball or a wide.",
+        "Wides and no balls each count as 1 extra run, and an extra ball must be bowled in the over. Any runs (byes, leg byes, etc.) scored off wides or no balls are credited as well. The ball is still in play after a no ball or a wide.",
       ),
       rule(
         "8.13",
-        "A batsman can be out on a wide ball for Hit Wicket, Obstructing the Field or stumped, and can be run out off a wide or a no-ball.",
+        "A batsman can be out on a wide ball for Hit Wicket, Obstructing the Field or stumped, and can be run out off a wide or a no ball.",
       ),
       heading("Diagrams"),
       {
@@ -419,13 +419,13 @@ export const RULE_BOOK: RuleSection[] = [
           },
           {
             src: "/documents/front-foot.png",
-            alt: "Front foot diagram: no-ball and legitimate delivery zones around the popping crease and return crease",
-            caption: "Front foot: no-ball and legitimate delivery zones",
+            alt: "Front foot diagram: no ball and legitimate delivery zones around the popping crease and return crease",
+            caption: "Front foot: no ball and legitimate delivery zones",
           },
           {
             src: "/documents/back-foot.png",
-            alt: "Back foot diagram: no-ball and legitimate delivery zones around the popping crease and return crease",
-            caption: "Back foot: no-ball and legitimate delivery zones",
+            alt: "Back foot diagram: no ball and legitimate delivery zones around the popping crease and return crease",
+            caption: "Back foot: no ball and legitimate delivery zones",
           },
         ],
       },
@@ -459,7 +459,7 @@ export const RULE_BOOK: RuleSection[] = [
       ),
       rule(
         "9.5",
-        "The bowler must notify the umpire whether they intend to bowl right-handed or left-handed, and whether over or round the wicket. Changing the mode of delivery without notifying the umpire is unfair play and results in a No-ball.",
+        "The bowler must notify the umpire whether they intend to bowl right-handed or left-handed, and whether over or round the wicket. Changing the mode of delivery without notifying the umpire is unfair play and results in a No ball.",
       ),
       rule("9.6", "Underarm bowling is not permitted."),
     ],
@@ -853,7 +853,7 @@ export const RULE_BOOK: RuleSection[] = [
       ),
       rule(
         "15.15",
-        "The umpires assess the delivery. If the ball has been thrown, the umpire calls and signals No-ball and, when the ball is dead, informs the other umpire of the reason. Although the striker’s end umpire has the primary responsibility for assessing fairness, the bowler’s end umpire may also call and signal No-ball if he/she considers the ball thrown.",
+        "The umpires assess the delivery. If the ball has been thrown, the umpire calls and signals No ball and, when the ball is dead, informs the other umpire of the reason. Although the striker’s end umpire has the primary responsibility for assessing fairness, the bowler’s end umpire may also call and signal No ball if he/she considers the ball thrown.",
       ),
       rule(
         "15.16",
@@ -865,7 +865,7 @@ export const RULE_BOOK: RuleSection[] = [
       ),
       rule(
         "15.18",
-        "Third offence – suspension. If either umpire considers that a further delivery by the same bowler in that innings is thrown, he calls and signals No-ball and, when the ball is dead, informs the other umpire of the reason. The bowler’s end umpire then directs the captain of the fielding side to suspend the bowler immediately. The over is completed by another bowler who has neither bowled the previous over (or part of it) nor is allowed to bowl any part of the next over. The suspended bowler cannot bowl again in that innings.",
+        "Third offence – suspension. If either umpire considers that a further delivery by the same bowler in that innings is thrown, he calls and signals No ball and, when the ball is dead, informs the other umpire of the reason. The bowler’s end umpire then directs the captain of the fielding side to suspend the bowler immediately. The over is completed by another bowler who has neither bowled the previous over (or part of it) nor is allowed to bowl any part of the next over. The suspended bowler cannot bowl again in that innings.",
       ),
       heading("Time delays"),
       rule(

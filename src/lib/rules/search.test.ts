@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { countMatches, filterRuleBook, searchTerms, sectionOfRule, splitByTerms } from "./search";
+import {
+  countMatches,
+  filterRuleBook,
+  rankResults,
+  resultTier,
+  searchTerms,
+  sectionOfRule,
+  splitByTerms,
+} from "./search";
 import { POPULAR_TOPICS } from "./topics";
 import { RULE_BOOK, type RuleSection } from "./winter-2026-27";
 
@@ -63,10 +71,20 @@ describe("filterRuleBook", () => {
     expect(ruleNums([found])).toContain("12.9"); // says only "overs"; "super" comes from the title
   });
 
-  it("does not match on a section's title alone", () => {
-    const nums = ruleNums(filterRuleBook(RULE_BOOK, searchTerms("umpiring")));
+  it("shows the whole section when the search matches its title", () => {
+    const found = filterRuleBook(RULE_BOOK, searchTerms("umpiring")).find((s) => s.title === "Umpiring")!;
     const section = RULE_BOOK.find((s) => s.title === "Umpiring")!;
-    expect(nums.length).toBeLessThan(ruleNums([section]).length);
+    expect(ruleNums([found])).toEqual(ruleNums([section]));
+  });
+
+  it("shows everything under a sub-heading when the search matches it", () => {
+    const section = RULE_BOOK.find((s) => s.items.some((i) => i.kind === "heading"))!;
+    const at = section.items.findIndex((i) => i.kind === "heading");
+    const heading = section.items[at] as { kind: "heading"; text: string };
+    const rest = section.items.slice(at + 1);
+    const under = rest.slice(0, rest.findIndex((i) => i.kind === "heading") + 1 || rest.length);
+    const found = filterRuleBook(RULE_BOOK, searchTerms(heading.text)).find((s) => s.id === section.id)!;
+    expect(ruleNums([found])).toEqual(expect.arrayContaining(ruleNums([{ ...section, items: under }])));
   });
 
   it("never includes sub-headings in results", () => {
@@ -197,13 +215,10 @@ describe("section titles as context", () => {
     ]);
   });
 
-  it("still leaves out rules that mention none of the words themselves", () => {
-    expect(ruleNums([section!])).not.toContain("6.3");
-  });
-
-  it("does not return a whole section for a title word alone", () => {
-    const umpiring = filterRuleBook(RULE_BOOK, searchTerms("umpiring")).find((s) => s.title === "Umpiring");
-    expect(ruleNums([umpiring!])).not.toContain("15.12");
+  it("returns the whole section, including rules that mention none of the words themselves", () => {
+    const all = RULE_BOOK.find((s) => s.id === "late-starts-forfeits-walkovers")!;
+    expect(ruleNums([section!])).toEqual(ruleNums([all]));
+    expect(ruleNums([section!])).toContain("6.3");
   });
 });
 
@@ -246,5 +261,59 @@ describe("splitByTerms", () => {
   it("merges overlapping hits and returns plain text with no terms", () => {
     expect(splitByTerms("free hit", ["free", "free hit".split(" ")[0]]).filter((p) => p.hit)).toHaveLength(1);
     expect(splitByTerms("abc", [])).toEqual([{ text: "abc", hit: false }]);
+  });
+});
+
+describe("rankResults", () => {
+  const terms = searchTerms("no ball");
+  const ranked = rankResults(filterRuleBook(RULE_BOOK, terms), terms);
+  const tiers = ranked.map((r) => r.tier);
+
+  it("lists the words-together matches first, then words apart, then context-only", () => {
+    expect(tiers).toEqual([...tiers].sort((a, b) => b - a));
+    expect(tiers[0]).toBe(3);
+  });
+
+  it("treats 'no ball' and 'no-ball' alike, but not the words far apart", () => {
+    const rule = (text: string) => ({ kind: "rule" as const, num: "1.1", text });
+    expect(resultTier(rule("A no-ball is called"), terms)).toBe(3);
+    expect(resultTier(rule("No runs; the ball is dead"), terms)).toBe(2);
+  });
+
+  it("returns every filtered item exactly once", () => {
+    const filtered = filterRuleBook(RULE_BOOK, terms);
+    expect(ranked).toHaveLength(filtered.reduce((n, section) => n + section.items.length, 0));
+  });
+
+  it("leaves out partial matches: the words must be in the item itself or in one header", () => {
+    // "umpiring" is a section title and "penalty" is not, so a rule saying only "penalty" is not a match.
+    const results = filterRuleBook(RULE_BOOK, searchTerms("umpiring penalty"));
+    const items = results.flatMap((s) => s.items);
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      const text = JSON.stringify(item).toLowerCase();
+      expect(text).toMatch(/umpir/);
+      expect(text).toMatch(/penalt/);
+    }
+  });
+
+  it("puts rules that only share a matching section title after the ones that say it", () => {
+    const wide = ranked.find((r) => r.item.kind === "rule" && r.item.num === "8.1")!;
+    const noBall = ranked.find((r) => r.item.kind === "rule" && r.item.num === "8.7")!;
+    expect(wide.tier).toBe(1); // a wide: the section is "Wides and No balls", the rule says nothing of it
+    expect(noBall.tier).toBe(3);
+    expect(ranked.indexOf(noBall)).toBeLessThan(ranked.indexOf(wide));
+  });
+
+  it("keeps rules under a matching sub-heading in rule-number order, with the rules that name the word", () => {
+    const throwTerms = searchTerms("throw");
+    const results = rankResults(filterRuleBook(RULE_BOOK, throwTerms), throwTerms);
+    const nums = results.flatMap((r) =>
+      r.item.kind === "rule" && r.section.title === "Umpiring" ? [r.item.num] : [],
+    );
+    const order = (n: string) => n.split(".").map(Number);
+    const inOrder = [...nums].sort((a, b) => order(a)[0] - order(b)[0] || order(a)[1] - order(b)[1]);
+    expect(nums).toContain("15.16"); // under "Illegal bowling action (throwing/chucking)", never says "throw" itself
+    expect(nums).toEqual(inOrder);
   });
 });

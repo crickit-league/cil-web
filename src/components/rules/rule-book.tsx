@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { countMatches, filterRuleBook, searchTerms, sectionOfRule } from "@/lib/rules/search";
+import { countMatches, filterRuleBook, rankResults, searchTerms, sectionOfRule } from "@/lib/rules/search";
 import { RULE_BOOK, RULE_BOOK_EMAIL, RULE_CATEGORIES, type RuleCategoryId } from "@/lib/rules/winter-2026-27";
 import { POPULAR_TOPICS } from "@/lib/rules/topics";
 import { Highlight, RuleBlock } from "./rule-blocks";
@@ -23,6 +23,7 @@ export function RuleBook() {
     [searched, category],
   );
   const matches = useMemo(() => countMatches(sections), [sections]);
+  const ranked = useMemo(() => rankResults(sections, terms), [sections, terms]);
   const categoryCounts = useMemo(() => {
     const counts = new Map<RuleCategoryId | "all", number>([["all", countMatches(searched)]]);
     for (const c of RULE_CATEGORIES) {
@@ -194,24 +195,22 @@ export function RuleBook() {
         </div>
       ) : searching ? (
         <ul className="flex flex-col gap-3" aria-label="Search results">
-          {sections.flatMap((section) =>
-            section.items.map((item, i) => (
-              <li
-                key={`${section.id}-${i}`}
-                className="border-line bg-dugout border-l-clay flex flex-col gap-2.5 border border-l-4 px-4 py-3"
+          {ranked.map(({ section, item, index }) => (
+            <li
+              key={`${section.id}-${index}`}
+              className="border-line bg-dugout border-l-clay flex flex-col gap-2.5 border border-l-4 px-4 py-3"
+            >
+              <button
+                type="button"
+                onClick={() => openRule(item.kind === "rule" ? item.num : "", section.id)}
+                className="font-data text-chalk-dim hover:text-clay-bright self-start text-[0.68rem] tracking-[0.1em] uppercase"
               >
-                <button
-                  type="button"
-                  onClick={() => openRule(item.kind === "rule" ? item.num : "", section.id)}
-                  className="font-data text-chalk-dim hover:text-clay-bright self-start text-[0.68rem] tracking-[0.1em] uppercase"
-                >
-                  {section.number}. {section.title}
-                  {item.kind === "table" && item.caption ? ` · ${item.caption}` : ""} →
-                </button>
-                <RuleBlock item={item} terms={terms} onZoom={setZoom} />
-              </li>
-            )),
-          )}
+                {section.number}. {section.title}
+                {item.kind === "table" && item.caption ? ` · ${item.caption}` : ""} →
+              </button>
+              <RuleBlock item={item} terms={terms} onZoom={setZoom} />
+            </li>
+          ))}
         </ul>
       ) : (
         <div className="flex flex-col gap-3">
