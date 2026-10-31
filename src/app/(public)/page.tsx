@@ -34,6 +34,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <div aria-hidden="true" className="home-glint" />
       <HomeHero />
       <div className="mx-auto flex max-w-[1180px] flex-col gap-5 px-3 py-6 sm:gap-6 sm:px-8 sm:py-8">
         {hasPhotos ? (
