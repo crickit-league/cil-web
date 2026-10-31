@@ -266,12 +266,35 @@ export async function getHomeMatchday(now = new Date()): Promise<HomeMatchday | 
 export async function getPublicFixture(matchId: string) {
   const match = await prisma.match.findFirst({
     where: { id: matchId, status: { not: "CANCELLED" } },
-    select: { ...scheduleSelect, series: { select: { name: true } } },
+    select: {
+      ...scheduleSelect,
+      series: { select: { name: true, maxOvers: true } },
+      matchNumber: true,
+      week: true,
+      oversPerSide: true,
+      tossWinnerIsTeamOne: true,
+      tossDecision: true,
+      playerOfMatch: { select: { fullName: true } },
+    },
   });
   if (!match) return null;
+
+  const tossWinner =
+    match.tossWinnerIsTeamOne === null ? null : match.tossWinnerIsTeamOne ? match.teamOne : match.teamTwo;
   return {
     match: toScheduleMatch(match),
-    series: match.series,
+    series: { name: match.series.name },
+    /** The "Match info" section; null where nothing has been recorded. */
+    info: {
+      matchNumber: match.matchNumber,
+      week: match.week,
+      overs: match.oversPerSide ?? match.series.maxOvers,
+      toss:
+        tossWinner && match.tossDecision
+          ? `${tossWinner.displayName} won the toss and chose to ${match.tossDecision}`
+          : null,
+      playerOfMatch: match.playerOfMatch?.fullName ?? null,
+    },
   };
 }
 

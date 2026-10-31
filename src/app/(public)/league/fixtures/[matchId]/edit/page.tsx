@@ -22,8 +22,8 @@ const sectionTitle = "font-display text-xl font-extrabold tracking-wide uppercas
 export default async function EditMatchPage({ params }: { params: Promise<{ matchId: string }> }) {
   const { matchId } = await params;
   const session = await auth();
-  // Everyone else gets the public fixture page; the service checks the role again.
-  if (!session?.user || !can(session.user, "manage-league")) redirect(`/league/fixtures/${matchId}`);
+  // Everyone else gets the fixtures list; the service checks the role again.
+  if (!session?.user || !can(session.user, "manage-league")) redirect("/league/fixtures");
 
   const view = await getMatchEditView(session.user, matchId);
   if (!view) notFound();
@@ -50,12 +50,14 @@ export default async function EditMatchPage({ params }: { params: Promise<{ matc
           {formatCardStampOrTbd(m)}
         </span>
         {m.ground ? <span className="text-chalk-dim text-sm">{m.ground}</span> : null}
-        <Link
-          href={`/league/fixtures/${m.id}`}
-          className="font-data text-clay-bright ml-auto text-[0.68rem] tracking-[0.08em] uppercase hover:underline"
-        >
-          View fixture
-        </Link>
+        {m.fixtureStatus === "COMPLETED" ? (
+          <Link
+            href={`/league/fixtures/${m.id}`}
+            className="font-data text-clay-bright ml-auto text-[0.68rem] tracking-[0.08em] uppercase hover:underline"
+          >
+            View fixture
+          </Link>
+        ) : null}
       </p>
 
       <section className="flex flex-col gap-3">
@@ -83,6 +85,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ matc
               url: p.url,
               caption: p.caption,
               title: p.title,
+              inCarousel: p.inCarousel,
               width: p.width,
               height: p.height,
             }))}

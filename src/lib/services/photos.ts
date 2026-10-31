@@ -62,6 +62,7 @@ function describeMatch(m: MatchRow) {
 export async function listHomePhotos(): Promise<PublicPhoto[]> {
   try {
     const rows = await prisma.photo.findMany({
+      where: { inCarousel: true },
       orderBy: { createdAt: "desc" },
       take: HOME_CAROUSEL_PHOTO_LIMIT,
       include: { match: { select: matchSelect } },
@@ -89,6 +90,45 @@ export async function listHomePhotos(): Promise<PublicPhoto[]> {
     });
   } catch (error) {
     console.error("Failed to load homepage photos:", error);
+    return [];
+  }
+}
+
+export type MatchPicture = {
+  id: string;
+  url: string;
+  title: string | null;
+  body: string | null;
+  caption: string | null;
+  width: number;
+  height: number;
+};
+
+/**
+ * Every picture linked to a match, oldest first, for its public page. Never
+ * throws: the page renders without pictures if the DB or R2 isn't available.
+ */
+export async function listMatchPictures(matchId: string): Promise<MatchPicture[]> {
+  try {
+    const rows = await prisma.photo.findMany({
+      where: { matchId },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        storageKey: true,
+        title: true,
+        body: true,
+        caption: true,
+        width: true,
+        height: true,
+      },
+    });
+    return rows.flatMap(({ storageKey, ...rest }) => {
+      const url = publicUrl(storageKey);
+      return url ? [{ ...rest, url }] : [];
+    });
+  } catch (error) {
+    console.error("Failed to load match pictures:", matchId, error);
     return [];
   }
 }
@@ -161,13 +201,22 @@ export async function listPhotosForMatch(user: SessionUser, matchId: string) {
   const rows = await prisma.photo.findMany({
     where: { matchId },
     orderBy: { createdAt: "desc" },
-    select: { id: true, storageKey: true, caption: true, title: true, width: true, height: true },
+    select: {
+      id: true,
+      storageKey: true,
+      caption: true,
+      title: true,
+      inCarousel: true,
+      width: true,
+      height: true,
+    },
   });
   return rows.map((row) => ({
     id: row.id,
     url: publicUrl(row.storageKey),
     caption: row.caption,
     title: row.title,
+    inCarousel: row.inCarousel,
     width: row.width,
     height: row.height,
   }));
@@ -216,6 +265,8 @@ export async function uploadPhoto(
     title?: unknown;
     body?: unknown;
     matchId?: unknown;
+    /** Show in the home carousel (default). Team pictures on a match page pass false. */
+    inCarousel?: boolean;
   },
 ) {
   if (!can(user, "manage-photos")) throw new ForbiddenError();
@@ -249,6 +300,7 @@ export async function uploadPhoto(
           title: parsed.title,
           body: parsed.body,
           matchId: parsed.matchId,
+          inCarousel: input.inCarousel ?? true,
           width: parsed.width,
           height: parsed.height,
           uploadedById: user.id,
@@ -299,6 +351,25 @@ export async function updatePhotoDetails(
       entityId: id,
       summary: "edited a photo's details",
       changes,
+    });
+  });
+}
+
+/** Shows or hides one photo in the home page carousel; it stays on its match page either way. */
+export async function setPhotoInCarousel(user: SessionUser, id: string, inCarousel: boolean) {
+  if (!can(user, "manage-photos")) throw new ForbiddenError();
+
+  const existing = await prisma.photo.findUnique({ where: { id } });
+  if (!existing || existing.inCarousel === inCarousel) return;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.photo.update({ where: { id }, data: { inCarousel } });
+    await recordAudit(tx, user, {
+      action: "photo.update",
+      entityType: "Photo",
+      entityId: id,
+      summary: inCarousel ? "added a photo to the home carousel" : "removed a photo from the home carousel",
+      changes: diffRecords({ inCarousel: existing.inCarousel }, { inCarousel }),
     });
   });
 }

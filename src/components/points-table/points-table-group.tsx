@@ -103,7 +103,7 @@ export function PointsTableGroup({
               <th scope="col" className="hidden w-20 py-2 text-right font-normal lg:table-cell">
                 Win%
               </th>
-              <th scope="col" className="w-24 py-2 pl-2 text-right font-normal">
+              <th scope="col" className="w-24 py-2 pr-3 pl-2 text-right font-normal lg:pr-0">
                 <abbr title="Net run rate" className="no-underline">
                   NRR
                 </abbr>
@@ -111,7 +111,7 @@ export function PointsTableGroup({
               <th scope="col" className="hidden w-24 py-2 pl-2 text-right font-normal lg:table-cell">
                 For
               </th>
-              <th scope="col" className="hidden w-24 py-2 pl-2 text-right font-normal lg:table-cell">
+              <th scope="col" className="hidden w-24 py-2 pr-3 pl-2 text-right font-normal lg:table-cell">
                 Against
               </th>
             </tr>
@@ -146,13 +146,13 @@ export function PointsTableGroup({
                 <td className="font-data text-chalk-dim hidden py-2.5 text-right lg:table-cell">
                   {row.winPercent === null ? "—" : `${row.winPercent.toFixed(2)}%`}
                 </td>
-                <td className="font-data text-chalk-dim py-2.5 pl-2 text-right">
+                <td className="font-data text-chalk-dim py-2.5 pr-3 pl-2 text-right lg:pr-0">
                   {formatNrr(row.netRunRate)}
                 </td>
                 <td className="font-data text-chalk-faint hidden py-2.5 pl-2 text-right lg:table-cell">
                   {row.runsFor ?? "—"}
                 </td>
-                <td className="font-data text-chalk-faint hidden py-2.5 pl-2 text-right lg:table-cell">
+                <td className="font-data text-chalk-faint hidden py-2.5 pr-3 pl-2 text-right lg:table-cell">
                   {row.runsAgainst ?? "—"}
                 </td>
               </tr>
