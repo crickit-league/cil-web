@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   compareFieldLabels,
   fieldChipLabel,
+  groundAppleMapsHref,
   groundDirectionsHref,
   groundEmbedSrc,
+  groundWazeHref,
   groundMapsHref,
   splitGroundName,
 } from "@/lib/grounds";
@@ -79,6 +81,18 @@ describe("map links", () => {
   it("links directions to the same place", () => {
     expect(groundDirectionsHref(rap)).toBe(
       "https://www.google.com/maps/dir/?api=1&destination=10495%20Woodstock%20Rd%2C%20Roswell%2C%20GA%2030075",
+    );
+  });
+
+  it("links Apple Maps and Waze to the same place, by coordinates when known", () => {
+    expect(groundAppleMapsHref(rap)).toBe(
+      "https://maps.apple.com/?daddr=10495%20Woodstock%20Rd%2C%20Roswell%2C%20GA%2030075",
+    );
+    expect(groundWazeHref(rap)).toBe(
+      "https://waze.com/ul?q=10495%20Woodstock%20Rd%2C%20Roswell%2C%20GA%2030075&navigate=yes",
+    );
+    expect(groundWazeHref({ ...rap, latitude: 34.0123, longitude: -84.3456 })).toBe(
+      "https://waze.com/ul?ll=34.0123%2C-84.3456&navigate=yes",
     );
   });
 });

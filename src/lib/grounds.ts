@@ -53,3 +53,17 @@ export function groundEmbedSrc(place: MapPlace): string {
 export function groundDirectionsHref(place: MapPlace): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery(place))}`;
 }
+
+/** Directions to the ground in Apple Maps (opens the Maps app on iPhones and Macs). */
+export function groundAppleMapsHref(place: MapPlace): string {
+  return `https://maps.apple.com/?daddr=${encodeURIComponent(mapQuery(place))}`;
+}
+
+/** Directions to the ground in Waze (opens the app when installed). */
+export function groundWazeHref(place: MapPlace): string {
+  const where =
+    place.latitude != null && place.longitude != null
+      ? `ll=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`
+      : `q=${encodeURIComponent(place.address?.trim() || place.name)}`;
+  return `https://waze.com/ul?${where}&navigate=yes`;
+}

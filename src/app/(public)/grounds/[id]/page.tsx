@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Navigation } from "lucide-react";
-import { fieldChipLabel, groundDirectionsHref, groundEmbedSrc, groundMapsHref } from "@/lib/grounds";
+import { ArrowLeft, ChevronDown, MapPin, Navigation } from "lucide-react";
+import {
+  fieldChipLabel,
+  groundAppleMapsHref,
+  groundDirectionsHref,
+  groundEmbedSrc,
+  groundWazeHref,
+} from "@/lib/grounds";
 import { getGround } from "@/lib/services/grounds";
 
 export const revalidate = 60;
@@ -77,30 +83,38 @@ export default async function GroundPage({
               </ul>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={groundDirectionsHref(ground)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={linkButton}
+            {/* One Directions button that lets the visitor pick the maps app (a plain <details>: no script). */}
+            <details className="relative w-fit">
+              <summary
+                className={`${linkButton} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}
               >
                 <Navigation className="size-4" aria-hidden="true" />
                 Directions
-              </a>
-              <a
-                href={groundMapsHref(ground)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={linkButton}
-              >
-                <ExternalLink className="size-4" aria-hidden="true" />
-                Open in Google Maps
-              </a>
-            </div>
+                <ChevronDown className="size-4" aria-hidden="true" />
+              </summary>
+              <ul className="border-line bg-dugout absolute z-10 mt-1 flex min-w-full flex-col overflow-hidden rounded-[6px] border shadow-lg">
+                {[
+                  { name: "Google Maps", href: groundDirectionsHref(ground) },
+                  { name: "Apple Maps", href: groundAppleMapsHref(ground) },
+                  { name: "Waze", href: groundWazeHref(ground) },
+                ].map((app) => (
+                  <li key={app.name}>
+                    <a
+                      href={app.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-clay block px-4 py-3 text-sm whitespace-nowrap"
+                    >
+                      {app.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
           </div>
 
           {/* Google's keyless embed: a map with the pin on the ground. Not on phones: the
-              Directions and Open in Google Maps buttons cover them (and a lazy iframe in a
+              Directions menu covers them (and a lazy iframe in a
               hidden box isn't fetched). */}
           <div className="border-line bg-dugout hidden aspect-[4/3] overflow-hidden rounded-[10px] border sm:block lg:aspect-auto lg:min-h-[24rem]">
             <iframe
