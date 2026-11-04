@@ -15,6 +15,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/league/fixtures", label: "Fixtures" },
   { href: "/league/points-table", label: "Points Table" },
+  { href: "/grounds", label: "Grounds" },
   { href: "/rules", label: "Rules" },
   { href: "/contact", label: "Contact" },
 ];
@@ -63,9 +64,9 @@ export function SiteHeader() {
   return (
     <header className="bg-dugout/95 border-line sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-x-6 px-5 py-2.5 sm:px-8">
-        <Link href="/" onClick={handleHomeClick} className="flex items-center gap-3">
+        <Link href="/" onClick={handleHomeClick} className="flex shrink-0 items-center gap-3">
           <CrestBadge size={44} />
-          <span className="flex flex-col gap-1">
+          <span className="flex flex-col gap-1 whitespace-nowrap">
             <span className="font-display text-xl leading-none font-extrabold tracking-wide uppercase">
               Crick-It
             </span>
@@ -76,7 +77,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop: inline nav, the current page as a filled pill. Phones use the menu below. */}
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {links.map((item) => {
             const current = isCurrent(item.href);
             return (
@@ -85,7 +86,7 @@ export function SiteHeader() {
                 href={sectionHref(item.href)}
                 onClick={item.href === "/" ? handleHomeClick : undefined}
                 aria-current={current ? "page" : undefined}
-                className={`font-display rounded-full px-4 py-2 text-lg leading-none font-bold tracking-wide whitespace-nowrap uppercase transition-colors ${
+                className={`font-display rounded-full px-3 py-2 text-lg leading-none font-bold tracking-wide whitespace-nowrap uppercase transition-colors xl:px-4 ${
                   current ? "bg-clay text-on-accent" : "text-chalk-dim hover:bg-pitch-deep hover:text-chalk"
                 }`}
               >
@@ -121,7 +122,7 @@ export function SiteHeader() {
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="border-line text-chalk-dim hover:border-clay hover:text-clay flex h-9 w-9 items-center justify-center rounded-full border transition-colors md:hidden"
+            className="border-line text-chalk-dim hover:border-clay hover:text-clay flex h-9 w-9 items-center justify-center rounded-full border transition-colors lg:hidden"
           >
             {menuOpen ? (
               <X className="size-5" aria-hidden="true" />
@@ -133,7 +134,7 @@ export function SiteHeader() {
       </div>
 
       {menuOpen ? (
-        <nav id="mobile-nav" aria-label="Main" className="border-line border-t md:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-line border-t lg:hidden">
           <ul className="mx-auto flex max-w-[1180px] flex-col px-5 py-2 sm:px-8">
             {links.map((item) => (
               <li key={item.href}>

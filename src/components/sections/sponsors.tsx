@@ -9,12 +9,12 @@ export function Sponsors() {
   if (!titleSponsor && otherSponsors.length === 0) return null;
 
   return (
-    <section id="sponsors" aria-labelledby="home-sponsors" className="py-12 sm:py-16">
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-8 px-5 sm:px-8">
+    <section id="sponsors" aria-labelledby="home-sponsors" className="py-6 sm:py-8">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-5 px-5 sm:px-8">
         <SectionTitle eyebrow="Thank you to our sponsors" title="Partners" id="home-sponsors" />
 
         {titleSponsor ? (
-          <div className="border-line bg-dugout flex flex-col items-start gap-5 rounded-lg border p-5 shadow-sm sm:flex-row sm:items-center sm:gap-8 sm:p-6">
+          <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
             <a
               href={titleSponsor.href}
               target="_blank"

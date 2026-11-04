@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { deletePhoto, updatePhotoDetails, uploadPhoto } from "@/lib/services/photos";
+import { deletePhoto, setPhotoInCarousel, updatePhotoDetails, uploadPhoto } from "@/lib/services/photos";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
 export type PhotoActionResult = { ok: true } | { ok: false; message: string };
 
 function refresh() {
   revalidatePath("/");
+  revalidatePath("/league/fixtures/[matchId]", "page");
   revalidatePath("/admin/photos");
   revalidatePath("/admin/activity");
 }
@@ -41,6 +42,7 @@ export async function uploadPhotoAction(formData: FormData): Promise<PhotoAction
       title: formData.get("title"),
       body: formData.get("body"),
       matchId: formData.get("matchId"),
+      inCarousel: formData.get("inCarousel") !== "false",
     });
   } catch (error) {
     return failure(error, "Upload failed.");
@@ -63,6 +65,20 @@ export async function updatePhotoDetailsAction(
     await updatePhotoDetails(session.user, { id, ...details });
   } catch (error) {
     return failure(error, "Couldn't save the photo.");
+  }
+
+  refresh();
+  return { ok: true };
+}
+
+export async function setPhotoInCarouselAction(id: string, inCarousel: boolean): Promise<PhotoActionResult> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, message: "You must be signed in." };
+
+  try {
+    await setPhotoInCarousel(session.user, id, inCarousel);
+  } catch (error) {
+    return failure(error, "Couldn't update the photo.");
   }
 
   refresh();

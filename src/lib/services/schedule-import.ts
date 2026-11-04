@@ -4,6 +4,7 @@ import { can, ForbiddenError, type SessionUser } from "@/lib/auth/permissions";
 import { recordAudit } from "@/lib/services/audit";
 import { loadSeriesTeams, saveTeamNameAlias } from "@/lib/services/teams";
 import { findCurrentSeries } from "@/lib/services/series";
+import { splitGroundName } from "@/lib/grounds";
 import {
   MatchesFileError,
   normalizeName,
@@ -246,12 +247,6 @@ export async function addUnmatchedImportTeams(user: SessionUser, runId: string) 
   for (const name of preview.plan.unmatchedTeams) {
     await mapImportTeamName(user, runId, name, "new");
   }
-}
-
-/** Splits "Nickajack Park 3" into ground "Nickajack Park" + field "3"; "Larry Bell" is a single-field ground. */
-function splitGroundName(raw: string): { ground: string; label: string } {
-  const m = raw.trim().match(/^(.*?)\s+(\d+)$/);
-  return m ? { ground: m[1], label: m[2] } : { ground: raw.trim(), label: "" };
 }
 
 async function resolveFieldId(tx: Prisma.TransactionClient, raw: string, cache: Map<string, string>) {

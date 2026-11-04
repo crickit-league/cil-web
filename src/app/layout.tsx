@@ -23,7 +23,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crick-It Inter League",
+  title: { default: "CIL - Winter League", template: "CIL - %s" },
   description:
     "Atlanta's weekend cricket league. F15, hard tennis ball, on the city's baseball fields since 2013.",
 };
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col overflow-x-hidden">
+      <body className="app-bg flex min-h-full flex-col overflow-x-hidden">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
