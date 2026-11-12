@@ -5,7 +5,6 @@ import { STAGE_LABEL } from "@/lib/import/schedule-plan";
 import { formatFixtureDay, formatMatchTimeOrTbd, groupByMatchDay } from "@/lib/time";
 import { UploadForm } from "./upload-form";
 import { UmpiringSelect } from "./umpiring-select";
-import { UmpireEntryLock } from "./umpire-entry-lock";
 import { RevealPhonesButton } from "@/components/umpires/reveal-phones-button";
 import { UmpireForm } from "@/components/umpires/umpire-form";
 
@@ -26,7 +25,7 @@ function SourceTag({ match }: { match: AdminMatch }) {
   );
 }
 
-/** Nominated umpires plus an inline editor. Admins can edit even while public entry is closed. */
+/** The assigned umpires plus an inline editor. */
 function AdminUmpires({ match }: { match: AdminMatch }) {
   const { one, two, hasPhones } = match.umpires;
   return (
@@ -122,8 +121,6 @@ export default async function ScheduleAdminPage({
       ) : null}
 
       <UploadForm />
-
-      <UmpireEntryLock locked={series.umpireEntryLocked} />
 
       {matches.length === 0 ? (
         <p className="text-chalk-dim">No matches yet. Import the CricClubs schedule to start.</p>

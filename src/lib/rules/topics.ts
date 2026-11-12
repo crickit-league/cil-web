@@ -2,7 +2,7 @@
 export const POPULAR_TOPICS = [
   { label: "Late start", query: "late start" },
   { label: "Free hit", query: "free hit" },
-  { label: "No-ball", query: "no-ball" },
+  { label: "No ball", query: "no ball" },
   // The rule book calls it the "return crease (side line)".
   { label: "Side crease", query: "return crease" },
   // The rule book calls them penalties ($25 / $50, points deducted); "|" means either word.

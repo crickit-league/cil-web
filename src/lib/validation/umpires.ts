@@ -21,12 +21,10 @@ const phone = (label: string) =>
     })
     .transform((v) => (v === "" ? null : normalizePhone(v)));
 
-export const umpireNominationSchema = z.object({
+export const umpireAssignmentSchema = z.object({
   umpireOneName: name,
   umpireOnePhone: phone("Umpire 1 phone"),
   umpireTwoName: name,
   umpireTwoPhone: phone("Umpire 2 phone"),
 });
-export type UmpireNominationInput = z.input<typeof umpireNominationSchema>;
-
-export const umpireEntryLockSchema = z.object({ locked: z.boolean() });
+export type UmpireAssignmentInput = z.input<typeof umpireAssignmentSchema>;

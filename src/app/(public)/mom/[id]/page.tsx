@@ -18,10 +18,10 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const entry = await getMomEntry(id);
-  if (!entry) return { title: "Photo · CIL Winter League" };
+  if (!entry) return { title: "Photo" };
   const title = entry.title ?? entry.caption ?? "Man of the match";
   return {
-    title: `${title} · CIL Winter League`,
+    title,
     description: entry.body?.split("\n\n")[0] ?? "A photo from the CIL Winter League.",
   };
 }

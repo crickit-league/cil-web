@@ -216,7 +216,7 @@ export function PhotoCarousel({
       id="photos"
       aria-roledescription="carousel"
       aria-label="Match photos"
-      className={`relative overflow-hidden pt-8 sm:pt-12 ${roomBelow ? "pb-24 sm:pb-28" : "pb-8 sm:pb-12"}`}
+      className={`relative overflow-hidden pt-5 sm:pt-6 ${roomBelow ? "pb-24 sm:pb-28" : "pb-5 sm:pb-6"}`}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") api?.scrollPrev();
         if (event.key === "ArrowRight") api?.scrollNext();
@@ -261,36 +261,30 @@ export function PhotoCarousel({
                     aria-label={`${photo.title ?? photo.caption ?? "Match photo"}: view details`}
                     className="focus-visible:outline-clay block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
-                    <figure
-                      className={`border-line bg-pitch-deep relative aspect-[3/4] overflow-hidden rounded-xl border transition duration-300 motion-reduce:transition-none sm:aspect-[4/5] ${
+                    <div
+                      className={`transition duration-300 motion-reduce:transition-none ${
                         slideshow && slideIndex !== selectedSlide ? "scale-[0.94] opacity-60" : ""
                       }`}
                     >
-                      <Image
-                        src={photo.url}
-                        alt={photo.title ?? photo.caption ?? "CIL Winter League match photo"}
-                        fill
-                        sizes="(min-width: 1180px) 372px, (min-width: 640px) 31vw, 58vw"
-                        priority={false}
-                        quality={78}
-                        draggable={false}
-                        className="object-cover object-top"
-                      />
-                      <figcaption className="on-brand from-pitch-deep/95 via-pitch-deep/70 absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t to-transparent px-3 pt-16 pb-3 sm:px-4 sm:pt-20 sm:pb-4">
-                        <p className="font-display line-clamp-3 text-base leading-tight font-bold text-balance sm:text-xl lg:text-2xl">
-                          {photo.title ?? photo.caption ?? "Match photo"}
+                      <figure className="border-line bg-pitch-deep relative aspect-[3/4] overflow-hidden rounded-xl border sm:aspect-[4/5]">
+                        <Image
+                          src={photo.url}
+                          alt={photo.title ?? photo.caption ?? "CIL Winter League match photo"}
+                          fill
+                          sizes="(min-width: 1180px) 372px, (min-width: 640px) 31vw, 58vw"
+                          priority={false}
+                          quality={78}
+                          draggable={false}
+                          className="object-cover object-top"
+                        />
+                      </figure>
+                      {/* The title sits under the picture, not over it, so it stays easy to read. */}
+                      {(photo.title ?? photo.caption) ? (
+                        <p className="font-display text-chalk mt-2 line-clamp-2 text-base leading-tight font-bold sm:text-lg">
+                          {photo.title ?? photo.caption}
                         </p>
-                        {photo.body ? (
-                          <p className="text-chalk-dim line-clamp-2 hidden text-sm sm:block">{photo.body}</p>
-                        ) : null}
-                        <span className="font-data text-clay-bright mt-0.5 text-[0.62rem] tracking-[0.1em] uppercase sm:mt-1 sm:text-[0.68rem]">
-                          {photo.match ? (
-                            <span className="hidden sm:inline">{`${photo.match.label} \u00b7 `}</span>
-                          ) : null}
-                          View details &rarr;
-                        </span>
-                      </figcaption>
-                    </figure>
+                      ) : null}
+                    </div>
                   </Link>
                 </div>
               );
